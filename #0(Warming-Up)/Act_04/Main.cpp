@@ -1,283 +1,308 @@
 ﻿#include <iostream>
-#include <string>
-#include <vector>
 #include <format>
-#include <random>       // <random> 헤더 사용
-#include <chrono>       // 시간 기반 시드 및 sleep에 사용
-#include <thread>       // std::this_thread::sleep_for 사용
-#include <algorithm>    // std::shuffle 사용
-#include <cctype>       // std::tolower 사용
-
-#ifdef _WIN32
+#include <string>
 #include <windows.h>
-#endif
+#include <sstream>
+#include <cctype>
 
-// 플랫폼 종속적인 기능을 위한 함수
-void ClearScreen() {
-#ifdef _WIN32
-    system("cls");
-#else
-    // For Linux/Mac
-    system("clear");
-#endif
-}
-
-void SleepFor(int milliseconds) {
-    std::this_thread::sleep_for(std::chrono::milliseconds(milliseconds));
-}
-
-// ANSI 색상 코드를 생성하는 유틸리티 함수
-std::string GetColorCode(int code = -1) {
-    if (code == -1) {
-        return "\033[0m"; // Reset
+std::string GetColorCode(int code_ = -1)
+{
+    if (code_ == -1)
+    {
+        return "\033[0m";
     }
-    return std::format("\033[38;5;{:d}m", code % 232); // 256 색상 모드 사용
+
+    return std::format("\033[3{:d}m", code_);
 }
 
-// 좌표를 표현하는 구조체 (기존과 유사)
-struct Coordinate {
-    char value = '\0';
-    bool isChecked = false;
+struct Coordinate
+{
+    bool isChecked;
+    char value;
 
-    [[nodiscard]] constexpr bool operator==(const Coordinate& other) const noexcept {
-        return value == other.value;
+    [[nodiscard]]
+    constexpr bool operator==(const Coordinate& other_) const noexcept
+    {
+        return value == other_.value;
+    }
+
+    [[nodiscard]]
+    constexpr bool operator!=(const Coordinate& other_) const noexcept
+    {
+        return !(*this == other_);
     }
 };
 
-// Point 구조체를 추가하여 row, col을 명확하게 관리
-struct Point {
-    std::size_t row = 0;
-    std::size_t col = 0;
-};
-
-class Game {
-public:
-    // 생성자에서 초기화 및 난수 엔진 시드 설정
-    Game() : m_rng(std::chrono::steady_clock::now().time_since_epoch().count()) {
-        Init();
-    }
-
-    void Run() {
-        m_isRunning = true;
-        while (m_isRunning) {
-            Draw();
-            ProcessInput();
-            Update();
-        }
-    }
-
-private:
-    // ### 게임 로직 및 상태 관련 함수들을 멤버 함수로 편입 ###
-    void Init() noexcept {
+struct Game
+{
+    void Init() noexcept
+    {
         InitBoard();
-        m_score = 0;
-        m_tryCount = 20;
-        m_isRunning = true;
+        InitScore();
+        InitCount();
     }
 
-    void InitBoard() noexcept {
-        // 1. 모든 칸을 비움
-        for (auto& row : m_board) {
-            for (auto& cell : row) {
-                cell.value = '\0';
-                cell.isChecked = false;
+    void Draw() const noexcept
+    {
+        system("cls");
+        DrawBoard();
+        DrawScore();
+    }
+
+    void InitBoard() noexcept
+    {
+        for (size_t row = 0; row < Game::ROW_SIZE; ++row)
+        {
+            for (size_t col = 0; col < Game::COLUMN_SIZE; ++col)
+            {
+                board[row][col].value = '\0';
+                board[row][col].isChecked = false;
             }
         }
 
-        // 2. 배치할 문자들을 미리 생성
-        std::vector<char> tiles;
-        for (std::size_t i = 0; i < (ROW_SIZE * COLUMN_SIZE - 1) / 2; ++i) {
-            char letter = static_cast<char>('a' + i);
-            tiles.push_back(letter);
-            tiles.push_back(letter);
+        for (std::size_t letterIdx = 0; letterIdx < 12; ++letterIdx)
+        {
+            for (std::size_t count = 0; count < 2; ++count)
+            {
+                std::size_t row, col;
+                do
+                {
+                    row = std::rand() % Game::ROW_SIZE;
+                    col = std::rand() % Game::COLUMN_SIZE;
+                }
+                while (board[row][col].value != '\0');
+
+                board[row][col].value = static_cast<char>(letterIdx + 'a');
+            }
         }
-        tiles.push_back('@'); // 조커 추가
 
-        // 3. 문자들을 무작위로 섞음
-        std::shuffle(tiles.begin(), tiles.end(), m_rng);
-
-        // 4. 보드에 순서대로 배치
-        for (std::size_t row = 0; row < ROW_SIZE; ++row) {
-            for (std::size_t col = 0; col < COLUMN_SIZE; ++col) {
-                if (!tiles.empty()) {
-                    m_board[row][col].value = tiles.back();
-                    tiles.pop_back();
+        for (size_t row = 0; row < Game::ROW_SIZE; ++row)
+        {
+            for (size_t col = 0; col < Game::COLUMN_SIZE; ++col)
+            {
+                if (board[row][col].value == '\0')
+                {
+                    board[row][col].value = '@';
+                    return;
                 }
             }
         }
     }
 
-    void Draw() const noexcept {
-        ClearScreen();
+    void InitScore(int score_ = 0) noexcept
+    {
+        score = score_;
+    }
+
+    void InitCount(int count_ = 20) noexcept
+    {
+        count = count_;
+    }
+
+    void DrawBoard() const noexcept
+    {
         std::cout << "  ";
-        for (std::size_t i = 0; i < COLUMN_SIZE; ++i) {
-            std::cout << static_cast<char>('a' + i) << ' ';
+        for (std::size_t count = 0; count < Game::COLUMN_SIZE; ++count)
+        {
+            std::cout << static_cast<char>(count + 'a') << ' ';
         }
-        std::cout << "\n";
+        std::cout << '\n';
 
-        for (std::size_t row = 0; row < ROW_SIZE; ++row) {
+        for (std::size_t row = 0; row < Game::ROW_SIZE; ++row)
+        {
             std::cout << row << ' ';
-            for (std::size_t col = 0; col < COLUMN_SIZE; ++col) {
-                const auto& cell = m_board[row][col];
-                if (m_shouldHint || cell.isChecked) {
-                    std::cout << GetColorCode(cell.value) << cell.value << ' ' << GetColorCode();
-                } else {
+            for (std::size_t col = 0; col < Game::COLUMN_SIZE; ++col)
+            {
+                if (!shouldHint && !board[row][col].isChecked)
+                {
                     std::cout << "* ";
+                    continue;
                 }
+
+                if (shouldHint || board[row][col].isChecked)
+                {
+                    std::cout << GetColorCode(board[row][col].value - 'a');
+                }
+                else
+                {
+                    std::cout << GetColorCode();
+                }
+
+                std::cout << board[row][col].value << ' ';
+                std::cout << GetColorCode();
             }
             std::cout << '\n';
         }
-        std::cout << std::format("\nScore: {:3d} Tries Left: {:3d}\n", m_score, m_tryCount);
     }
 
-    void ProcessInput() {
-        std::cout << "Enter command (e.g., a0 b1), or H(int), R(eset), Q(uit): ";
-        std::string line;
-        std::getline(std::cin, line);
+    void DrawScore() const noexcept
+    {
+        std::cout << std::format("Score: {:3d} Count: {:3d}\n", score, count);
+    }
 
-        if (line.empty()) return;
+    /**
+    * @brief 보드판 세로 최대 크기.
+    */
+    static constexpr std::size_t COLUMN_SIZE = 5;
 
-        char command = std::toupper(line[0]);
-        switch (command) {
-            case 'R':
-                Init();
-                break;
-            case 'H':
-                ShowHint();
-                break;
-            case 'Q':
-                m_isRunning = false;
-                break;
-            default:
-                // ### 입력 파싱 로직 개선 ###
-                if (auto points = ParseCoordinates(line)) {
-                    ProcessTurn(points->first, points->second);
-                    m_tryCount--;
-                } else {
-                    std::cout << "Invalid input. Please use format like 'a0 b1'.\n";
-                    SleepFor(1000);
+    /**
+    * @brief 보드판 가로 최대 크기.
+    */
+    static constexpr std::size_t ROW_SIZE = 5;
+
+    /**
+    * @brief 보드판.
+    */
+    Coordinate board[COLUMN_SIZE][ROW_SIZE];
+
+    /**
+    * @brief 힌트 적용 여부.
+    */
+    bool shouldHint = false;
+
+    /**
+    * @brief 점수.
+    */
+    unsigned int score;
+
+    unsigned int count;
+};
+
+Game game;
+
+bool CheckKan(char lhs_[2], char rhs_[2])
+{
+    auto firstCol = std::tolower(lhs_[0]) - 'a';
+    auto firstRow = lhs_[1] - '0';
+
+    auto secondCol = std::tolower(rhs_[0]) - 'a';
+    auto secondRow = rhs_[1] - '0';
+
+    if (game.board[firstRow][firstCol].isChecked ||
+        game.board[secondRow][secondCol].isChecked)
+    {
+        return false;
+    }
+
+    if (game.board[firstRow][firstCol].value == '@' ||
+        game.board[secondRow][secondCol].value == '@')
+    {
+        game.board[firstRow][firstCol].isChecked = true;
+        game.board[secondRow][secondCol].isChecked = true;
+
+        char temp = (game.board[firstRow][firstCol].value == '@')
+                        ? game.board[secondRow][secondCol].value
+                        : game.board[firstRow][firstCol].value;
+
+        for (int i = 0; i < Game::ROW_SIZE; ++i)
+        {
+            for (int j = 0; j < Game::COLUMN_SIZE; ++j)
+            {
+                if (game.board[i][j].value == temp)
+                {
+                    game.board[i][j].isChecked = true;
                 }
-                break;
-        }
-    }
-
-    // 게임 상태 업데이트 (턴 종료 후)
-    void Update() {
-        if (m_tryCount <= 0 || IsGameFinished()) {
-            Draw(); // 마지막 상태 보여주기
-            std::cout << "Game Over!\n";
-            std::cout << "Final Score: " << m_score << '\n';
-            system("pause");
-            m_isRunning = false; // 게임 루프 종료
-        }
-    }
-
-    // ### CheckKan 함수를 클래스 내부로 가져와 역할에 맞게 분리 ###
-    void ProcessTurn(Point p1, Point p2) {
-        if (p1.row == p2.row && p1.col == p2.col) return; // 같은 칸 선택 방지
-
-        auto& cell1 = m_board[p1.row][p1.col];
-        auto& cell2 = m_board[p2.row][p2.col];
-
-        if (cell1.isChecked || cell2.isChecked) return; // 이미 맞춘 칸 선택 방지
-
-        // 선택한 두 칸을 잠시 보여줌
-        cell1.isChecked = true;
-        cell2.isChecked = true;
-        Draw();
-        SleepFor(1000);
-
-        bool isMatch = false;
-        if (cell1.value == '@' || cell2.value == '@') { // 조커 로직
-            isMatch = true;
-            char target = (cell1.value == '@') ? cell2.value : cell1.value;
-            // 나머지 한 쌍도 찾아서 체크
-            for (auto& row : m_board) {
-                for (auto& cell : row) {
-                    if (cell.value == target) cell.isChecked = true;
-                }
-            }
-        } else if (cell1.value == cell2.value) { // 일반 매치 로직
-            isMatch = true;
-        }
-
-        if (isMatch) {
-            m_score += 10;
-        } else {
-            // 매치 실패 시 다시 뒤집음
-            cell1.isChecked = false;
-            cell2.isChecked = false;
-        }
-    }
-
-    void ShowHint() {
-        m_shouldHint = true;
-        Draw();
-        std::cout << "Showing Hint...\n";
-        SleepFor(1000);
-        m_shouldHint = false;
-    }
-
-    // ### 입력 파싱을 별도 함수로 분리 ###
-    std::optional<std::pair<Point, Point>> ParseCoordinates(const std::string& input) {
-        if (input.length() < 5) return std::nullopt;
-
-        char c1, c2;
-        int r1, r2;
-        // C++20 std::format을 활용한 파싱 (C++17 이하라면 sscanf_s 또는 stringstream 사용)
-        // 여기서는 간단한 직접 파싱 사용
-        c1 = std::tolower(input[0]);
-        r1 = input[1] - '0';
-        c2 = std::tolower(input[3]);
-        r2 = input[4] - '0';
-
-        if (c1 < 'a' || c1 >= 'a' + COLUMN_SIZE || r1 < 0 || r1 >= ROW_SIZE ||
-            c2 < 'a' || c2 >= 'a' + COLUMN_SIZE || r2 < 0 || r2 >= ROW_SIZE) {
-            return std::nullopt;
-        }
-
-        return {{ { (size_t)r1, (size_t)(c1 - 'a') }, { (size_t)r2, (size_t)(c2 - 'a') } }};
-    }
-
-    bool IsGameFinished() const {
-        for(const auto& row : m_board) {
-            for(const auto& cell : row) {
-                if (!cell.isChecked) return false;
             }
         }
         return true;
     }
 
+    if (game.board[firstRow][firstCol] == game.board[secondRow][secondCol])
+    {
+        game.board[firstRow][firstCol].isChecked = true;
+        game.board[secondRow][secondCol].isChecked = true;
+        return true;
+    }
 
-private:
-    // ### 멤버 변수(상태) ###
-    static constexpr std::size_t ROW_SIZE = 5;
-    static constexpr std::size_t COLUMN_SIZE = 5;
+    return false;
+}
 
-    // 버그 수정: [행][열] 순서로 변경
-    Coordinate m_board[ROW_SIZE][COLUMN_SIZE];
-
-    unsigned int m_score = 0;
-    int m_tryCount = 0;
-    bool m_shouldHint = false;
-    bool m_isRunning = true;
-
-    // ### 현대적인 난수 생성기 ###
-    std::mt19937 m_rng;
-};
-
-int main() {
+int main()
+{
 #ifdef _WIN32
-    // Windows에서 ANSI 이스케이프 코드 활성화
+    // Enable ANSI escape codes in Windows 10+
     HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
     DWORD dwMode = 0;
     GetConsoleMode(hOut, &dwMode);
     SetConsoleMode(hOut, dwMode | ENABLE_VIRTUAL_TERMINAL_PROCESSING);
 #endif
 
-    // Game 객체를 main 내부에 생성
-    Game game;
-    game.Run(); // 게임 루프 실행
+    game.Init();
 
+    bool isRunning = true;
+    while (isRunning)
+    {
+        game.Draw();
+
+        if (game.count <= 0)
+        {
+            std::cout << "Game Over!\n";
+            std::cout << "Your Score: " << game.score << '\n';
+            system("pause");
+
+            // Game over logic can be extended here, for now, we just exit.
+            break;
+        }
+
+        std::cout << "Enter command (e.g., a1 b2) or single command (R, H, Q): ";
+        std::string line;
+        std::getline(std::cin, line);
+
+        if (line.empty())
+        {
+            continue;
+        }
+
+        std::stringstream ss(line);
+        std::string first_token;
+        ss >> first_token;
+
+        if (first_token.length() == 1)
+        {
+            char cmd = std::toupper(first_token[0]);
+            if (cmd == 'R' || cmd == 'H' || cmd == 'Q')
+            {
+                switch (cmd)
+                {
+                    case 'R':
+                        game.Init();
+                        continue;
+                    case 'H':
+                        game.shouldHint = true;
+                        game.Draw();
+                        std::cout << "Showing Hint...\n";
+                        Sleep(1000);
+                        game.shouldHint = false;
+                        game.count--; // Using a hint costs one turn
+                        continue;
+                    case 'Q':
+                        isRunning = false;
+                        continue;
+                }
+            }
+        }
+
+        std::string second_token;
+        ss >> second_token;
+
+        if (!first_token.empty() && !second_token.empty() && first_token.length() >= 2 && second_token.length() >= 2)
+        {
+            char first[3] = {first_token[0], first_token[1], 0};
+            char second[3] = {second_token[0], second_token[1], 0};
+
+            if (CheckKan(first, second))
+            {
+                game.score += 10;
+            }
+        }
+        else
+        {
+            std::cout << "Invalid command or coordinate format.\n";
+            Sleep(1000);
+        }
+
+        game.count--;
+    }
     return 0;
+
 }
