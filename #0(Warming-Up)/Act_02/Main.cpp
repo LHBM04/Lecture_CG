@@ -69,19 +69,11 @@ int main()
             }
             case 'b':
             {
-                std::size_t wordCount = 0;
-                for (const auto& iter1 : lines)
+                for (const std::string& line : lines)
                 {
-                    for (const auto iter2 : iter1)
-                    {
-                        if (iter2 == ' ')
-                        {
-                            ++wordCount;
-                        }
-                    }
+                    std::size_t wordCount = std::ranges::count(line, ' ');
+                    std::cout << line << " (" << wordCount + 1 << ")\n";
                 }
-
-                std::cout << wordCount << '\n';
 
                 break;
             }
@@ -165,39 +157,55 @@ int main()
                 static bool trigger= false;
                 trigger = !trigger;
 
+                static std::vector<std::string> temp;
+
                 if (trigger)
                 {
                     char targetChar, replacementChar;
                     std::cin >> targetChar >> replacementChar;
 
+                    temp = lines;
+
                     for (auto& line : lines)
                     {
-                        std::string temp = line;
-
-                        for (auto& character : temp)
-                        {
-                            if (std::isupper(character) && std::tolower(character) == std::tolower(targetChar))
-                            {
-                                std::cout << static_cast<char>(std::toupper(replacementChar));
-                            }
-                            else if (std::islower(character) && std::tolower(character) == std::tolower(targetChar))
-                            {
-                                std::cout << static_cast<char>(std::tolower(replacementChar));
-                            }
-                            else
-                            {
-                                std::cout << character;
-                            }
-                        }
-                        std::cout << '\n';
+                        std::ranges::replace(line, targetChar, replacementChar);
+                        std::cout << line << '\n';
                     }
+
+                    // for (auto& line : lines)
+                    // {
+                    //     std::string temp = line;
+
+                    //     for (auto& character : temp)
+                    //     {
+                    //         if (std::isupper(character) && std::tolower(character) == std::tolower(targetChar))
+                    //         {
+                    //             std::cout << static_cast<char>(std::toupper(replacementChar));
+                    //         }
+                    //         else if (std::islower(character) && std::tolower(character) == std::tolower(targetChar))
+                    //         {
+                    //             std::cout << static_cast<char>(std::tolower(replacementChar));
+                    //         }
+                    //         else
+                    //         {
+                    //             std::cout << character;
+                    //         }
+                    //     }
+                    //     std::cout << '\n';
+                    // }
                 }
                 else
                 {
-                    for (auto& line : lines)
+                    lines = temp;
+                    for (const std::string& line : lines)
                     {
                         std::cout << line << '\n';
                     }
+
+                    // for (auto& line : lines)
+                    // {
+                    //     std::cout << line << '\n';
+                    // }
                 }
 
                 break;

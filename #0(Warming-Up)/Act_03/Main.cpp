@@ -5,7 +5,7 @@
 #include <algorithm>
 #include <cmath>
 
-struct Point
+struct Coordinate
 {
     [[nodiscard]]
     constexpr std::size_t Length() const noexcept
@@ -13,11 +13,27 @@ struct Point
         return static_cast<std::size_t>(std::sqrt(x * x + y * y + z * z));
     }
 
-    int x, y, z;
+    [[nodiscard]]
+    friend std::istream& operator>>(std::istream& is_, Coordinate& point_)
+    {
+        is_ >> point_.x
+            >> point_.y
+            >> point_.z;
+        return is_;
+    }
+
+    [[nodiscard]]
+    friend std::ostream& operator<<(std::ostream& os_, const Coordinate& point_)
+    {
+        os_ << std::format("[{:d} {:d} {:d}]", point_.x, point_.y, point_.z);
+        return os_;
+    }
+
+    unsigned long x, y, z;
 };
 
 constexpr std::size_t MAX_POINTS_COUNT = 10;
-std::array<std::optional<Point>, MAX_POINTS_COUNT> points{ };
+std::array<std::optional<Coordinate>, MAX_POINTS_COUNT> points{ };
 
 std::size_t currentHead;
 std::size_t currentTail;
@@ -38,45 +54,40 @@ void Print()
         return;
     }
 
-    for (std::size_t index = currentTail; index > currentHead; --index)
+    for (std::size_t index = currentTail; index > 0; --index)
     {
         std::size_t subIndex = index - 1;
-
         if (!points.at(subIndex).has_value())
         {
-            std::cout << "[empty]\n";
             continue;
         }
 
-        const Point& point = points.at(subIndex).value();
-        std::cout << std::format("{:d}. [{:d} {:d} {:d}]\n", index, point.x, point.y, point.z);
+        const auto& [x, y, z] = points.at(subIndex).value();
+        std::cout << std::format("{:d}. [{:d} {:d} {:d}]\n", index, x, y, z);
     }
 }
 
-void PushBack(const Point& point_)
+void PushBack(const Coordinate& point_)
 {
     if (currentTail >= MAX_POINTS_COUNT)
     {
+        for (auto& iter : points)
+        {
+            if (iter == std::nullopt)
+            {
+                iter = point_;
+                return;
+            }
+        }
+
         std::cerr << "Overflow\n";
-        return;
-    }
-
-    auto begin = points.begin() + currentHead;
-    auto end   = points.begin() + currentTail;
-
-    auto result = std::find(begin, end, std::nullopt);
-    if (result != end)
-    {
-        std::size_t index = std::distance(points.begin(), result);
-        points.at(index) = point_;
-
         return;
     }
 
     points.at(currentTail++) = point_;
 }
 
-void PushFront(const Point& point_)
+void PushFront(const Coordinate& point_)
 {
     if (currentTail >= MAX_POINTS_COUNT)
     {
@@ -115,6 +126,12 @@ void PopFront()
     points.at(currentHead++) = std::nullopt;
 }
 
+[[nodiscard]]
+std::size_t GetSize()
+{
+    return (currentTail - currentHead) + 1;
+}
+
 void Move()
 {
     const auto first = points.at(currentHead);
@@ -132,7 +149,7 @@ void Sort()
     const auto subBegin  = points.begin() + currentHead;
     const auto subEnd    = points.begin() + currentTail;
 
-    auto predicate = [](const std::optional<Point>& a, const std::optional<Point>& b)
+    auto predicate = [](const std::optional<Coordinate>& a, const std::optional<Coordinate>& b)
     {
         if (!a.has_value())
         {
@@ -164,7 +181,7 @@ int main()
         {
             case '+':
             {
-                Point newPoint = { };
+                Coordinate newPoint = { };
                 std::cin >> newPoint.x >> newPoint.y >> newPoint.z;
 
                 PushBack(newPoint);
@@ -178,7 +195,7 @@ int main()
             }
             case 'e':
             {
-                Point newPoint = { };
+                Coordinate newPoint = { };
                 std::cin >> newPoint.x >> newPoint.y >> newPoint.z;
 
                 PushFront(newPoint);
@@ -188,6 +205,11 @@ int main()
             case 'd':
             {
                 PopFront();
+                break;
+            }
+            case 'a':
+            {
+                std::cout << "Size: " << GetSize() << '\n';
                 break;
             }
             case 'b':

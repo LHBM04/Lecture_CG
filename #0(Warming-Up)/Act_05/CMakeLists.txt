@@ -1,0 +1,1 @@
+add_executable(Act_05 Main.cpp)

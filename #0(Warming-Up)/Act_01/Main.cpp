@@ -67,9 +67,9 @@ void Add(const int lhs_[MAT_SIZE][MAT_SIZE],
     }
 }
 
-void Substract(const int lhs_[MAT_SIZE][MAT_SIZE],
-               const int rhs_[MAT_SIZE][MAT_SIZE],
-               int       res_[MAT_SIZE][MAT_SIZE]) noexcept
+void Subtract(const int lhs_[MAT_SIZE][MAT_SIZE],
+              const int rhs_[MAT_SIZE][MAT_SIZE],
+              int       res_[MAT_SIZE][MAT_SIZE]) noexcept
 {
     for (std::size_t row = 0; row < MAT_SIZE; ++row)
     {
@@ -127,7 +127,6 @@ void Transpose(const int mat_[MAT_SIZE][MAT_SIZE],
             res_[col][row] = mat_[row][col];
         }
     }
-
 }
 
 [[nodiscard]]
@@ -177,8 +176,7 @@ int main()
     bool isRunning = true;
     while (isRunning)
     {
-        std::cout << "Please enter the command...\n";
-        std::cout << "===>> ";
+        std::cout << "Enter command: ";
 
         char command = '\0';
         std::cin >> command;
@@ -235,7 +233,7 @@ int main()
             case 'd':
             {
                 int res[MAT_SIZE][MAT_SIZE] = {};
-                Substract(mat1, mat2, res);
+                Subtract(mat1, mat2, res);
 
                 std::cout << "====[Result Matrix]====\n";
                 Print(res);

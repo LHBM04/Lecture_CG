@@ -1,11 +1,12 @@
-﻿#include <iostream>
+﻿#include <cctype>
 #include <format>
-#include <string>
-#include <windows.h>
+#include <iostream>
 #include <sstream>
-#include <cctype>
+#include <string>
+#include <string_view>
+#include <windows.h>
 
-std::string GetColorCode(int code_ = -1)
+std::string_view GetColorCode(int code_ = -1)
 {
     if (code_ == -1)
     {
@@ -219,13 +220,10 @@ bool CheckKan(char lhs_[2], char rhs_[2])
 
 int main()
 {
-#ifdef _WIN32
-    // Enable ANSI escape codes in Windows 10+
     HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
     DWORD dwMode = 0;
     GetConsoleMode(hOut, &dwMode);
     SetConsoleMode(hOut, dwMode | ENABLE_VIRTUAL_TERMINAL_PROCESSING);
-#endif
 
     game.Init();
 
@@ -239,12 +237,10 @@ int main()
             std::cout << "Game Over!\n";
             std::cout << "Your Score: " << game.score << '\n';
             system("pause");
-
-            // Game over logic can be extended here, for now, we just exit.
             break;
         }
 
-        std::cout << "Enter command (e.g., a1 b2) or single command (R, H, Q): ";
+        std::cout << "Enter command: ";
         std::string line;
         std::getline(std::cin, line);
 
@@ -260,7 +256,9 @@ int main()
         if (first_token.length() == 1)
         {
             char cmd = std::toupper(first_token[0]);
-            if (cmd == 'R' || cmd == 'H' || cmd == 'Q')
+            if (cmd == 'R' ||
+                cmd == 'H' ||
+                cmd == 'Q')
             {
                 switch (cmd)
                 {
