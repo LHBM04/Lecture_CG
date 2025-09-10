@@ -6,8 +6,8 @@
 
 constexpr std::size_t MAT_SIZE = 4;
 
-int mat1[MAT_SIZE][MAT_SIZE] = {};
-int mat2[MAT_SIZE][MAT_SIZE] = {};
+int matrix1[MAT_SIZE][MAT_SIZE] = {};
+int matrix2[MAT_SIZE][MAT_SIZE] = {};
 
 void Init(int mat_[MAT_SIZE][MAT_SIZE]) noexcept
 {
@@ -166,12 +166,12 @@ int FindMax(const int mat_[MAT_SIZE][MAT_SIZE]) noexcept
 int main()
 {
     std::cout << "====[1st Matrix]====\n";
-    Init(mat1);
-    Print(mat1);
+    Init(matrix1);
+    Print(matrix1);
 
     std::cout << "====[2nd Matrix]====\n";
-    Init(mat2);
-    Print(mat2);
+    Init(matrix2);
+    Print(matrix2);
 
     bool isRunning = true;
     while (isRunning)
@@ -191,18 +191,18 @@ int main()
                 const int target = command - '0';
 
                 std::cout << "====[1st Matrix - Filtered]====\n";
-                Print(mat1, target);
+                Print(matrix1, target);
 
                 std::cout << "====[2nd Matrix - Filtered]====\n";
-                Print(mat2, target);
+                Print(matrix2, target);
             }
             else
             {
                 std::cout << "====[1st Matrix]====\n";
-                Print(mat1);
+                Print(matrix1);
 
                 std::cout << "====[2nd Matrix]====\n";
-                Print(mat2);
+                Print(matrix2);
             }
 
             continue;
@@ -213,7 +213,7 @@ int main()
             case 'm':
             {
                 int res[MAT_SIZE][MAT_SIZE] = {};
-                Multiply(mat1, mat2, res);
+                Multiply(matrix1, matrix2, res);
 
                 std::cout << "====[Result Matrix]====\n";
                 Print(res);
@@ -223,7 +223,7 @@ int main()
             case 'a':
             {
                 int res[MAT_SIZE][MAT_SIZE] = {};
-                Add(mat1, mat2, res);
+                Add(matrix1, matrix2, res);
 
                 std::cout << "====[Result Matrix]====\n";
                 Print(res);
@@ -233,7 +233,7 @@ int main()
             case 'd':
             {
                 int res[MAT_SIZE][MAT_SIZE] = {};
-                Subtract(mat1, mat2, res);
+                Subtract(matrix1, matrix2, res);
 
                 std::cout << "====[Result Matrix]====\n";
                 Print(res);
@@ -242,8 +242,8 @@ int main()
             }
             case 'r':
             {
-                const int det1 = Determinant(mat1);
-                const int det2 = Determinant(mat2);
+                const int det1 = Determinant(matrix1);
+                const int det2 = Determinant(matrix2);
 
                 std::cout << "====[Determinants]====\n";
                 std::cout << "det(mat1): " << det1 << '\n';
@@ -257,8 +257,8 @@ int main()
                     int res1[MAT_SIZE][MAT_SIZE] = {};
                     int res2[MAT_SIZE][MAT_SIZE] = {};
 
-                    Transpose(mat1, res1);
-                    Transpose(mat2, res2);
+                    Transpose(matrix1, res1);
+                    Transpose(matrix2, res2);
 
                     std::cout << "====[Transposed Matrix 1]====\n";
                     Print(res1);
@@ -267,8 +267,8 @@ int main()
                     Print(res2);
                 }
                 {
-                    const int det1 = Determinant(mat1);
-                    const int det2 = Determinant(mat2);
+                    const int det1 = Determinant(matrix1);
+                    const int det2 = Determinant(matrix2);
 
                     std::cout << "====[Determinants]====\n";
                     std::cout << "det(mat1): " << det1 << '\n';
@@ -282,39 +282,41 @@ int main()
                 static bool trigger = false;
                 trigger = !trigger;
 
+                static int subMatrix1[MAT_SIZE][MAT_SIZE] = {};
+                static int subMatrix2[MAT_SIZE][MAT_SIZE] = {};
+
                 if (trigger)
                 {
-                    int subMat1[MAT_SIZE][MAT_SIZE] = {};
-                    int subMat2[MAT_SIZE][MAT_SIZE] = {};
+                    std::memcpy(subMatrix1, matrix1, sizeof(int) * MAT_SIZE * MAT_SIZE);
+                    std::memcpy(subMatrix2, matrix2, sizeof(int) * MAT_SIZE * MAT_SIZE);
 
-                    std::memcpy(subMat1, mat1, sizeof(int) * MAT_SIZE * MAT_SIZE);
-                    std::memcpy(subMat2, mat2, sizeof(int) * MAT_SIZE * MAT_SIZE);
-
-                    const int mat1Min = FindMin(mat1);
-                    const int mat2Min = FindMin(mat2);
+                    const int matrix1Max = FindMin(matrix1);
+                    const int matrix2Max = FindMin(matrix2);
 
                     for (std::size_t row = 0; row < MAT_SIZE; ++row)
                     {
                         for (std::size_t col = 0; col < MAT_SIZE; ++col)
                         {
-                            subMat1[row][col] -= mat1Min;
-                            subMat2[row][col] -= mat2Min;
+                            matrix1[row][col] -= matrix1Max;
+                            matrix2[row][col] -= matrix2Max;
                         }
                     }
-
                     std::cout << "====[1st Matrix - Min Extracted]====\n";
-                    Print(subMat1);
+                    Print(matrix1);
 
                     std::cout << "====[2nd Matrix - Min Extracted]====\n";
-                    Print(subMat2);
+                    Print(matrix2);
                 }
                 else
                 {
+                    std::memcpy(matrix1, subMatrix1, sizeof(int) * MAT_SIZE * MAT_SIZE);
+                    std::memcpy(matrix2, subMatrix2, sizeof(int) * MAT_SIZE * MAT_SIZE);
+
                     std::cout << "====[1st Matrix]====\n";
-                    Print(mat1);
+                    Print(matrix1);
 
                     std::cout << "====[2nd Matrix]====\n";
-                    Print(mat2);
+                    Print(matrix2);
                 }
 
                 break;
@@ -324,53 +326,56 @@ int main()
                 static bool trigger = false;
                 trigger = !trigger;
 
+                static int subMatrix1[MAT_SIZE][MAT_SIZE] = {};
+                static int subMatrix2[MAT_SIZE][MAT_SIZE] = {};
+
                 if (trigger)
                 {
-                    int subMat1[MAT_SIZE][MAT_SIZE] = {};
-                    int subMat2[MAT_SIZE][MAT_SIZE] = {};
+                    std::memcpy(subMatrix1, matrix1, sizeof(int) * MAT_SIZE * MAT_SIZE);
+                    std::memcpy(subMatrix2, matrix2, sizeof(int) * MAT_SIZE * MAT_SIZE);
 
-                    std::memcpy(subMat1, mat1, sizeof(int) * MAT_SIZE * MAT_SIZE);
-                    std::memcpy(subMat2, mat2, sizeof(int) * MAT_SIZE * MAT_SIZE);
-
-                    const int mat1Max = FindMax(mat1);
-                    const int mat2Max = FindMax(mat2);
+                    const int mat1Max = FindMax(matrix1);
+                    const int mat2Max = FindMax(matrix2);
 
                     for (std::size_t row = 0; row < MAT_SIZE; ++row)
                     {
                         for (std::size_t col = 0; col < MAT_SIZE; ++col)
                         {
-                            subMat1[row][col] += mat1Max;
-                            subMat2[row][col] += mat2Max;
+                            matrix1[row][col] += mat1Max;
+                            matrix2[row][col] += mat2Max;
                         }
                     }
 
                     std::cout << "====[1st Matrix - Max Extracted]====\n";
-                    Print(subMat1);
+                    Print(matrix1);
 
                     std::cout << "====[2nd Matrix - Max Extracted]====\n";
-                    Print(subMat2);
+                    Print(matrix2);
                 }
                 else
                 {
+                    std::memcpy(matrix1, subMatrix1, sizeof(int) * MAT_SIZE * MAT_SIZE);
+                    std::memcpy(matrix2, subMatrix2, sizeof(int) * MAT_SIZE * MAT_SIZE);
+
                     std::cout << "====[1st Matrix]====\n";
-                    Print(mat1);
+                    Print(matrix1);
 
                     std::cout << "====[2nd Matrix]====\n";
-                    Print(mat2);
+                    Print(matrix2);
                 }
 
                 break;
             }
             case 's':
             {
-                Init(mat1);
-                Init(mat2);
+                Init(matrix1);
+                Init(matrix2);
 
                 std::cout << "====[1st Matrix]====\n";
-                Print(mat1);
+                Print(matrix1);
 
                 std::cout << "====[2nd Matrix]====\n";
-                Print(mat2);
+                Print(matrix2);
 
                 break;
             }

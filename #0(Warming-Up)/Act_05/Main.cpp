@@ -193,11 +193,15 @@ private:
                 {
                     const Rectangle& rectangle = _rectangle[index];
 
-                    const unsigned long minX = rectangle.min.x, minY = rectangle.min.y;
-                    const unsigned long maxX = rectangle.max.x, maxY = rectangle.max.y;
+                    const unsigned long minX = rectangle.min.x;
+                    const unsigned long minY = rectangle.min.y;
+                    const unsigned long maxX = rectangle.max.x;
+                    const unsigned long maxY = rectangle.max.y;
 
-                    const bool colMatch = minX > maxX ? (col >= minX || col <= maxX) : (col >= minX && col <= maxX);
-                    const bool rowMatch = minY > maxY ? (row >= minY || row <= maxY) : (row >= minY && row <= maxY);
+                    const bool colMatch = minX > maxX ? (col >= minX || col <= maxX)
+                                                      : (col >= minX && col <= maxX);
+                    const bool rowMatch = minY > maxY ? (row >= minY || row <= maxY)
+                                                      : (row >= minY && row <= maxY);
 
                     if (rowMatch && colMatch)
                     {
@@ -243,37 +247,53 @@ private:
             // 대기
         }
 
-        _cursor = (_cursor + 1) % RECTANGLE_COUNTS;
-        auto& [min, max] = _rectangle[_cursor];
-
         switch (_getch())
         {
             case 'x':
             {
+                _cursor = (_cursor + 1) % RECTANGLE_COUNTS;
+                auto& [min, max] = _rectangle[_cursor];
+
                 min.x = (min.x > 0) ? min.x - 1 : _width - 1;
                 max.x = (max.x > 0) ? max.x - 1 : _width - 1;
+
                 break;
             }
             case 'X':
             {
-                min.x = (min.x + 1 < _width) ? min.x + 1 : 0;
-                max.x = (max.x + 1 < _width) ? max.x + 1 : 0;
+                _cursor = (_cursor + 1) % RECTANGLE_COUNTS;
+                auto& [min, max] = _rectangle[_cursor];
+
+                min.x = (min.x < _width - 1) ? min.x + 1 : 0;
+                max.x = (max.x < _width - 1) ? max.x + 1 : 0;
+
                 break;
             }
             case 'y':
             {
+                _cursor = (_cursor + 1) % RECTANGLE_COUNTS;
+                auto& [min, max] = _rectangle[_cursor];
+
                 min.y = (min.y > 0) ? min.y - 1 : _height - 1;
                 max.y = (max.y > 0) ? max.y - 1 : _height - 1;
+
                 break;
             }
             case 'Y':
             {
-                min.y = (min.y + 1 < _height) ? min.y + 1 : 0;
-                max.y = (max.y + 1 < _height) ? max.y + 1 : 0;
+                _cursor = (_cursor + 1) % RECTANGLE_COUNTS;
+                auto& [min, max] = _rectangle[_cursor];
+
+                min.y = (min.y < _height - 1) ? min.y + 1 : 0;
+                max.y = (max.y < _height - 1) ? max.y + 1 : 0;
+
                 break;
             }
             case 's':
             {
+                _cursor = (_cursor + 1) % RECTANGLE_COUNTS;
+                auto& [min, max] = _rectangle[_cursor];
+
                 if (min.x + 1 < max.x)
                 {
                     min.x++;
@@ -290,10 +310,14 @@ private:
                 {
                     max.y--;
                 }
+
                 break;
             }
             case 'S':
             {
+                _cursor = (_cursor + 1) % RECTANGLE_COUNTS;
+                auto& [min, max] = _rectangle[_cursor];
+
                 if (min.x > 0)
                 {
                     min.x--;
@@ -310,10 +334,14 @@ private:
                 {
                     max.y--;
                 }
+
                 break;
             }
             case 'i':
             {
+                _cursor = (_cursor + 1) % RECTANGLE_COUNTS;
+                auto& [min, max] = _rectangle[_cursor];
+
                 if (min.x > 0)
                 {
                     min.x--;
@@ -326,6 +354,9 @@ private:
             }
             case 'I':
             {
+                _cursor = (_cursor + 1) % RECTANGLE_COUNTS;
+                auto& [min, max] = _rectangle[_cursor];
+
                 if (min.x + 1 < max.x)
                 {
                     min.x++;
@@ -338,6 +369,9 @@ private:
             }
             case 'j':
             {
+                _cursor = (_cursor + 1) % RECTANGLE_COUNTS;
+                auto& [min, max] = _rectangle[_cursor];
+
                 if (min.y > 0)
                 {
                     min.y--;
@@ -350,6 +384,9 @@ private:
             }
             case 'J':
             {
+                _cursor = (_cursor + 1) % RECTANGLE_COUNTS;
+                auto& [min, max] = _rectangle[_cursor];
+
                 if (min.y + 1 < max.y)
                 {
                     min.y++;
@@ -359,8 +396,12 @@ private:
                     max.y--;
                 }
                 break;
-            }case 'a':
+            }
+            case 'a':
             {
+                _cursor = (_cursor + 1) % RECTANGLE_COUNTS;
+                auto& [min, max] = _rectangle[_cursor];
+
                 if (min.x > 0)
                 {
                     min.x--;
@@ -381,6 +422,9 @@ private:
             }
             case 'A':
             {
+                _cursor = (_cursor + 1) % RECTANGLE_COUNTS;
+                auto& [min, max] = _rectangle[_cursor];
+
                 if (min.x + 1 < max.x)
                 {
                     min.x++;
@@ -402,6 +446,9 @@ private:
             case 'b':
             case 'B':
             {
+                _cursor = (_cursor + 1) % RECTANGLE_COUNTS;
+                auto& [min, max] = _rectangle[_cursor];
+
                 unsigned long width, height;
 
                 if (max.x >= min.x)
@@ -429,64 +476,87 @@ private:
                 _getch();
                 break;
             }
+                // _Update() 함수 내 case 'c', 'C' 부분
             case 'c':
             case 'C':
             {
-                if (_width != World::MAX_WIDTH_SIZE)
-                    _width++;
-                if (_height != World::MAX_HEIGHT_SIZE)
-                    _height++;
+                const unsigned long oldWidth  = _width;
+                const unsigned long oldHeight = _height;
+
+                _width  = (_width < MAX_WIDTH_SIZE) ? _width + 1 : MAX_WIDTH_SIZE;
+                _height = (_height < MAX_HEIGHT_SIZE) ? _height + 1 : MAX_HEIGHT_SIZE;
+
+                for (auto& [min, max] : _rectangle)
+                {
+                    // X축이 경계선에 걸쳐져(wrapping) 있는지 확인
+                    if (max.x < min.x)
+                    {
+                        // 이전 월드의 우측 경계선과의 거리를 계산하고,
+                        // 새로운 월드의 우측 경계선에서도 동일한 거리를 유지하도록 min.x를 조정합니다.
+                        min.x = _width - (oldWidth - min.x);
+                    }
+
+                    // Y축이 경계선에 걸쳐져(wrapping) 있는지 확인
+                    if (max.y < min.y)
+                    {
+                        // 이전 월드의 하단 경계선과의 거리를 계산하고,
+                        // 새로운 월드의 하단 경계선에서도 동일한 거리를 유지하도록 min.y를 조정합니다.
+                        min.y = _height - (oldHeight - min.y);
+                    }
+
+                    // 경계선에 걸치지 않은 일반적인 도형은 좌표를 변경할 필요가 없습니다.
+                }
                 break;
             }
             case 'd':
             case 'D':
             {
-                // 1. X축 크기 줄이기
-                if (_width > World::MIN_WIDTH_SIZE)
+                const unsigned long oldWidth  = _width;
+                const unsigned long oldHeight = _height;
+
+                _width  = (_width > MIN_WIDTH_SIZE) ? _width - 1 : MIN_WIDTH_SIZE;
+                _height = (_height > MIN_HEIGHT_SIZE) ? _height - 1 : MIN_HEIGHT_SIZE;
+
+                for (auto& [min, max] : _rectangle)
                 {
-                    const unsigned long oldWidth = _width; // 변경 전 너비 저장
-                    _width--; // 월드 너비 축소
+                    unsigned long rectWidth, rectHeight;
 
-                    for (auto& [min, max] : _rectangle)
+                    // [수정된 부분] 너비 계산
+                    if (max.x >= min.x)
                     {
-                        // 1-1. 기존 너비 계산 (래핑 상태 고려)
-                        std::size_t rectWidth = (min.x <= max.x)
-                            ? (max.x - min.x + 1)
-                            : ((oldWidth - min.x) + max.x + 1);
-
-                        // 1-2. 너비가 새 경계를 넘지 않도록 조정
-                        rectWidth = std::min(rectWidth, _width);
-
-                        // 1-3. min.x가 새 경계를 벗어나지 않도록 조정
-                        if (min.x >= _width) {
-                            min.x = 0; // 혹은 _width - rectWidth; 등으로 조정 가능
-                        }
-
-                        max.x = (min.x + rectWidth - 1) % _width;
+                        // 비-랩핑 상태: (최대 - 최소 + 1)
+                        rectWidth = max.x - min.x + 1;
                     }
+                    else // 랩핑 상태
+                    {
+                        // (오른쪽 부분 크기) + (왼쪽 부분 크기)
+                        // 오른쪽: oldWidth - min.x
+                        // 왼쪽: max.x + 1
+                        rectWidth = (oldWidth - min.x) + (max.x + 1);
+                    }
+
+                    // [수정된 부분] 높이 계산
+                    if (max.y >= min.y)
+                    {
+                        // 비-랩핑 상태: (최대 - 최소 + 1)
+                        rectHeight = max.y - min.y + 1;
+                    }
+                    else // 랩핑 상태
+                    {
+                        // (아래쪽 부분 크기) + (위쪽 부분 크기)
+                        rectHeight = (oldHeight - min.y) + (max.y + 1);
+                    }
+
+                    // min 좌표를 새로운 월드 크기에 맞게 재조정
+                    min.x %= _width;
+                    min.y %= _height;
+
+                    // 보존했던 너비/높이를 사용해 max 좌표를 재계산
+                    // 너비/높이에서 1을 빼서 좌표 간의 '거리'로 변환한 후 더함
+                    max.x = (min.x + rectWidth - 1) % _width;
+                    max.y = (min.y + rectHeight - 1) % _height;
                 }
 
-                if (_height > World::MIN_HEIGHT_SIZE)
-                {
-                    const unsigned long oldHeight = _height;
-                    _height--;
-
-                    for (auto& [min, max] : _rectangle)
-                    {
-                        std::size_t rectHeight = (min.y <= max.y)
-                            ? (max.y - min.y + 1)
-                            : ((oldHeight - min.y) + max.y + 1);
-
-                        rectHeight = std::min(rectHeight, _height);
-
-                        // 2-3. min.y가 새 경계를 벗어나지 않도록 조정
-                        if (min.y >= _height) {
-                            min.y = 0;
-                        }
-
-                        max.y = (min.y + rectHeight - 1) % _height;
-                    }
-                }
                 break;
             }
             case 'r':
@@ -540,12 +610,12 @@ private:
     /**
      * @brief 공간 너비.
      */
-    std::size_t _width;
+    unsigned long _width;
 
     /**
      * @brief 공간 높이.
      */
-    std::size_t _height;
+    unsigned long _height;
 
     /**
      * @brief 월드 내 직사각형 개수.

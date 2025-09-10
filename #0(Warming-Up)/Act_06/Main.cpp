@@ -151,8 +151,8 @@ private:
 
     bool isRunning;
 
-    int fields[WIDTH_SIZE][HEIGHT_SIZE];
-    Coordinate player;
+    int fields[WIDTH_SIZE][HEIGHT_SIZE]{};
+    Coordinate player{};
 };
 
 int main()

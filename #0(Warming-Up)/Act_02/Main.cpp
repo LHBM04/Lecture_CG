@@ -5,38 +5,37 @@
 #include <vector>
 #include <sstream>
 
-#include <windows.h>
-
 int main()
 {
-    HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
-    if (hOut == INVALID_HANDLE_VALUE) return -1;
-    DWORD dwMode = 0;
-    if (!GetConsoleMode(hOut, &dwMode)) return -1;
-    dwMode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
-    SetConsoleMode(hOut, dwMode);
+    std::string   input;
+    std::ifstream file;
 
+    while (true)
+    {
+        std::cout << "Enter the file path: ";
+        std::getline(std::cin, input);
+
+        file.open(input);
+        if (not file)
+        {
+            std::cout << "Failed to open the file: " << input << '\n';
+            continue;
+        }
+
+        break;
+    }
+
+    std::string              temp;
     std::vector<std::string> lines;
 
-    std::string input;
-    std::getline(std::cin, input);
-    std::ifstream file(input);
-
-    if (!file.is_open())
+    while (std::getline(file, temp))
     {
-        return 1;
+        lines.push_back(temp);
     }
 
-    std::string casheLine;
-    while (std::getline(file, casheLine))
+    for (const std::string& line : lines)
     {
-        lines.push_back(casheLine);
-    }
-
-    // Add newlines when displaying file contents
-    for (auto iter : lines)
-    {
-        std::cout << iter << '\n';
+        std::cout << line << '\n';
     }
     std::cout.flush();
 
@@ -79,36 +78,56 @@ int main()
             }
             case 'c':
             {
-                for (const auto& line : lines)
+                static bool trigger = false;
+                trigger = !trigger;
+
+                for (const std::string& line : lines)
                 {
-                    std::stringstream ss(line);
-                    std::string word;
-
-                    while (ss >> word)
+                    if (trigger)
                     {
-                        if (!word.empty() && std::isupper(word[0]))
-                        {
-                            constexpr const char* RESET  = "\033[0m";
-                            constexpr const char* YELLOW = "\033[33m";
+                        std::stringstream ss(line);
+                        std::string       word;
+                        std::size_t       upperCount = 0;
 
-                            std::cout << YELLOW << word << RESET << " ";
-                        }
-                        else
+                        while (ss >> word)
                         {
-                            std::cout << word << " ";
+                            if (std::isupper(word[0]))
+                            {
+                                std::cout << "\033[33m" << word << "\033[0m ";
+                                ++upperCount;
+                            }
+                            else
+                            {
+                                std::cout << word << ' ';
+                            }
                         }
+
+                        std::cout << "(" << upperCount << ")\n";
                     }
-                    std::cout << '\n';
+                    else
+                    {
+                        std::cout << line << '\n';
+                    }
                 }
                 break;
             }
             case 'd':
             {
-                for (auto& iter1 : lines)
+                static bool trigger = false;
+                trigger = !trigger;
+
+                for (const std::string& line : lines)
                 {
-                    auto temp = iter1;
-                    std::ranges::reverse(temp);
-                    std::cout << temp << '\n';
+                    if (trigger)
+                    {
+                        std::string subLine = line;
+                        std::ranges::reverse(subLine);
+                        std::cout << subLine << '\n';
+                    }
+                    else
+                    {
+                        std::cout << line << '\n';
+                    }
                 }
 
                 break;
@@ -166,7 +185,7 @@ int main()
 
                     temp = lines;
 
-                    for (auto& line : lines)
+                    for (std::string& line : lines)
                     {
                         std::ranges::replace(line, targetChar, replacementChar);
                         std::cout << line << '\n';
@@ -267,35 +286,41 @@ int main()
                             }
                         }
                     }
+                }
 
-                    switch (sortType)
+                switch (sortType)
+                {
+                    case Ascending:
                     {
-                        case Ascending:
-                        {
-                            std::ranges::sort(tests.begin(), tests.end(),
-                                [](const Test& a, const Test& b) {
-                                    return a.alphabetCount < b.alphabetCount;
-                                });
-                            break;
-                        }
-                        case Descending:
-                        {
-                            std::ranges::sort(tests.begin(), tests.end(),
-                                [](const Test& a, const Test& b) {
-                                    return a.alphabetCount > b.alphabetCount;
-                                });
-                            break;
-                        }
-                        case None:
-                        {
-                            break;
-                        }
+                        std::ranges::sort(tests.begin(), tests.end(),
+                            [](const Test& a, const Test& b) {
+                                return a.alphabetCount < b.alphabetCount;
+                            });
+                        break;
                     }
+                    case Descending:
+                    {
+                        std::ranges::sort(tests.begin(), tests.end(),
+                            [](const Test& a, const Test& b) {
+                                return a.alphabetCount > b.alphabetCount;
+                            });
+                        break;
+                    }
+                    case None:
+                    {
+                        break;
+                    }
+                }
 
-                    // Display results
-                    for (const auto& [content, alphabetCount] : tests)
+                for (const auto& [content, alphabetCount] : tests)
+                {
+                    if (sortType != None)
                     {
                         std::cout << content << " (" << alphabetCount << ")\n";
+                    }
+                    else
+                    {
+                        std::cout << content << '\n';
                     }
                 }
 
@@ -303,11 +328,11 @@ int main()
             }
             case 'j':
             {
-                std::string targetWord = "";
+                std::string targetWord;
                 std::size_t wordCount  = 0;
                 std::cin >> targetWord;
 
-                for (const auto& line : lines)
+                for (const std::string& line : lines)
                 {
                     std::stringstream ss(line);
                     std::string word;

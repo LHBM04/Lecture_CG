@@ -1,175 +1,137 @@
 ﻿#include <iostream>
-#include <optional>
-#include <array>
-#include <format>
+#include <vector>
+#include <numeric>
 #include <algorithm>
 #include <cmath>
+#include <stdexcept>
 
 struct Coordinate
 {
     [[nodiscard]]
-    constexpr std::size_t Length() const noexcept
+    constexpr unsigned long LengthSq() const noexcept
     {
-        return static_cast<std::size_t>(std::sqrt(x * x + y * y + z * z));
+        return x * x + y * y + z * z;
     }
 
     [[nodiscard]]
+    constexpr double Length() const noexcept
+    {
+        return std::sqrt(static_cast<double>(LengthSq()));
+    }
+
     friend std::istream& operator>>(std::istream& is_, Coordinate& point_)
     {
-        is_ >> point_.x
-            >> point_.y
-            >> point_.z;
+        is_ >> point_.x >> point_.y >> point_.z;
         return is_;
     }
 
-    [[nodiscard]]
     friend std::ostream& operator<<(std::ostream& os_, const Coordinate& point_)
     {
-        os_ << std::format("[{:d} {:d} {:d}]", point_.x, point_.y, point_.z);
+        os_ << "[" << point_.x << " " << point_.y << " " << point_.z << "]";
         return os_;
     }
 
     unsigned long x, y, z;
 };
 
-constexpr std::size_t MAX_POINTS_COUNT = 10;
-std::array<std::optional<Coordinate>, MAX_POINTS_COUNT> points{ };
-
-std::size_t currentHead;
-std::size_t currentTail;
-
-void Reset()
+class PointQueue
 {
-    points.fill(std::nullopt);
-
-    currentHead = 0;
-    currentTail = 0;
-}
-
-void Print()
-{
-    if (currentHead == currentTail)
+public:
+    void Reset()
     {
-        std::cout << "[empty]\n";
-        return;
+        points_.clear();
     }
 
-    for (std::size_t index = currentTail; index > 0; --index)
+    void Print() const
     {
-        std::size_t subIndex = index - 1;
-        if (!points.at(subIndex).has_value())
+        if (points_.empty())
         {
-            continue;
+            std::cout << "[empty]\n";
+            return;
         }
 
-        const auto& [x, y, z] = points.at(subIndex).value();
-        std::cout << std::format("{:d}. [{:d} {:d} {:d}]\n", index, x, y, z);
-    }
-}
-
-void PushBack(const Coordinate& point_)
-{
-    if (currentTail >= MAX_POINTS_COUNT)
-    {
-        for (auto& iter : points)
+        for (std::size_t i = 0; i < points_.size(); ++i)
         {
-            if (iter == std::nullopt)
-            {
-                iter = point_;
-                return;
-            }
+            std::cout << (i + 1) << ". " << points_[i] << "\n";
+        }
+    }
+
+    void PushBack(const Coordinate& point)
+    {
+        if (points_.size() >= MAX_POINTS_COUNT)
+        {
+            std::cerr << "Overflow\n";
+            return;
         }
 
-        std::cerr << "Overflow\n";
-        return;
+        points_.push_back(point);
     }
 
-    points.at(currentTail++) = point_;
-}
-
-void PushFront(const Coordinate& point_)
-{
-    if (currentTail >= MAX_POINTS_COUNT)
+    void PushFront(const Coordinate& point)
     {
-        std::cerr << "Overflow\n";
-        return;
-    }
-
-    for (std::size_t index = currentTail; index > currentHead; index--)
-    {
-        points.at(index) = points.at(index - 1);
-    }
-
-    points.at(currentHead) = point_;
-    ++currentTail;
-}
-
-void PopBack()
-{
-    if (currentHead == currentTail)
-    {
-        std::cerr << "Underflow\n";
-        return;
-    }
-
-    points.at(--currentTail) = std::nullopt;
-}
-
-void PopFront()
-{
-    if (currentHead == currentTail)
-    {
-        std::cerr << "Underflow\n";
-        return;
-    }
-
-    points.at(currentHead++) = std::nullopt;
-}
-
-[[nodiscard]]
-std::size_t GetSize()
-{
-    return (currentTail - currentHead) + 1;
-}
-
-void Move()
-{
-    const auto first = points.at(currentHead);
-
-    for (std::size_t index = currentHead; index < currentTail - 1; ++index)
-    {
-        points.at(index) = points.at(index + 1);
-    }
-
-    points.at(currentTail - 1) = first;
-}
-
-void Sort()
-{
-    const auto subBegin  = points.begin() + currentHead;
-    const auto subEnd    = points.begin() + currentTail;
-
-    auto predicate = [](const std::optional<Coordinate>& a, const std::optional<Coordinate>& b)
-    {
-        if (!a.has_value())
+        if (points_.size() >= MAX_POINTS_COUNT)
         {
-            return false;
-        }
-        if (!b.has_value())
-        {
-            return true;
+            std::cerr << "Overflow\n";
+            return;
         }
 
-        return a->Length() < b->Length();
-    };
+        points_.insert(points_.begin(), point);
+    }
 
-    std::sort(subBegin, subEnd, predicate);
-}
+    void PopBack()
+    {
+        if (points_.empty())
+        {
+            std::cerr << "Underflow\n";
+            return;
+        }
+
+        points_.pop_back();
+    }
+
+    void PopFront()
+    {
+        if (points_.empty())
+        {
+            std::cerr << "Underflow\n";
+            return;
+        }
+
+        points_.erase(points_.begin());
+    }
+
+    [[nodiscard]]
+    std::size_t GetSize() const
+    {
+        return points_.size();
+    }
+
+    void Move()
+    {
+        if (points_.size() < 2)
+        {
+            return;
+        }
+        std::rotate(points_.begin(), points_.begin() + 1, points_.end());
+    }
+
+    void Sort()
+    {
+        std::sort(points_.begin(), points_.end(), [](const Coordinate& a, const Coordinate& b)
+        {
+            return a.LengthSq() < b.LengthSq();
+        });
+    }
+
+private:
+    static constexpr std::size_t MAX_POINTS_COUNT = 10;
+    std::vector<Coordinate> points_;
+};
 
 int main()
 {
-    Reset();
-    Print();
+    PointQueue queue;
+    queue.Print();
 
     bool isRunning = true;
     while (isRunning)
@@ -182,60 +144,62 @@ int main()
             case '+':
             {
                 Coordinate newPoint = { };
-                std::cin >> newPoint.x >> newPoint.y >> newPoint.z;
-
-                PushBack(newPoint);
-
+                std::cin >> newPoint;
+                queue.PushBack(newPoint);
                 break;
             }
             case '-':
             {
-                PopBack();
+                queue.PopBack();
                 break;
             }
             case 'e':
             {
                 Coordinate newPoint = { };
-                std::cin >> newPoint.x >> newPoint.y >> newPoint.z;
-
-                PushFront(newPoint);
-
+                std::cin >> newPoint;
+                queue.PushFront(newPoint);
                 break;
             }
             case 'd':
             {
-                PopFront();
+                queue.PopFront();
                 break;
             }
             case 'a':
             {
-                std::cout << "Size: " << GetSize() << '\n';
+                std::cout << "Size: " << queue.GetSize() << '\n';
                 break;
             }
             case 'b':
             {
-                Move();
+                queue.Move();
                 break;
             }
             case 'c':
             {
-                Reset();
+                queue.Reset();
+                break;
             }
             case 'f':
             {
-                Sort();
+                queue.Sort();
                 break;
             }
             case 'q':
             {
                 isRunning = false;
+                break;
             }
             default:
             {
+                // Ignore unknown commands
                 break;
             }
         }
 
-        Print();
+        if (isRunning)
+        {
+            queue.Print();
+        }
     }
 }
