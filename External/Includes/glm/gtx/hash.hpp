@@ -26,7 +26,7 @@
 #include "../gtc/vec1.hpp"
 
 #include "../gtc/quaternion.hpp"
-#include "dual_quaternion.hpp"
+#include "../gtx/dual_quaternion.hpp"
 
 #include "../mat2x2.hpp"
 #include "../mat2x3.hpp"

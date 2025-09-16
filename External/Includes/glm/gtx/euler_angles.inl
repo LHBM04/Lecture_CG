@@ -1,6 +1,6 @@
 /// @ref gtx_euler_angles
 
-#include "compatibility.hpp"
+#include "compatibility.hpp" // glm::atan2
 
 namespace glm
 {

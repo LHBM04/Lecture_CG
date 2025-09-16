@@ -15,7 +15,7 @@
 
 // Dependency:
 #include "../glm.hpp"
-#include "vector_query.hpp"
+#include "../gtx/vector_query.hpp"
 #include <limits>
 
 #ifndef GLM_ENABLE_EXPERIMENTAL

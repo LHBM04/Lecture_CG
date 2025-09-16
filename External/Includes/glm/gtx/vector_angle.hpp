@@ -17,8 +17,8 @@
 // Dependency:
 #include "../glm.hpp"
 #include "../gtc/epsilon.hpp"
-#include "quaternion.hpp"
-#include "rotate_vector.hpp"
+#include "../gtx/quaternion.hpp"
+#include "../gtx/rotate_vector.hpp"
 
 #ifndef GLM_ENABLE_EXPERIMENTAL
 #	error "GLM: GLM_GTX_vector_angle is an experimental extension and may change in the future. Use #define GLM_ENABLE_EXPERIMENTAL before including it, if you really want to use it."

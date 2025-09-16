@@ -166,6 +166,9 @@ struct Game
     */
     unsigned int score;
 
+    /**
+     * @brief 남은 기회 횟수.
+     */
     unsigned int count;
 };
 
@@ -191,17 +194,16 @@ bool CheckKan(char lhs_[2], char rhs_[2])
         game.board[firstRow][firstCol].isChecked = true;
         game.board[secondRow][secondCol].isChecked = true;
 
-        char temp = (game.board[firstRow][firstCol].value == '@')
-                        ? game.board[secondRow][secondCol].value
-                        : game.board[firstRow][firstCol].value;
+        char temp = (game.board[firstRow][firstCol].value == '@') ? game.board[secondRow][secondCol].value
+                                                                  : game.board[firstRow][firstCol].value;
 
-        for (int i = 0; i < Game::ROW_SIZE; ++i)
+        for (auto& coordinates : game.board)
         {
-            for (int j = 0; j < Game::COLUMN_SIZE; ++j)
+            for (auto& [isChecked, value] : coordinates)
             {
-                if (game.board[i][j].value == temp)
+                if (value == temp)
                 {
-                    game.board[i][j].isChecked = true;
+                    isChecked = true;
                 }
             }
         }

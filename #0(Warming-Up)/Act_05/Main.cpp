@@ -476,7 +476,6 @@ private:
                 _getch();
                 break;
             }
-                // _Update() 함수 내 case 'c', 'C' 부분
             case 'c':
             case 'C':
             {
@@ -488,24 +487,16 @@ private:
 
                 for (auto& [min, max] : _rectangle)
                 {
-                    // X축이 경계선에 걸쳐져(wrapping) 있는지 확인
                     if (max.x < min.x)
                     {
-                        // 이전 월드의 우측 경계선과의 거리를 계산하고,
-                        // 새로운 월드의 우측 경계선에서도 동일한 거리를 유지하도록 min.x를 조정합니다.
                         min.x = _width - (oldWidth - min.x);
                     }
-
-                    // Y축이 경계선에 걸쳐져(wrapping) 있는지 확인
                     if (max.y < min.y)
                     {
-                        // 이전 월드의 하단 경계선과의 거리를 계산하고,
-                        // 새로운 월드의 하단 경계선에서도 동일한 거리를 유지하도록 min.y를 조정합니다.
                         min.y = _height - (oldHeight - min.y);
                     }
-
-                    // 경계선에 걸치지 않은 일반적인 도형은 좌표를 변경할 필요가 없습니다.
                 }
+
                 break;
             }
             case 'd':
@@ -519,44 +510,26 @@ private:
 
                 for (auto& [min, max] : _rectangle)
                 {
-                    unsigned long rectWidth, rectHeight;
-
-                    // [수정된 부분] 너비 계산
-                    if (max.x >= min.x)
+                    if (max.x < min.x)
                     {
-                        // 비-랩핑 상태: (최대 - 최소 + 1)
-                        rectWidth = max.x - min.x + 1;
+                        min.x = _width - (oldWidth - min.x);
                     }
-                    else // 랩핑 상태
+                    else
                     {
-                        // (오른쪽 부분 크기) + (왼쪽 부분 크기)
-                        // 오른쪽: oldWidth - min.x
-                        // 왼쪽: max.x + 1
-                        rectWidth = (oldWidth - min.x) + (max.x + 1);
+                        min.x = std::min(min.x, _width - 1);
+                        max.x = std::min(max.x, _width - 1);
                     }
 
-                    // [수정된 부분] 높이 계산
-                    if (max.y >= min.y)
+                    if (max.y < min.y)
                     {
-                        // 비-랩핑 상태: (최대 - 최소 + 1)
-                        rectHeight = max.y - min.y + 1;
+                        min.y = _height - (oldHeight - min.y);
                     }
-                    else // 랩핑 상태
+                    else
                     {
-                        // (아래쪽 부분 크기) + (위쪽 부분 크기)
-                        rectHeight = (oldHeight - min.y) + (max.y + 1);
+                        min.y = std::min(min.y, _height - 1);
+                        max.y = std::min(max.y, _height - 1);
                     }
-
-                    // min 좌표를 새로운 월드 크기에 맞게 재조정
-                    min.x %= _width;
-                    min.y %= _height;
-
-                    // 보존했던 너비/높이를 사용해 max 좌표를 재계산
-                    // 너비/높이에서 1을 빼서 좌표 간의 '거리'로 변환한 후 더함
-                    max.x = (min.x + rectWidth - 1) % _width;
-                    max.y = (min.y + rectHeight - 1) % _height;
                 }
-
                 break;
             }
             case 'r':

@@ -2,7 +2,7 @@
 
 #include "../gtc/constants.hpp"
 #include "../gtc/epsilon.hpp"
-#include "transform.hpp"
+#include "../gtx/transform.hpp"
 
 namespace glm{
 namespace detail

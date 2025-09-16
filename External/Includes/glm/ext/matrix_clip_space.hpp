@@ -20,7 +20,7 @@
 #pragma once
 
 // Dependencies
-#include "scalar_constants.hpp"
+#include "../ext/scalar_constants.hpp"
 #include "../geometric.hpp"
 #include "../trigonometric.hpp"
 

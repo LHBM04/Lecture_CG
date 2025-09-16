@@ -3,8 +3,8 @@
 
 #include <iomanip>                  // std::fixed, std::setfill<>, std::setprecision, std::right, std::setw
 #include <ostream>                  // std::basic_ostream<>
-#include "../gtc/matrix_access.hpp"
-#include "type_trait.hpp"
+#include "../gtc/matrix_access.hpp" // glm::col, glm::row
+#include "../gtx/type_trait.hpp"    // glm::type<>
 
 #if GLM_COMPILER & GLM_COMPILER_CLANG
 #	pragma clang diagnostic push

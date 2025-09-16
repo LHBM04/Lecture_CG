@@ -15,7 +15,7 @@
 // Dependency:
 #include "../glm.hpp"
 #include "../gtc/integer.hpp"
-#include "component_wise.hpp"
+#include "../gtx/component_wise.hpp"
 
 #ifndef GLM_ENABLE_EXPERIMENTAL
 #	error "GLM: GLM_GTX_texture is an experimental extension and may change in the future. Use #define GLM_ENABLE_EXPERIMENTAL before including it, if you really want to use it."
