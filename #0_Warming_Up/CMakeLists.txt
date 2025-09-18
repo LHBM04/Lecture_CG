@@ -1,4 +1,4 @@
-# Warming Up (01 ~ 04)
+# Warming Up (01 ~ 06)
 add_subdirectory("Act_01")
 add_subdirectory("Act_02")
 add_subdirectory("Act_03")
