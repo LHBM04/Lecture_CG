@@ -8,8 +8,19 @@
 
 struct Rect
 {
+    /**
+     * @brief 위치.
+     */
     glm::vec2 pos;
+
+    /**
+     * @brief 크기.
+     */
     glm::vec2 size;
+
+    /**
+     * @brief 색상.
+     */
     glm::vec3 color;
 };
 
