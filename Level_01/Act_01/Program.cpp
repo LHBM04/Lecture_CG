@@ -1,195 +1,157 @@
 #include <cstdio>
 #include <iostream>
+#include <cstdlib>
+#include <ctime>
+#include <chrono>
 
-#include <gl/glew.h>
-#include <gl/freeglut.h>
-#include <gl/freeglut_ext.h>
-
-/**
- * @brief 윈도우가 렌더될 떄 호출됩니다.
- */
-void OnDisplay();
+#include <glad/glad.h>
+#include <GLFW/glfw3.h>
+#include <glm/vec3.hpp>
 
 /**
- * @brief 윈도우의 크기가 변경될 때 호출됩니다.
- *
- * @param width_ 윈도우의 가로 크기.
- * @param height_ 윈도우의 세로 크기.
+ * @brief 배경색.
  */
-void OnResize(const int width_,
-              const int height_);
+static glm::vec3 gBackgroundColor = { 1.0f, 1.0f, 1.0f };
 
 /**
- * @brief 키가 눌렸을 때 호출됩니다.
- *
- * @param key_ 눌린 키 값.
- * @param x_ 마우스의 X 좌표.
- * @param y_ 마우스의 Y 좌표.
+ * @brief 애니메이션 트리거.
  */
-void OnKeyDown(const unsigned char key_,
-               const int           x_,
-               const int           y_);
+static bool gShouldChangeColor = false;
 
-/**
- * @brief 매 프레임마다 호출됩니다.
- */
-void OnUpdate(const int value_);
-
-static float r = 255.0f;
-static float g = 255.0f;
-static float b = 255.0f;
-
-static bool trigger = false;
-
-int main(int    argc_,
-         char** argv_)
+void OnKeyDown(GLFWwindow* window, int key, int /*scancode*/, int action, int /*mods*/)
 {
-    std::srand(static_cast<unsigned int>(std::time(nullptr)));
+    if (action != GLFW_PRESS) return;
 
-    glutInit(&argc_, argv_);
-    glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA);
-    glutInitWindowPosition(100, 100);
-    glutInitWindowSize(800, 600);
-    glutCreateWindow("OpenGL Program");
-
-    glewExperimental = GL_TRUE;
-    if (glewInit() != GLEW_OK)
+    switch (key)
     {
-        std::cerr << "Failed to initialize GLEW\n";
-        return EXIT_FAILURE;
-    }
-
-    glutDisplayFunc(OnDisplay);
-    glutReshapeFunc(OnResize);
-    glutKeyboardFunc(OnKeyDown);
-    glutMainLoop();
-}
-
-void OnDisplay()
-{
-    glClearColor(r, g, b, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT);
-    glutSwapBuffers();
-}
-
-void OnResize(const int width_,
-              const int height_)
-{
-    glViewport(0, 0, width_, height_);
-}
-
-void OnKeyDown(const unsigned char key_,
-               const int           x_,
-               const int           y_)
-{
-    switch (key_)
-    {
-        case 'c':
+        case GLFW_KEY_C:
         {
-            if (trigger)
+            if (!gShouldChangeColor)
             {
-                break;
+                gBackgroundColor = { 0, 1, 1 };
+            }
+            break;
+        }
+        case GLFW_KEY_M:
+        {
+            if (!gShouldChangeColor)
+            {
+                gBackgroundColor = { 1, 0, 1 };
             }
 
-            r = 0.0f;
-            g = 1.0f;
-            b = 1.0f;
             break;
         }
-        case 'm':
+        case GLFW_KEY_Y:
         {
-            if (trigger)
+            if (!gShouldChangeColor)
             {
-                break;
+                gBackgroundColor = { 1, 1, 1 };
+            }
+            break;
+        }
+        case GLFW_KEY_A:
+        {
+            if (!gShouldChangeColor)
+            {
+                gBackgroundColor = { static_cast<float>(std::rand() % 256) / 255.0f,
+                                        static_cast<float>(std::rand() % 256) / 255.0f,
+                                        static_cast<float>(std::rand() % 256) / 255.0f };
             }
 
-            r = 1.0f;
-            g = 0.0f;
-            b = 1.0f;
             break;
         }
-        case 'y':
+        case GLFW_KEY_W:
         {
-            if (trigger)
+            if (!gShouldChangeColor)
             {
-                break;
+                gBackgroundColor = { 1, 1, 1};
             }
-
-            r = 1.0f;
-            g = 1.0f;
-            b = 0.0f;
             break;
         }
-        case 'a':
+        case GLFW_KEY_K:
         {
-            if (trigger)
+            if (!gShouldChangeColor)
             {
-                break;
+                gBackgroundColor = { 0, 0, 0};
             }
-
-            r = static_cast<float>(std::rand() % 256) / 255.0f;
-            g = static_cast<float>(std::rand() % 256) / 255.0f;
-            b = static_cast<float>(std::rand() % 256) / 255.0f;
-
             break;
         }
-        case 'w':
+        case GLFW_KEY_T:
         {
-            if (trigger)
-            {
-                break;
-            }
-
-            r = 1.0f;
-            g = 1.0f;
-            b = 1.0f;
+            gShouldChangeColor = true;
             break;
         }
-        case 'k':
+        case GLFW_KEY_S:
         {
-            if (trigger)
-            {
-                break;
-            }
-
-            r = 0.0f;
-            g = 0.0f;
-            b = 0.0f;
+            gShouldChangeColor = false;
             break;
         }
-        case 't':
+        case GLFW_KEY_Q:
         {
-            trigger = true;
-            glutTimerFunc(50, OnUpdate, 1);
+            glfwSetWindowShouldClose(window, true);
             break;
-        }
-        case 's':
-        {
-            trigger = false;
-            break;
-        }
-        case 'q':
-        {
-            glutLeaveMainLoop();
         }
         default:
         {
             break;
         }
     }
-
-    glutPostRedisplay();
 }
+// ------------------------------------
 
-void OnUpdate(const int value_)
+int main()
 {
-    if (trigger)
-    {
-        r = static_cast<float>(std::rand() % 256) / 255.0f;
-        g = static_cast<float>(std::rand() % 256) / 255.0f;
-        b = static_cast<float>(std::rand() % 256) / 255.0f;
+    std::srand(static_cast<unsigned int>(std::time(nullptr)));
 
-        glutPostRedisplay();
-        glutTimerFunc(50, OnUpdate, 1);
+    if (!glfwInit())
+    {
+        std::cerr << "Failed to initialize GLFW\n";
+        return EXIT_FAILURE;
     }
+
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+
+    GLFWwindow* window = glfwCreateWindow(800, 600, "OpenGL Program", NULL, NULL);
+    if (!window)
+    {
+        std::cerr << "Failed to create GLFW window\n";
+        glfwTerminate();
+        return EXIT_FAILURE;
+    }
+
+    glfwSetWindowPos(window, 100, 100);
+    glfwMakeContextCurrent(window);
+
+    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
+    {
+        std::cerr << "Failed to initialize GLAD\n";
+        return EXIT_FAILURE;
+    }
+
+    glfwSetKeyCallback(window, OnKeyDown);
+
+    static double lastTime = glfwGetTime();
+    while (!glfwWindowShouldClose(window))
+    {
+        const double nowTime = glfwGetTime();
+        if (gShouldChangeColor && nowTime - lastTime >= 0.05) // 50ms
+        {
+            gBackgroundColor = { static_cast<float>(std::rand() % 256) / 255.0f,
+                                    static_cast<float>(std::rand() % 256) / 255.0f,
+                                    static_cast<float>(std::rand() % 256) / 255.0f };
+            lastTime = nowTime;
+        }
+
+        glClearColor(gBackgroundColor.r, gBackgroundColor.g, gBackgroundColor.b, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT);
+
+        glfwSwapBuffers(window);
+        glfwPollEvents();
+    }
+
+    glfwTerminate();
+    return 0;
 }

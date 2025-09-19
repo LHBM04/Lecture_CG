@@ -1,8 +1,8 @@
 add_executable(1_Act_01 Program.cpp)
 
 target_link_libraries(1_Act_01 PRIVATE
-    GLEW
-    FreeGLUT
+    GLAD
+    GLFW
     GLM
     opengl32
     glu32
