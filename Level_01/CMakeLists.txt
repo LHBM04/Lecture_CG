@@ -1,17 +1,17 @@
 # GLEW
-add_library(GLEW STATIC IMPORTED)
-set_target_properties(GLEW PROPERTIES
+add_library(GLAD STATIC IMPORTED)
+set_target_properties(GLAD PROPERTIES
         INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_SOURCE_DIR}/External/Includes"
-        IMPORTED_LOCATION_DEBUG       "${CMAKE_SOURCE_DIR}/External/Libraries/Debug/glew32d.lib"
-        IMPORTED_LOCATION_RELEASE     "${CMAKE_SOURCE_DIR}/External/Libraries/Release/glew32.lib"
+        IMPORTED_LOCATION_DEBUG       "${CMAKE_SOURCE_DIR}/External/Libraries/Debug/glad.lib"
+        IMPORTED_LOCATION_RELEASE     "${CMAKE_SOURCE_DIR}/External/Libraries/Release/glad.lib"
 )
 
-# FreeGLUT
-add_library(FreeGLUT STATIC IMPORTED)
-set_target_properties(FreeGLUT PROPERTIES
+# GLFW
+add_library(GLFW STATIC IMPORTED)
+set_target_properties(GLFW PROPERTIES
         INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_SOURCE_DIR}/External/Includes"
-        IMPORTED_LOCATION_DEBUG       "${CMAKE_SOURCE_DIR}/External/Libraries/Debug/freeglutd.lib"
-        IMPORTED_LOCATION_RELEASE     "${CMAKE_SOURCE_DIR}/External/Libraries/Release/freeglut.lib"
+        IMPORTED_LOCATION_DEBUG       "${CMAKE_SOURCE_DIR}/External/Libraries/Debug/glfw3dll.lib"
+        IMPORTED_LOCATION_RELEASE     "${CMAKE_SOURCE_DIR}/External/Libraries/Release/glfw3dll.lib"
 )
 
 # GLM
