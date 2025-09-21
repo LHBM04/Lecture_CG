@@ -3,29 +3,9 @@
 #include <string>
 #include <vector>
 
-#include <GL/glew.h>
-#include <GL/freeglut.h>
+#include <glad/glad.h>
+#include <glfw/glfw3.h>
 #include <glm/glm.hpp>
-
-class Block
-{
-public:
-};
-
-class Field
-{
-public:
-
-};
-
-class Game
-{
-public:
-    static constexpr int WINDOW_WIDTH  = 1200;
-    static constexpr int WINDOW_HEIGHT = 600;
-private:
-
-};
 
 static constexpr int WINDOW_WIDTH      = 1200;
 static constexpr int WINDOW_HEIGHT     = 600;

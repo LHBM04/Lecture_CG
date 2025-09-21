@@ -1,11 +1,16 @@
-#include <algorithm>
+﻿#include <algorithm>
 #include <iostream>
 #include <vector>
 
-#include <gl/glew.h>
-#include <gl/freeglut.h>
+#include <glad/glad.h>
+#include <glfw/glfw3.h>
 #include <glm/glm.hpp>
 
+/**
+ * @struct Rect
+ *
+ * @brief 사각형을 정의합니다.
+ */
 struct Rect
 {
     /**
@@ -24,46 +29,55 @@ struct Rect
     glm::vec3 color;
 };
 
+/**
+ * @brief 두 사각형이 충돌하는지 검사합니다.
+ *
+ * @param left_ 비교할 첫 번째 사각형.
+ * @param right_ 비교할 두 번째 사각형.
+ *
+ * @return bool 충돌 여부.
+ */
 static bool IsCollide(const Rect& left_,
                       const Rect& right_) noexcept;
 
 /**
- * @brief 어플리케이션을 그릴 때 호출됩니다.
- */
-static void OnDisplay();
-
-/**
- * @brief 키보드의 키가 눌렸을 때 호출됩니다.
+ * @brief 키와 상호작용할 때 호출됩니다.
  *
+ * @param window_ 윈도우.
  * @param key_ 눌린 키.
- * @param x_ 마우스의 X 좌표.
- * @param y_ 마우스의 Y 좌표.
+ * @param scancode_ 스캔 코드.
+ * @param action_ 키 액션.
+ * @param mods_ 수정자 키 상태.
  */
-static void OnKeyDowned(unsigned char key_,
-                        int           x_,
-                        int           y_);
+static void OnKeyInteracted(GLFWwindow* window_,
+                            int         key_,
+                            int         scancode_,
+                            int         action_,
+                            int         mods_);
 
 /**
- * @brief 마우스 버튼이 클릭되었을 때 호출됩니다.
+ * @brief 버튼과 상호작용할 떄 호출됩니다.
  *
+ * @param window_ 윈도우.
  * @param button_ 클릭된 버튼.
- * @param state_ 버튼 상태.
- * @param x_ 마우스의 X 좌표.
- * @param y_ 마우스의 Y 좌표.
+ * @param action_ 버튼 액션.
+ * @param mods_ 버튼 상태.
  */
-static void OnButtonClicked(int button_,
-                            int state_,
-                            int x_,
-                            int y_);
+static void OnButtonInteracted(GLFWwindow* window_,
+                               int         button_,
+                               int         action_,
+                               int         mods_);
 
 /**
- * @brief 마우스의 커서가 움직일 때 호출됩니다.
+ * @brief 커서의 위치가 변경되었을 때 호출됩니다.
  *
- * @param x_ 마우스의 X 좌표.
- * @param y_ 마우스의 Y 좌표.
+ * @param window_ 윈도우.
+ * @param x_ 마우스 X 좌표.
+ * @param y_ 마우스 Y 좌표.
  */
-static void OnCursorMoved(int x_,
-                          int y_);
+static void OnCursorMoved(GLFWwindow* window_,
+                          double      x_,
+                          double      y_);
 
 /**
  * @brief 애플리케이션 너비.
@@ -78,7 +92,17 @@ static constexpr unsigned int WINDOW_HEIGHT = 600;
 /**
  * @brief 애플리케이션 타이틀.
  */
-static constexpr const char* const WINDOW_TITLE = "Eraser Simulator";
+static constexpr const char* const WINDOW_TITLE = "Animation Simulator";
+
+/**
+ * @brief GL 메이저 버전.
+ */
+constexpr unsigned char CONTEXT_MAJOR_VERSION = 4;
+
+/**
+ * @brief GL 마이너 버전.
+ */
+constexpr unsigned char CONTEXT_MINOR_VERSION = 5;
 
 /**
  * @brief 월드 내 있을 수 있는 사각형의 최대 갯수.
@@ -124,84 +148,107 @@ int main(int argc_, char** argv_)
         });
     }
 
-    glutInit(&argc_, argv_);
-    glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA);
-    glutInitWindowPosition(0, 0);
-    glutInitWindowSize(WINDOW_WIDTH, WINDOW_HEIGHT);
-    glutCreateWindow(WINDOW_TITLE);
-
-    glewExperimental = GL_TRUE;
-    if (glewInit() != GLEW_OK)
+    if (!glfwInit())
     {
-        std::cerr << "Failed to initialize GLEW\n";
-        return EXIT_FAILURE;
+        std::cerr << "Failed to initialize GLFW\n";
+        return -1;
     }
 
-    glutDisplayFunc(OnDisplay);
-    glutKeyboardFunc(OnKeyDowned);
-    glutMouseFunc(OnButtonClicked);
-    glutMotionFunc(OnCursorMoved);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, CONTEXT_MAJOR_VERSION);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, CONTEXT_MINOR_VERSION);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_COMPAT_PROFILE);
+    glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
-    glutMainLoop();
+    GLFWwindow* window = glfwCreateWindow(WINDOW_WIDTH,
+                                          WINDOW_HEIGHT,
+                                          WINDOW_TITLE,
+                                          nullptr,
+                                          nullptr);
+    if (!window)
+    {
+        std::cerr << "Failed to create GLFW window\n";
+        glfwTerminate();
+        return -1;
+    }
 
-    return EXIT_SUCCESS;
+    glfwSetWindowPos(window, 100, 100);
+    glfwMakeContextCurrent(window);
+
+    if (!gladLoadGLLoader(reinterpret_cast<GLADloadproc>(glfwGetProcAddress)))
+    {
+        std::cerr << "Failed to initialize GLAD\n";
+        return -1;
+    }
+
+    glfwSetKeyCallback(window, OnKeyInteracted);
+    glfwSetMouseButtonCallback(window, OnButtonInteracted);
+    glfwSetCursorPosCallback(window, OnCursorMoved);
+
+    while (!glfwWindowShouldClose(window))
+    {
+        glfwPollEvents();
+        {
+            glMatrixMode(GL_PROJECTION);
+            glLoadIdentity();
+            glOrtho(0.0, WINDOW_WIDTH, 0.0, WINDOW_HEIGHT, -1, 1);
+
+            glMatrixMode(GL_MODELVIEW);
+            glLoadIdentity();
+
+            glClearColor(0.15f, 0.15f, 0.15f, 1.0f);
+            glClear(GL_COLOR_BUFFER_BIT);
+
+            for (const auto&[position, size, color] : rects)
+            {
+                glColor3f(color.r, color.g, color.b);
+                glRectf(position.x, position.y, position.x + size.x, position.y + size.y);
+            }
+
+            if (shouldEnableEraser)
+            {
+                glColor3f(eraser.color.r, eraser.color.g, eraser.color.b);
+
+                if (currentEraseCounts > 0)
+                {
+                    glRectf(eraser.pos.x, eraser.pos.y,
+                  eraser.pos.x + eraser.size.x * currentEraseCounts,
+                  eraser.pos.y + eraser.size.y * currentEraseCounts);
+                }
+                else
+                {
+                    glRectf(eraser.pos.x, eraser.pos.y, (eraser.pos.x + eraser.size.x), (eraser.pos.y + eraser.size.y));
+                }
+            }
+        }
+        glfwSwapBuffers(window);
+    }
+
+    return 0;
 }
 
 bool IsCollide(const Rect& left_,
                const Rect& right_) noexcept
 {
-    return !(left_.pos.x > right_.pos.x + right_.size.x ||
-             left_.pos.x + left_.size.x < right_.pos.x  ||
-             left_.pos.y > right_.pos.y + right_.size.y ||
-             left_.pos.y + left_.size.y < right_.pos.y);
+    return !(left_.pos.x + left_.size.x < right_.pos.x ||
+             right_.pos.x + right_.size.x < left_.pos.x ||
+             left_.pos.y + left_.size.y < right_.pos.y ||
+             right_.pos.y + right_.size.y < left_.pos.y );
 }
 
-void OnDisplay()
+void OnKeyInteracted(GLFWwindow* window_,
+                     int         key_,
+                     int         scancode_,
+                     int         action_,
+                     int         mods_)
 {
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    gluOrtho2D(0.0, WINDOW_WIDTH, 0.0, WINDOW_HEIGHT);
-
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-
-    glClearColor(0.15f, 0.15f, 0.15f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT);
-
-    for (const auto&[position, size, color] : rects)
+    if (action_ != GLFW_PRESS)
     {
-        glColor3f(color.r, color.g, color.b);
-        glRectf(position.x, position.y,
-                position.x + size.x, position.y + size.y);
+        return;
     }
 
-    if (shouldEnableEraser)
-    {
-        glColor3f(eraser.color.r, eraser.color.g, eraser.color.b);
-
-        if (currentEraseCounts > 0)
-        {
-            glRectf(eraser.pos.x, eraser.pos.y,
-          eraser.pos.x + eraser.size.x * currentEraseCounts,
-          eraser.pos.y + eraser.size.y * currentEraseCounts);
-        }
-        else
-        {
-            glRectf(eraser.pos.x, eraser.pos.y, (eraser.pos.x + eraser.size.x), (eraser.pos.y + eraser.size.y));
-        }
-    }
-
-    glutSwapBuffers();
-}
-
-void OnKeyDowned(unsigned char key_,
-                 int           x_,
-                 int           y_)
-{
     switch (key_)
     {
-        case 'r': [[fallthrough]];
-        case 'R':
+        case GLFW_KEY_R:
         {
             rects.clear();
             for (size_t count = 0; count < CREATE_RECT_COUNTS; ++count)
@@ -223,10 +270,9 @@ void OnKeyDowned(unsigned char key_,
 
             break;
         }
-        case 'q': [[fallthrough]];
-        case 'Q':
+        case GLFW_KEY_Q:
         {
-            glutLeaveMainLoop();
+            glfwSetWindowShouldClose(window_, true);
             break;
         }
         default:
@@ -234,37 +280,39 @@ void OnKeyDowned(unsigned char key_,
             break;
         }
     }
-
-    glutPostRedisplay();
 }
 
-void OnButtonClicked(int button_,
-                     int state_,
-                     int x_,
-                     int y_)
+void OnButtonInteracted(GLFWwindow* window_,
+                        int         button_,
+                        int         action_,
+                        int         mods_)
 {
-    if (button_ == GLUT_LEFT_BUTTON)
+    double mouseX, mouseY;
+    glfwGetCursorPos(window_, &mouseX, &mouseY);
+
+    if (button_ == GLFW_MOUSE_BUTTON_LEFT)
     {
-        if (state_ == GLUT_DOWN)
+        if (action_ == GLFW_PRESS)
         {
             shouldEnableEraser = true;
 
-            const float fx = static_cast<float>(x_);
-            const float fy = static_cast<float>(WINDOW_HEIGHT - y_);
+            const float fixedX = static_cast<float>(mouseX);
+            const float fixedY = static_cast<float>(WINDOW_HEIGHT - mouseY);
 
-            eraser.pos = {fx, fy};
-            eraser.size= {20, 20};
-            eraser.color = {1.0f, 1.0f, 1.0f};
+            eraser.pos   = { fixedX - eraser.size.x * 0.5f,
+                                fixedY - eraser.size.y * 0.5f };;
+            eraser.size  = {20, 20};
+            eraser.color = {0.0f, 0.0f, 0.0f};
         }
-        else if (state_ == GLUT_UP)
+        else if (action_ == GLFW_RELEASE)
         {
             shouldEnableEraser = false;
             currentEraseCounts = 0;
         }
     }
-    else if (button_ == GLUT_RIGHT_BUTTON)
+    else if (button_ == GLFW_MOUSE_BUTTON_RIGHT)
     {
-        if (state_ == GLUT_DOWN)
+        if (action_ == GLFW_PRESS)
         {
             if (rects.size() >= CREATE_RECT_COUNTS)
             {
@@ -287,25 +335,24 @@ void OnButtonClicked(int button_,
             });
         }
     }
-
-    glutPostRedisplay();
 }
 
-void OnCursorMoved(int x_,
-                   int y_)
+void OnCursorMoved(GLFWwindow* window_,
+                   double      x_,
+                   double      y_)
 {
     if (!shouldEnableEraser)
     {
         return;
     }
 
-    const float fx = static_cast<float>(x_);
-    const float fy = static_cast<float>(WINDOW_HEIGHT - y_);
+    float fixedX = static_cast<float>(x_);
+    float fixedY = static_cast<float>(WINDOW_HEIGHT - y_);
 
-    eraser.pos = {fx, fy};
+    eraser.pos = { fixedX - eraser.size.x * 0.5f,
+                      fixedY - eraser.size.y * 0.5f };
 
-    using Iterator = std::vector<Rect>::iterator;
-    for (Iterator iter = rects.begin(); iter != rects.end(); ++iter)
+    for (auto iter = rects.begin(); iter != rects.end(); ++iter)
     {
         if (IsCollide(eraser, *iter))
         {
@@ -316,6 +363,4 @@ void OnCursorMoved(int x_,
             break;
         }
     }
-
-    glutPostRedisplay();
 }

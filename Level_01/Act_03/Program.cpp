@@ -1,10 +1,10 @@
-#include <ctime>
+﻿#include <ctime>
 #include <format>
 #include <iostream>
 #include <vector>
 
-#include <gl/glew.h>
-#include <gl/freeglut.h>
+#include <glad/glad.h>
+#include <glfw/glfw3.h>
 #include <glm/glm.hpp>
 
 /**
@@ -38,31 +38,69 @@ struct Rect
 void OnDisplay();
 
 /**
- * @brief 키보드와 상호작용할 때 호출됩니다.
+ * @brief 키와 상호작용할 때 호출됩니다.
  *
+ * @param window_ 윈도우.
  * @param key_ 눌린 키.
- * @param x_ 마우스 X 좌표.
- * @param y_ 마우스 Y 좌표.
+ * @param scancode_ 스캔 코드.
+ * @param action_ 키 액션.
+ * @param mods_ 수정자 키 상태.
  */
-void OnKeyDown(unsigned char key_, int x_, int y_);
+static void OnKeyInteracted(GLFWwindow* window_,
+                            int         key_,
+                            int         scancode_,
+                            int         action_,
+                            int         mods_);
 
 /**
- * @brief 마우스와 상호작용할 때 호출됩니다.
+ * @brief 버튼과 상호작용할 떄 호출됩니다.
  *
- * @param button_ 버튼.
- * @param state_ 버튼 상태.
- * @param x_ 마우스 X 좌표.
- * @param y_ 마우스 Y 좌표.
+ * @param window_ 윈도우.
+ * @param button_ 클릭된 버튼.
+ * @param action_ 버튼 액션.
+ * @param mods_ 버튼 상태.
  */
-void OnMouseClick(int button_, int state_, int x_, int y_);
+static void OnButtonInteracted(GLFWwindow* window_,
+                               int         button_,
+                               int         action_,
+                               int         mods_);
+
 
 /**
- * @brief 마우스가 움직일 때 호출됩니다.
+ * @brief 커서의 위치가 변경되었을 때 호출됩니다.
  *
+ * @param window_ 윈도우.
  * @param x_ 마우스 X 좌표.
  * @param y_ 마우스 Y 좌표.
  */
-void OnCursorMoved(int x_, int y_);
+static void OnCursorMoved(GLFWwindow* window_,
+                          double      x_,
+                          double      y_);
+
+/**
+ * @brief 윈도우 타이틀.
+ */
+static constexpr const char* const WINDOW_TITLE = "Interact Simulator";
+
+/**
+ * @brief 윈도우 너비.
+ */
+static constexpr int WINDOW_WIDTH  = 800;
+
+/**
+ * @brief 윈도우 높이.
+ */
+static constexpr int WINDOW_HEIGHT = 800;
+
+/**
+ * @brief GL 메이저 버전.
+ */
+constexpr unsigned char CONTEXT_MAJOR_VERSION = 4;
+
+/**
+ * @brief GL 마이너 버전.
+ */
+constexpr unsigned char CONTEXT_MINOR_VERSION = 5;
 
 /**
  * @brief 사각형들.
@@ -87,59 +125,86 @@ static std::size_t currentCreateCounts = 0;
 /**
  * @brief 현재 선택 중인 사각형.
  */
-static Rect* currentRect;
+static Rect* currentRect = nullptr;
 
-int main(int   argc_,
-         char** argv_)
+int main(int, char**)
 {
-    std::srand(static_cast<float>(std::time(nullptr)));
+    std::srand(static_cast<unsigned int>(std::time(nullptr)));
 
-    glutInit(&argc_, argv_);
-    glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA);
-    glutInitWindowPosition(100, 100);
-    glutInitWindowSize(800, 600);
-    glutCreateWindow("OpenGL Program");
-
-    glewExperimental = GL_TRUE;
-    if (glewInit() != GLEW_OK)
+    if (!glfwInit())
     {
-        std::cerr << "Failed to initialize GLEW\n";
-        return EXIT_FAILURE;
+        std::cerr << "Failed to initialize GLFW\n";
+        return -1;
     }
 
-    glutDisplayFunc(OnDisplay);
-    glutKeyboardFunc(OnKeyDown);
-    glutMouseFunc(OnMouseClick);
-    glutMotionFunc(OnCursorMoved);
-    glutMainLoop();
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, CONTEXT_MAJOR_VERSION);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, CONTEXT_MINOR_VERSION);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_COMPAT_PROFILE);
+    glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+
+    GLFWwindow* window = glfwCreateWindow(WINDOW_WIDTH,
+                                          WINDOW_HEIGHT,
+                                          WINDOW_TITLE,
+                                          nullptr,
+                                          nullptr);
+    if (!window)
+    {
+        std::cerr << "Failed to create GLFW window\n";
+        glfwTerminate();
+        return -1;
+    }
+
+    glfwSetWindowPos(window, 100, 100);
+    glfwMakeContextCurrent(window);
+
+    if (!gladLoadGLLoader(reinterpret_cast<GLADloadproc>(glfwGetProcAddress)))
+    {
+        std::cerr << "Failed to initialize GLAD\n";
+        return -1;
+    }
+
+    glfwSetKeyCallback(window, OnKeyInteracted);
+    glfwSetMouseButtonCallback(window, OnButtonInteracted);
+    glfwSetCursorPosCallback(window, OnCursorMoved);
+
+    static double lastTime = glfwGetTime();
+    while (!glfwWindowShouldClose(window))
+    {
+        glfwPollEvents();
+        {
+            glMatrixMode(GL_PROJECTION);
+            glLoadIdentity();
+            glOrtho(0, WINDOW_WIDTH, 0, WINDOW_HEIGHT, -1, 1);
+
+            glMatrixMode(GL_MODELVIEW);
+            glLoadIdentity();
+
+            glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+            glClear(GL_COLOR_BUFFER_BIT);
+
+            for (const auto& [min, max, color] : rects)
+            {
+                glColor3f(color.r, color.g, color.b);
+                glRectf(min.x, min.y, max.x, max.y);
+            }
+        }
+        glfwSwapBuffers(window);
+    }
 
     return EXIT_SUCCESS;
 }
 
-void OnDisplay()
+void OnKeyInteracted(GLFWwindow* window_,
+                     int         key_,
+                     int         scancode_,
+                     int         action_,
+                     int         mods_)
 {
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    gluOrtho2D(0.0, 800.0, 0.0, 600.0);
-
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-
-    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT);
-
-    for (const auto& [min, max, color] : rects)
+    if (action_ != GLFW_PRESS)
     {
-        glColor3f(color.r, color.g, color.b);
-        glRectf(min.x, min.y, max.x, max.y);
+        return;
     }
 
-    glutSwapBuffers();
-}
-
-
-void OnKeyDown(unsigned char key_, int x_, int y_)
-{
     switch (key_)
     {
         case 'a': [[fallthrough]];
@@ -172,7 +237,7 @@ void OnKeyDown(unsigned char key_, int x_, int y_)
         case 'q': [[fallthrough]];
         case 'Q':
         {
-            glutLeaveMainLoop();
+            glfwSetWindowShouldClose(window_, true);
             break;
         }
         default:
@@ -180,23 +245,31 @@ void OnKeyDown(unsigned char key_, int x_, int y_)
             break;
         }
     }
-
-    glutPostRedisplay();
 }
 
-void OnMouseClick(int button_, int state_, int x_, int y_)
+void OnButtonInteracted(GLFWwindow* window_,
+                        int         button_,
+                        int         action_,
+                        int         mods_)
 {
-    const float mouseX = static_cast<float>(x_);
-    const float mouseY = static_cast<float>(600 - y_);
+    int width;
+    int height;
+    glfwGetWindowSize(window_, &width, &height);
 
-    if (button_ == GLUT_LEFT_BUTTON)
+    double mouseX;
+    double mouseY;
+    glfwGetCursorPos(window_, &mouseX, &mouseY);
+
+    float fixedY = static_cast<float>(height - mouseY);
+
+    if (button_ == GLFW_MOUSE_BUTTON_LEFT)
     {
-        if (state_ == GLUT_DOWN)
+        if (action_ == GLFW_PRESS)
         {
             for (auto& rect : rects)
             {
-                if (mouseX >= rect.min.x && mouseX <= rect.max.x &&
-                    mouseY >= rect.min.y && mouseY <= rect.max.y)
+                if ((mouseX >= rect.min.x && mouseX <= rect.max.x) &&
+                    (fixedY >= rect.min.y && fixedY <= rect.max.y))
                 {
                     currentRect = &rect;
                     std::cout << "[Info] The rectangle selected!\n";
@@ -204,7 +277,7 @@ void OnMouseClick(int button_, int state_, int x_, int y_)
                 }
             }
         }
-        else if (state_ == GLUT_UP)
+        else if (action_ == GLFW_RELEASE)
         {
             auto toErase = rects.end();
 
@@ -215,8 +288,8 @@ void OnMouseClick(int button_, int state_, int x_, int y_)
                     continue;
                 }
 
-                if (!(currentRect->max.x < iter->min.x || currentRect->min.x > iter->max.x ||
-                      currentRect->max.y < iter->min.y || currentRect->min.y > iter->max.y))
+                if (!((currentRect->max.x < iter->min.x || currentRect->min.x > iter->max.x) ||
+                      (currentRect->max.y < iter->min.y || currentRect->min.y > iter->max.y)))
                 {
                     const glm::vec2 newMin   = { std::min(currentRect->min.x, iter->min.x),
                                                  std::min(currentRect->min.y, iter->min.y) };
@@ -243,13 +316,13 @@ void OnMouseClick(int button_, int state_, int x_, int y_)
             currentRect = nullptr;
         }
     }
-    else if (button_ == GLUT_RIGHT_BUTTON)
+    else if (button_ == GLFW_MOUSE_BUTTON_RIGHT)
     {
-        if (state_ == GLUT_DOWN)
+        if (action_ == GLFW_PRESS)
         {
             if (rects.size() + 2 >= MAX_RECT_COUNTS)
             {
-                std::cerr << "[Oops!] If you devied rectangle, has been overflow!\n";
+                std::cerr << "[Oops!] If you divide rectangle, overflow!\n";
                 return;
             }
 
@@ -257,8 +330,8 @@ void OnMouseClick(int button_, int state_, int x_, int y_)
 
             for (auto iter = rects.begin(); iter != rects.end(); ++iter)
             {
-                if (mouseX >= iter->min.x && mouseX <= iter->max.x &&
-                    mouseY >= iter->min.y && mouseY <= iter->max.y)
+                if ((mouseX >= iter->min.x && mouseX <= iter->max.x) &&
+                    (fixedY >= iter->min.y && fixedY <= iter->max.y))
                 {
                     toErase = iter;
                     break;
@@ -318,28 +391,29 @@ void OnMouseClick(int button_, int state_, int x_, int y_)
             }
         }
     }
-
-    glutPostRedisplay();
 }
 
-void OnCursorMoved(int x_, int y_)
+void OnCursorMoved(GLFWwindow* window_,
+                   double      x_,
+                   double      y_)
 {
     if (currentRect == nullptr)
     {
         return;
     }
 
-    const float x      = static_cast<float>(x_);
-    const float y      = static_cast<float>(600 - y_);
-    const float width  = currentRect->max.x - currentRect->min.x;
-    const float height = currentRect->max.y - currentRect->min.y;
+    int width  = 0;
+    int height = 0;
+    glfwGetWindowSize(window_, &width, &height);
 
-    currentRect->min.x = x - width  / 2.0f;
-    currentRect->min.y = y - height / 2.0f;
-    currentRect->max.x = x + width  / 2.0f;
-    currentRect->max.y = y + height / 2.0f;
+    float fixedX = static_cast<float>(x_);
+    float fixedY = static_cast<float>(height - y_);
 
-    std::cout << std::format("[Info] Current Position: ({:.1f}, {:.1f})\n", x, y);
+    const float rectWidth  = currentRect->max.x - currentRect->min.x;
+    const float rectHeight = currentRect->max.y - currentRect->min.y;
 
-    glutPostRedisplay();
+    currentRect->min = { fixedX - rectWidth / 2.0f, fixedY - rectHeight / 2.0f };
+    currentRect->max = { fixedX + rectWidth / 2.0f, fixedY + rectHeight / 2.0f };
+
+    std::cout << std::format("[Info] Current Position: ({:.1f}, {:.1f})\n", fixedX, fixedY);
 }

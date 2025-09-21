@@ -1,12 +1,50 @@
-#include <cstdio>
-#include <iostream>
-#include <cstdlib>
+﻿#include <cstdlib>
 #include <ctime>
-#include <chrono>
+#include <iostream>
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <glm/vec3.hpp>
+
+/**
+ * @brief 키와 상호작용했을 때 호출됩니다.
+ *
+ * @param window_
+ * @param key_
+ * @param scancode_
+ * @param action_
+ * @param mods_
+ */
+void OnKeyDown(GLFWwindow* window_,
+               int         key_,
+               int         scancode_,
+               int         action_,
+               int         mods_);
+
+/**
+ * @brief 윈도우 타이틀.
+ */
+static constexpr const char* const WINDOW_TITLE = "OpenGL Color Simulator";
+
+/**
+ * @brief 윈도우 너비.
+ */
+static constexpr int WINDOW_WIDTH  = 800;
+
+/**
+ * @brief 윈도우 높이.
+ */
+static constexpr int WINDOW_HEIGHT = 800;
+
+/**
+ * @brief GL 메이저 버전.
+ */
+constexpr unsigned char CONTEXT_MAJOR_VERSION = 4;
+
+/**
+ * @brief GL 마이너 버전.
+ */
+constexpr unsigned char CONTEXT_MINOR_VERSION = 5;
 
 /**
  * @brief 배경색.
@@ -14,15 +52,87 @@
 static glm::vec3 gBackgroundColor = { 1.0f, 1.0f, 1.0f };
 
 /**
- * @brief 애니메이션 트리거.
+ * @brief 특정 시간마다 배경색을 변경할지 여부.
  */
 static bool gShouldChangeColor = false;
 
-void OnKeyDown(GLFWwindow* window, int key, int /*scancode*/, int action, int /*mods*/)
+int main()
 {
-    if (action != GLFW_PRESS) return;
+    std::srand(static_cast<unsigned int>(std::time(nullptr)));
 
-    switch (key)
+    if (!glfwInit())
+    {
+        std::cerr << "Failed to initialize GLFW\n";
+        return EXIT_FAILURE;
+    }
+
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, CONTEXT_MAJOR_VERSION);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, CONTEXT_MINOR_VERSION);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_COMPAT_PROFILE);
+    glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+
+    GLFWwindow* window = glfwCreateWindow(WINDOW_WIDTH,
+                                          WINDOW_HEIGHT,
+                                          WINDOW_TITLE,
+                                          nullptr,
+                                          nullptr);
+    if (!window)
+    {
+        std::cerr << "Failed to create GLFW window\n";
+        glfwTerminate();
+        return EXIT_FAILURE;
+    }
+
+    glfwSetWindowPos(window, 100, 100);
+    glfwMakeContextCurrent(window);
+
+    if (!gladLoadGLLoader(reinterpret_cast<GLADloadproc>(glfwGetProcAddress)))
+    {
+        std::cerr << "Failed to initialize GLAD\n";
+        return EXIT_FAILURE;
+    }
+
+    glfwSetKeyCallback(window, OnKeyDown);
+
+    static double lastTime = glfwGetTime();
+    while (!glfwWindowShouldClose(window))
+    {
+        glfwPollEvents();
+        {
+            const double nowTime = glfwGetTime();
+            if (gShouldChangeColor && nowTime - lastTime >= 0.05) // 50ms
+            {
+                gBackgroundColor = { static_cast<float>(std::rand() % 256) / 255.0f,
+                                        static_cast<float>(std::rand() % 256) / 255.0f,
+                                        static_cast<float>(std::rand() % 256) / 255.0f };
+                lastTime = nowTime;
+            }
+
+            glClearColor(gBackgroundColor.r,
+                         gBackgroundColor.g,
+                         gBackgroundColor.b,
+                         1.0f);
+            glClear(GL_COLOR_BUFFER_BIT);
+        }
+        glfwSwapBuffers(window);
+    }
+
+    glfwTerminate();
+    return 0;
+}
+
+void OnKeyDown(GLFWwindow* window_,
+               int         key_,
+               int         scancode_,
+               int         action_,
+               int         mods_)
+{
+    if (action_ != GLFW_PRESS)
+    {
+        return;
+    }
+
+    switch (key_)
     {
         case GLFW_KEY_C:
         {
@@ -88,7 +198,7 @@ void OnKeyDown(GLFWwindow* window, int key, int /*scancode*/, int action, int /*
         }
         case GLFW_KEY_Q:
         {
-            glfwSetWindowShouldClose(window, true);
+            glfwSetWindowShouldClose(window_, true);
             break;
         }
         default:
@@ -96,62 +206,4 @@ void OnKeyDown(GLFWwindow* window, int key, int /*scancode*/, int action, int /*
             break;
         }
     }
-}
-// ------------------------------------
-
-int main()
-{
-    std::srand(static_cast<unsigned int>(std::time(nullptr)));
-
-    if (!glfwInit())
-    {
-        std::cerr << "Failed to initialize GLFW\n";
-        return EXIT_FAILURE;
-    }
-
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-    glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
-
-    GLFWwindow* window = glfwCreateWindow(800, 600, "OpenGL Program", NULL, NULL);
-    if (!window)
-    {
-        std::cerr << "Failed to create GLFW window\n";
-        glfwTerminate();
-        return EXIT_FAILURE;
-    }
-
-    glfwSetWindowPos(window, 100, 100);
-    glfwMakeContextCurrent(window);
-
-    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
-    {
-        std::cerr << "Failed to initialize GLAD\n";
-        return EXIT_FAILURE;
-    }
-
-    glfwSetKeyCallback(window, OnKeyDown);
-
-    static double lastTime = glfwGetTime();
-    while (!glfwWindowShouldClose(window))
-    {
-        const double nowTime = glfwGetTime();
-        if (gShouldChangeColor && nowTime - lastTime >= 0.05) // 50ms
-        {
-            gBackgroundColor = { static_cast<float>(std::rand() % 256) / 255.0f,
-                                    static_cast<float>(std::rand() % 256) / 255.0f,
-                                    static_cast<float>(std::rand() % 256) / 255.0f };
-            lastTime = nowTime;
-        }
-
-        glClearColor(gBackgroundColor.r, gBackgroundColor.g, gBackgroundColor.b, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
-
-        glfwSwapBuffers(window);
-        glfwPollEvents();
-    }
-
-    glfwTerminate();
-    return 0;
 }

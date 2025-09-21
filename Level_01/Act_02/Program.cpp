@@ -1,25 +1,10 @@
-#include <array>
-#include <random>
+﻿#include <array>
+#include <ctime>
 #include <iostream>
 
-#include <gl/glew.h>
-#include <gl/freeglut.h>
+#include <glad/glad.h>
+#include <glfw/glfw3.h>
 #include <glm/glm.hpp>
-
-/**
- * @brief 애플리케이션 타이틀.
- */
-static constexpr const char* const WINDOW_TITLE = "OpenGL Program";
-
-/**
- * @brief 애플리케이션 너비.
- */
-static constexpr int WINDOW_WIDTH  = 800;
-
-/**
- * @brief 애플리케이션 높이.
- */
-static constexpr int WINDOW_HEIGHT = 800;
 
 /**
  * @struct Rect
@@ -45,53 +30,62 @@ struct Rect
 };
 
 /**
- * @brief 윈도우가 렌더될 떄 호출됩니다.
- */
-void OnDisplay();
-
-/**
- * @brief 키보드의 키가 눌렸을 때 호출됩니다.
+ * @brief 키와 상호작용할 때 호출됩니다.
  *
+ * @param window_ 윈도우.
  * @param key_ 눌린 키.
- * @param x_ 마우스의 X 좌표.
- * @param y_ 마우스의 Y 좌표.
+ * @param scancode_ 스캔 코드.
+ * @param action_ 키 액션.
+ * @param mods_ 수정자 키 상태.
  */
-void OnKeyDown(unsigned char key_,
-                int           x_,
-                int           y_);
+static void OnKeyInteracted(GLFWwindow* window_,
+                            int         key_,
+                            int         scancode_,
+                            int         action_,
+                            int         mods_);
 
 /**
- * @brief 마우스의 버튼을 눌렀을 때 호출됩니다.
+ * @brief 버튼과 상호작용할 떄 호출됩니다.
  *
+ * @param window_ 윈도우.
  * @param button_ 클릭된 버튼.
- * @param state_ 버튼 상태.
- * @param x_ 마우스의 X 좌표.
- * @param y_ 마우스의 Y 좌표.
+ * @param action_ 버튼 액션.
+ * @param mods_ 버튼 상태.
  */
-void OnMouseClick(int button_,
-                  int state_,
-                  int x_,
-                  int y_);
+static void OnButtonInteracted(GLFWwindow* window_,
+                               int         button_,
+                               int         action_,
+                               int         mods_);
 
 /**
- * @brief 시드 값을 위한 랜덤 디바이스.
+ * @brief 윈도우 타이틀.
  */
-static std::random_device rd;
+static constexpr const char* const WINDOW_TITLE = "Interact Simulator";
 
 /**
- * @brief 난수 생성 엔진.
+ * @brief 윈도우 너비.
  */
-static std::mt19937 gen(rd());
+static constexpr int WINDOW_WIDTH  = 800;
 
 /**
- * @brief 난수 생성 범위.
+ * @brief 윈도우 높이.
  */
-static std::uniform_int_distribution<> distrib(0, 255);
+static constexpr int WINDOW_HEIGHT = 800;
+
+/**
+ * @brief GL 메이저 버전.
+ */
+constexpr unsigned char CONTEXT_MAJOR_VERSION = 4;
+
+/**
+ * @brief GL 마이너 버전.
+ */
+constexpr unsigned char CONTEXT_MINOR_VERSION = 5;
 
 /**
  * @brief 뒤에 올 사각형.
  */
-static std::array backs
+static std::array<Rect, 4> backs
 {
     Rect{ {  0.0f,  0.0f }, { 1.0f, 1.0f }, { 0.25f, 0.0f,  0.0f  } },
     Rect{ { -1.0f,  0.0f }, { 0.0f, 1.0f }, { 0.0f,  0.25f, 0.0f  } },
@@ -102,7 +96,7 @@ static std::array backs
 /**
  * @brief 앞에 올 사각형들.
  */
-static std::array fronts
+static std::array<Rect, 4> fronts
 {
     Rect{ {  0.0f,  0.0f }, { 1.0f, 1.0f }, { 1.0f, 0.0f, 0.0f } },
     Rect{ { -1.0f,  0.0f }, { 0.0f, 1.0f }, { 0.0f, 1.0f, 0.0f } },
@@ -113,7 +107,7 @@ static std::array fronts
 /**
  * @brief 크기 조절 스케일러.
  */
-static constexpr float SCALER = 0.05f;
+static constexpr float SCALE_MULTIPLIER = 0.05f;
 
 /**
  * @brief 최소 크기.
@@ -125,64 +119,101 @@ static constexpr float MIN_SIZE = 0.1f;
  */
 static constexpr float MAX_SIZE = 1.0f;
 
-int main(int    argc_,
-         char** argv_)
+int main()
 {
-    glutInit(&argc_, argv_);
-    glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA);
-    glutInitWindowPosition(100, 100);
-    glutInitWindowSize(WINDOW_WIDTH, WINDOW_HEIGHT);
-    glutCreateWindow(WINDOW_TITLE);
+    std::srand(static_cast<unsigned int>(std::time(nullptr)));
 
-    glutDisplayFunc(OnDisplay);
-    glutKeyboardFunc(OnKeyDown);
-    glutMouseFunc(OnMouseClick);
-    glutMainLoop();
-}
-
-void OnDisplay()
-{
-    glClearColor(0.5f, 0.0f, 0.5f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT);
-
-    for (const auto& [min, max, color] : backs)
+    if (!glfwInit())
     {
-        glColor3f(color.r, color.g, color.b);
-        glRectf(min.x, min.y, max.x, max.y);
+        std::cerr << "Failed to initialize GLFW\n";
+        return -1;
     }
 
-    for (const auto& [min, max, color] : fronts)
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, CONTEXT_MAJOR_VERSION);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, CONTEXT_MINOR_VERSION);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_COMPAT_PROFILE);
+    glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+
+    GLFWwindow* window = glfwCreateWindow(WINDOW_WIDTH,
+                                          WINDOW_HEIGHT,
+                                          WINDOW_TITLE,
+                                          nullptr,
+                                          nullptr);
+    if (!window)
     {
-        glColor3f(color.r, color.g, color.b);
-        glRectf(min.x, min.y, max.x, max.y);
+        std::cerr << "Failed to create GLFW window\n";
+        glfwTerminate();
+        return -1;
     }
 
-    glutSwapBuffers();
+    glfwSetWindowPos(window, 100, 100);
+    glfwMakeContextCurrent(window);
+
+    if (!gladLoadGLLoader(reinterpret_cast<GLADloadproc>(glfwGetProcAddress)))
+    {
+        std::cerr << "Failed to initialize GLAD\n";
+        return -1;
+    }
+
+    glfwSetKeyCallback(window, OnKeyInteracted);
+    glfwSetMouseButtonCallback(window, OnButtonInteracted);
+
+    while (!glfwWindowShouldClose(window))
+    {
+        glfwPollEvents();
+        {
+            glClearColor(0.5f, 0.0f, 0.5f, 1.0f);
+            glClear(GL_COLOR_BUFFER_BIT);
+
+            for (const auto& [min, max, color] : backs)
+            {
+                glColor3f(color.r, color.g, color.b);
+                glRectf(min.x, min.y, max.x, max.y);
+            }
+
+            for (const auto& [min, max, color] : fronts)
+            {
+                glColor3f(color.r, color.g, color.b);
+                glRectf(min.x, min.y, max.x, max.y);
+            }
+        }
+        glfwSwapBuffers(window);
+    }
+
+    glfwTerminate();
+    return 0;
 }
 
-void OnKeyDown(unsigned char key_,
-                int           x_,
-                int           y_)
+void OnKeyInteracted(GLFWwindow* window_,
+                     int         key_,
+                     int         scancode_,
+                     int         action_,
+                     int         mods_)
 {
-    if (key_ == 'q' || key_ == 'Q')
+    if (key_ == GLFW_KEY_Q && action_ == GLFW_RELEASE)
     {
-        glutLeaveMainLoop();
+        glfwSetWindowShouldClose(window_, true);
     }
 }
 
-
-void OnMouseClick(int button_,
-             int state_,
-             int x_,
-             int y_)
+void OnButtonInteracted(GLFWwindow* window_,
+                        int         button_,
+                        int         action_,
+                        int         mods_)
 {
-    if (state_ != GLUT_DOWN)
+    if (action_ != GLFW_PRESS)
     {
         return;
     }
 
-    const float mouseX = (static_cast<float>(x_) / WINDOW_WIDTH) * 2.0f - 1.0f;
-    const float mouseY = 1.0f - (static_cast<float>(y_) / WINDOW_HEIGHT) * 2.0f;
+    int width, height;
+    glfwGetWindowSize(window_, &width, &height);
+
+    double mouseX, mouseY;
+    glfwGetCursorPos(window_, &mouseX, &mouseY);
+
+    float ndcX = static_cast<float>( (mouseX / width)  * 2.0 - 1.0 );
+    float ndcY = static_cast<float>( 1.0 - (mouseY / height) * 2.0 );
 
     bool isInteracted = false;
 
@@ -190,29 +221,26 @@ void OnMouseClick(int button_,
     {
         Rect& front = fronts[index];
 
-        if (mouseX >= front.min.x && mouseX <= front.max.x &&
-            mouseY >= front.min.y && mouseY <= front.max.y)
+        if ((ndcX >= front.min.x && ndcX <= front.max.x) &&
+            (ndcY >= front.min.y && ndcY <= front.max.y))
         {
             isInteracted = true;
 
-            if (button_ == GLUT_LEFT_BUTTON)
+            if (button_ == GLFW_MOUSE_BUTTON_LEFT)
             {
-                front.color =
-                {
-                    static_cast<float>(distrib(gen)) / 255.0f,
-                    static_cast<float>(distrib(gen)) / 255.0f,
-                    static_cast<float>(distrib(gen)) / 255.0f
-                };
+                front.color = { static_cast<float>(std::rand() % 256) / 255.0f,
+                                   static_cast<float>(std::rand() % 256) / 255.0f,
+                                   static_cast<float>(std::rand() % 256) / 255.0f };
 
                 break;
             }
-            if (button_ == GLUT_RIGHT_BUTTON)
+            if (button_ == GLFW_MOUSE_BUTTON_RIGHT)
             {
                 if ((front.max.x - front.min.x > MIN_SIZE * 2.0f) &&
                     (front.max.y - front.min.y > MIN_SIZE * 2.0f))
                 {
-                    front.min += glm::vec2(SCALER);
-                    front.max -= glm::vec2(SCALER);
+                    front.min += glm::vec2(SCALE_MULTIPLIER);
+                    front.max -= glm::vec2(SCALE_MULTIPLIER);
                 }
 
                 break;
@@ -223,27 +251,24 @@ void OnMouseClick(int button_,
         {
             Rect& back  = backs[index];
 
-            if (mouseX >= back.min.x && mouseX <= back.max.x &&
-                mouseY >= back.min.y && mouseY <= back.max.y)
+            if ((ndcX >= back.min.x && ndcX <= back.max.x) &&
+                (ndcY >= back.min.y && ndcY <= back.max.y))
             {
-                if (button_ == GLUT_LEFT_BUTTON)
+                if (button_ == GLFW_MOUSE_BUTTON_LEFT)
                 {
-                    back.color =
-                    {
-                        static_cast<float>(distrib(gen)) / 255.0f,
-                        static_cast<float>(distrib(gen)) / 255.0f,
-                        static_cast<float>(distrib(gen)) / 255.0f
-                    };
+                    back.color = { static_cast<float>(std::rand() % 256) / 255.0f,
+                                      static_cast<float>(std::rand() % 256) / 255.0f,
+                                      static_cast<float>(std::rand() % 256) / 255.0f };
 
                     break;
                 }
-                if (button_ == GLUT_RIGHT_BUTTON)
+                if (button_ == GLFW_MOUSE_BUTTON_RIGHT)
                 {
                     if ((front.max.x - front.min.x < MAX_SIZE) &&
                         (front.max.y - front.min.y < MAX_SIZE))
                     {
-                        front.min -= glm::vec2(SCALER);
-                        front.max += glm::vec2(SCALER);
+                        front.min -= glm::vec2(SCALE_MULTIPLIER);
+                        front.max += glm::vec2(SCALE_MULTIPLIER);
                     }
 
                     break;
@@ -251,6 +276,4 @@ void OnMouseClick(int button_,
             }
         }
     }
-
-    glutPostRedisplay();
 }
