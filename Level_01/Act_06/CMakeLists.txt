@@ -9,7 +9,7 @@ target_link_libraries(1_Act_06 PRIVATE
 )
 
 set_target_properties(1_Act_06 PROPERTIES
-        RUNTIME_OUTPUT_NAME "Act 5"
+        RUNTIME_OUTPUT_NAME "Act 6"
 )
 
 add_custom_command(TARGET 1_Act_06 POST_BUILD

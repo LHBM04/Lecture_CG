@@ -1,322 +1,314 @@
-#include <algorithm>
+﻿#include <iostream>
 #include <random>
-#include <string>
 #include <vector>
 
 #include <glad/glad.h>
 #include <glfw/glfw3.h>
 #include <glm/glm.hpp>
 
-static constexpr int WINDOW_WIDTH      = 1200;
-static constexpr int WINDOW_HEIGHT     = 600;
-static constexpr int GRID_SIZE         = 10; // 10x10 격자
-static constexpr int PANEL_GRID_WIDTH  = GRID_SIZE;
-static constexpr int PANEL_GRID_HEIGHT = GRID_SIZE;
-static constexpr int NUM_SHAPES        = 10; // 생성할 도형의 개수
-
-// 화면의 절반(왼쪽 패널)의 너비
-static constexpr int PANEL_PIXEL_WIDTH = WINDOW_WIDTH / 2;
-
-// 각 격자 셀의 픽셀 크기
-static constexpr float CELL_WIDTH = static_cast<float>(PANEL_PIXEL_WIDTH) / PANEL_GRID_WIDTH;
-static constexpr float CELL_HEIGHT = static_cast<float>(WINDOW_HEIGHT) / PANEL_GRID_HEIGHT;
-
-// --- 구조체 정의 ---
-
-// 도형의 속성을 담는 구조체
 struct Block
 {
-    int id{};
-    glm::vec2 gridPos{}; // 격자 좌표 (x, y)
-    glm::vec2 size{};    // 격자 단위 크기 (너비, 높이)
-    glm::vec3 color{};
-    bool isDragging = false;
+    /**
+     * @brief 해당 사각형의 최소 좌표를 반환합니다.
+     *
+     * @return glm::vec2 최소 좌표.
+     */
+    [[nodiscard]]
+    constexpr inline glm::vec2 GetMin() const noexcept
+    {
+        return { position.x - size.x * 0.5f, position.y - size.y * 0.5f };
+    }
+
+    /**
+     * @brief 해당 사각형의 최대 좌표를 반환합니다.
+     *
+     * @return glm::vec2 최대 좌표.
+     */
+    [[nodiscard]]
+    constexpr inline glm::vec2 GetMax() const noexcept
+    {
+        return { position.x + size.x * 0.5f, position.y + size.y * 0.5f };
+    }
+
+    /**
+     * @brief 해당 사각형과 지정한 점이 접촉하는지 여부를 반환합니다.
+     *
+     * @param point_ 지정할 점.
+     *
+     * @return bool 접촉 여부.
+     */
+    [[nodiscard]]
+    constexpr inline bool IsInteract(const glm::vec2& point_) const noexcept
+    {
+        const glm::vec2 min = GetMin();
+        const glm::vec2 max = GetMax();
+
+        return (point_.x >= min.x && point_.x <= max.x) &&
+               (point_.y >= min.y && point_.y <= max.y);
+    }
+
+    inline void Render() const noexcept
+    {
+        glColor3f(color.r, color.g, color.b);
+        glBegin(GL_QUADS);
+        {
+            const glm::vec2 min = GetMin();
+            const glm::vec2 max = GetMax();
+
+            glVertex2f(min.x, min.y);
+            glVertex2f(max.x, min.y);
+            glVertex2f(max.x, max.y);
+            glVertex2f(min.x, max.y);
+        }
+        glEnd();
+    }
+
+    /**
+     * @brief 블럭 식별을 위한 변수.
+     */
+    unsigned char id;
+
+    /**
+     * @brief 위치.
+     */
+    glm::vec2 position;
+
+    /**
+     * @brief 크기.
+     */
+    glm::vec2 size;
+
+    /**
+     * @brief 색상.
+     */
+    glm::vec3 color;
 };
 
-// --- 전역 변수 ---
-std::vector<Block> question;   // 왼쪽 문제 패널의 도형들
-std::vector<Block> answer;     // 오른쪽 사용자 패널의 도형들
-Block* draggedShape = nullptr; // 현재 드래그 중인 도형의 포인터
-glm::vec2 dragOffset;          // 드래그 시작 시 마우스와 도형 중심 간의 오프셋
-bool isGameComplete = false;   // 게임 완료 여부
+/**
+* @brief 키와 상호작용할 때 호출됩니다.
+ *
+ * @param window_ 윈도우.
+ * @param key_ 눌린 키.
+ * @param scancode_ 스캔 코드.
+ * @param action_ 키 액션.
+ * @param mods_ 수정자 키 상태.
+ */
+static void OnKeyInteracted(GLFWwindow* const window_,
+                            const int         key_,
+                            const int         scancode_,
+                            const int         action_,
+                            const int         mods_) noexcept;
 
-// --- 함수 프로토타입 ---
-void init();
-void display();
-void reshape(int w, int h);
-void mouse(int button, int state, int x, int y);
-void motion(int x, int y);
-void keyboard(unsigned char key, int x, int y);
-void drawGrid(float startX);
-void drawShapes(const std::vector<Block>& shapes, float startX);
-void drawText(float x, float y, const std::string& text, void* font);
-void checkCompletion();
-glm::vec2 screenToGrid(int sx, int sy, float panelStartX);
+/**
+ * @brief 버튼과 상호작용할 떄 호출됩니다.
+ *
+ * @param window_ 윈도우.
+ * @param button_ 클릭된 버튼.
+ * @param action_ 버튼 액션.
+ * @param mods_ 버튼 상태.
+ */
+static void OnButtonInteracted(GLFWwindow* const window_,
+                               const int         button_,
+                               const int         action_,
+                               const int         mods_) noexcept;
 
-int main(int    argc_,
-         char** argv_)
+/**
+ * @brief 커서의 위치가 변경되었을 때 호출됩니다.
+ *
+ * @param window_ 윈도우.
+ * @param x_ 마우스 X 좌표.
+ * @param y_ 마우스 Y 좌표.
+ */
+static void OnCursorMoved(GLFWwindow* const window_,
+                          const double      x_,
+                          const double      y_) noexcept;
+
+/**
+ * @brief 게임을 초기화합니다.
+ */
+static void Initialize() noexcept;
+
+/**
+ * @brief 매 프레임마다 호출됩니다.
+ *
+ * @param deltaTime_ 이전 프레임과 현재 프레임 사이의 간격.
+ */
+static void Update(const float deltaTime_) noexcept;
+
+/**
+ * @brief 게임을 렌더링합니다.
+ */
+static void Render() noexcept;
+
+/**
+ * @brief 게임 종료 여부 검사.
+ */
+static void CheckComplete() noexcept;
+
+/**
+ * @brief 애플리케이션 너비.
+ */
+static constexpr unsigned int WINDOW_WIDTH  = 1200;
+
+/**
+ * @brief 애플리케이션 높이.
+ */
+static constexpr unsigned int WINDOW_HEIGHT = 600;
+
+/**
+ * @brief 애플리케이션 타이틀.
+ */
+static constexpr const char* const WINDOW_TITLE = "Puzzle Game";
+
+/**
+ * @brief GL 메이저 버전.
+ */
+constexpr unsigned char CONTEXT_MAJOR_VERSION = 4;
+
+/**
+ * @brief GL 마이너 버전.
+ */
+constexpr unsigned char CONTEXT_MINOR_VERSION = 5;
+
+/**
+ * @brief 커서 위치.
+ */
+static glm::vec2 cursorPosition = { 0, 0 };
+
+/**
+ * @brief 격자 크기.
+ */
+static constexpr int GRID_SIZE = 10;
+
+/**
+ * @brief 화면의 절반(왼쪽 패널)의 너비
+ */
+static constexpr int PANEL_PIXEL_WIDTH = WINDOW_WIDTH / 2;
+
+/**
+ * @brief
+ */
+static constexpr float CELL_WIDTH = static_cast<float>(PANEL_PIXEL_WIDTH) / GRID_SIZE;
+
+/**
+ * @brief
+ */
+static constexpr float CELL_HEIGHT = static_cast<float>(WINDOW_HEIGHT) / GRID_SIZE;
+
+/**
+ * @brief 문제.
+ */
+static std::vector<Block> question;
+
+/**
+ * @brief 답안.
+ */
+static std::vector<Block> answer;
+
+/**
+ * @brief 드래그 중인 도형.
+ */
+static Block* dragged = nullptr;
+
+/**
+ * @brief 게임 종료 여부.
+ */
+static bool isGameOver = false;
+
+int main()
 {
-    glutInit(&argc_, argv_);
-    glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_MULTISAMPLE);
-    glutInitWindowSize(WINDOW_WIDTH, WINDOW_HEIGHT);
-    glutInitWindowPosition(100, 100);
-    glutCreateWindow("Shape Matching Game");
+    if (!glfwInit())
+    {
+        std::cerr << "Failed to initialize GLFW" << std::endl;
+        return -1;
+    }
 
-    glewInit();
-    init();
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, CONTEXT_MAJOR_VERSION);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, CONTEXT_MINOR_VERSION);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_COMPAT_PROFILE);
+    glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
-    glutDisplayFunc(display);
-    glutReshapeFunc(reshape);
-    glutMouseFunc(mouse);
-    glutMotionFunc(motion);
-    glutKeyboardFunc(keyboard);
+    GLFWwindow* window = glfwCreateWindow(WINDOW_WIDTH,
+                                          WINDOW_HEIGHT,
+                                          WINDOW_TITLE,
+                                          nullptr,
+                                          nullptr);
+    if (!window)
+    {
+        std::cerr << "Failed to create GLFW window\n";
+        ::glfwTerminate();
+        return -1;
+    }
 
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glfwSetWindowPos(window, 100, 100);
+    glfwMakeContextCurrent(window);
 
-    glutMainLoop();
+    if (!gladLoadGLLoader(reinterpret_cast<GLADloadproc>(glfwGetProcAddress)))
+    {
+        std::cerr << "Failed to initialize GLAD\n";
+        return -1;
+    }
 
+    glfwSetKeyCallback(window, OnKeyInteracted);
+    glfwSetMouseButtonCallback(window, OnButtonInteracted);
+    glfwSetCursorPosCallback(window, OnCursorMoved);
+
+    Initialize();
+
+    float lastTime = static_cast<float>(glfwGetTime());
+
+    while (!glfwWindowShouldClose(window))
+    {
+        glfwPollEvents();
+        // Update.
+        {
+            float currentTime = static_cast<float>(glfwGetTime());
+            float deltaTime = currentTime - lastTime;
+            lastTime = currentTime;
+
+            Update(deltaTime);
+        }
+        // Render.
+        {
+            glMatrixMode(GL_PROJECTION);
+            glLoadIdentity();
+            glOrtho(0.0, WINDOW_WIDTH, 0.0, WINDOW_HEIGHT, -1, 1);
+
+            glMatrixMode(GL_MODELVIEW);
+            glLoadIdentity();
+
+            glClearColor(0.15f, 0.15f, 0.15f, 1.0f);
+            glClear(GL_COLOR_BUFFER_BIT);
+            Render();
+        }
+        glfwSwapBuffers(window);
+    }
+
+    glfwTerminate();
     return 0;
 }
 
-// --- 함수 구현 ---
-
-// 초기화 함수
-void init() {
-    // 기존 데이터 초기화
-    question.clear();
-    answer.clear();
-    isGameComplete = false;
-    draggedShape = nullptr;
-
-    glClearColor(0.1f, 0.1f, 0.15f, 1.0f); // 어두운 배경색
-
-    std::random_device rd;
-    std::mt19937 gen(rd());
-    std::uniform_real_distribution<float> colorDist(0.3f, 1.0f);
-    std::uniform_int_distribution<int> sizeDist(1, 3);
-    std::uniform_int_distribution<int> posDist(0, GRID_SIZE - 3); // 도형이 그리드 밖으로 나가지 않도록
-
-    // 문제 도형 생성
-    for (int i = 0; i < NUM_SHAPES; ++i)
-    {
-        Block newShape;
-        newShape.id = i;
-        newShape.size = { sizeDist(gen), sizeDist(gen) };
-
-        // 다른 도형과 겹치지 않는 위치 찾기
-        bool positionFound = false;
-
-        while (!positionFound)
-        {
-            newShape.gridPos = { posDist(gen), posDist(gen) };
-            positionFound = true;
-
-            // 경계 검사
-            if (newShape.gridPos.x + newShape.size.x > GRID_SIZE ||
-                newShape.gridPos.y + newShape.size.y > GRID_SIZE) {
-                positionFound = false;
-                continue;
-            }
-
-            // 다른 도형과 겹치는지 검사
-            for (const auto& shape : question)
-            {
-                if (newShape.gridPos.x < shape.gridPos.x + shape.size.x &&
-                    newShape.gridPos.x + newShape.size.x > shape.gridPos.x &&
-                    newShape.gridPos.y < shape.gridPos.y + shape.size.y &&
-                    newShape.gridPos.y + newShape.size.y > shape.gridPos.y)
-                {
-                    positionFound = false;
-                    break;
-                }
-            }
-        }
-
-        newShape.color = { colorDist(gen), colorDist(gen), colorDist(gen) };
-        question.push_back(newShape);
-    }
-
-    // 사용자 도형 생성 (문제 도형 복사 후 위치 무작위화)
-    answer = question;
-    std::uniform_int_distribution<int> userPosDistX(GRID_SIZE, 2 * GRID_SIZE - 3);
-    std::uniform_int_distribution<int> userPosDistY(0, GRID_SIZE - 3);
-
-    for (auto& shape : answer) {
-         bool positionFound = false;
-
-        while(!positionFound)
-         {
-            shape.gridPos = { userPosDistX(gen), userPosDistY(gen) };
-            positionFound = true;
-
-            // 다른 도형과 겹치는지 검사 (사용자 패널 내에서)
-            for(const Block& other : answer)
-            {
-                if(shape.id == other.id)
-                {
-                    continue;
-                }
-
-                if (shape.gridPos.x < other.gridPos.x + other.size.x &&
-                    shape.gridPos.x + shape.size.x > other.gridPos.x &&
-                    shape.gridPos.y < other.gridPos.y + other.size.y &&
-                    shape.gridPos.y + shape.size.y > other.gridPos.y)
-                {
-                    positionFound = false;
-                    break;
-                }
-            }
-         }
-    }
-}
-
-// 화면 그리기 콜백 함수
-void display()
+void OnKeyInteracted(GLFWwindow* const window_,
+                     const int         key_,
+                     const int         scancode_,
+                     const int         action_,
+                     const int         mods_) noexcept
 {
-    glClear(GL_COLOR_BUFFER_BIT);
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    gluOrtho2D(0, WINDOW_WIDTH, WINDOW_HEIGHT, 0); // Y축을 아래로 향하게 설정
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-
-    // 그리드 그리기
-    drawGrid(0); // 왼쪽 패널
-    drawGrid(PANEL_PIXEL_WIDTH); // 오른쪽 패널
-
-    // 중앙 구분선 그리기
-    glColor3f(1.0f, 1.0f, 1.0f);
-    glLineWidth(2.0f);
-    glBegin(GL_LINES);
-    glVertex2f(WINDOW_WIDTH / 2.0f, 0);
-    glVertex2f(WINDOW_WIDTH / 2.0f, WINDOW_HEIGHT);
-    glEnd();
-
-    // 도형 그리기
-    drawShapes(question, 0);
-    drawShapes(answer, 0); // userShapes는 전체 좌표계 기준으로 그려짐
-
-    // 게임 완료 메시지
-    if (isGameComplete)
-    {
-        glColor4f(0.0f, 0.0f, 0.0f, 0.5f);
-        glRectf(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
-
-        constexpr float boxW = 350;
-        constexpr float boxH = 150;
-        constexpr float boxX = (WINDOW_WIDTH - boxW) / 2.0f;
-        constexpr float boxY = (WINDOW_HEIGHT - boxH) / 2.0f;
-
-        constexpr const char* const clearMessageHeader = "Mission Complete!";
-        constexpr const char* const clearMessageBody   = "Press 'r' to restart or 'q' to quit.";
-
-        glColor3f(1.0f, 1.0f, 1.0f);
-        drawText(boxX + 105, boxY + 80, clearMessageHeader, GLUT_BITMAP_HELVETICA_18);
-        drawText(boxX + 50, boxY + 110, clearMessageBody, GLUT_BITMAP_HELVETICA_12);
-    }
-
-    glutSwapBuffers();
-}
-
-// 창 크기 변경 콜백 함수
-void reshape(int w, int h)
-{
-    glViewport(0, 0, w, h);
-    glutPostRedisplay();
-}
-
-// 마우스 클릭/해제 콜백 함수
-void mouse(int button, int state, int x, int y)
-{
-    if (isGameComplete)
+    if (action_ != GLFW_PRESS)
     {
         return;
     }
 
-    if (button == GLUT_LEFT_BUTTON)
+    switch (key_)
     {
-        if (state == GLUT_DOWN)
+        case GLFW_KEY_R:
         {
-            // 오른쪽 패널의 도형 위에서 클릭했는지 확인
-            for (Block& shape : answer)
-            {
-                const glm::vec2 start = {  shape.gridPos.x * CELL_WIDTH,
-                                           shape.gridPos.y * CELL_HEIGHT };
-                const glm::vec2 end   = { start.x + shape.size.x * CELL_WIDTH,
-                                          start.y + shape.size.y * CELL_HEIGHT };
-
-                if (x >= start.x && x <= end.x &&
-                    y >= start.y && y <= end.y)
-                {
-                    draggedShape = &shape;
-                    draggedShape->isDragging = true;
-                    // 마우스 위치와 도형의 좌상단 모서리 사이의 오프셋 계산
-                    dragOffset = { static_cast<float>(x) - start.x,
-                                      static_cast<float>(y) - start.y };
-                    break;
-                }
-            }
-        }
-        else if (state == GLUT_UP)
-        {
-            if (draggedShape)
-            {
-                // 도형을 그리드에 맞추기
-                float newPosX = x - dragOffset.x;
-                float newPosY = y - dragOffset.y;
-                int gridX = static_cast<int>(round(newPosX / CELL_WIDTH));
-                int gridY = static_cast<int>(round(newPosY / CELL_HEIGHT));
-
-                // 도형이 왼쪽 패널로 넘어가지 않도록 함
-                gridX = std::max(PANEL_GRID_WIDTH, gridX);
-                // 도형이 패널 경계를 벗어나지 않도록 함
-                gridX = std::min(gridX, 2 * PANEL_GRID_WIDTH - (int)draggedShape->size.x);
-                gridY = std::max(0, std::min(gridY, PANEL_GRID_HEIGHT - (int)draggedShape->size.y));
-
-                draggedShape->gridPos = { (float)gridX, (float)gridY };
-
-                draggedShape->isDragging = false;
-                draggedShape = nullptr;
-                checkCompletion(); // 도형을 놓을 때마다 정답 확인
-                glutPostRedisplay();
-            }
-        }
-    }
-}
-
-// 마우스 드래그 콜백 함수
-void motion(int x, int y)
-{
-    if (draggedShape)
-    {
-        // 드래그 중인 도형의 위치를 픽셀 단위로 업데이트 (그리기 위함)
-        // 실제 gridPos는 마우스를 놓았을 때만 업데이트
-        float newPosX = x - dragOffset.x;
-        float newPosY = y - dragOffset.y;
-
-        // 임시 위치를 그리드 단위로 변환하여 저장 (화면에 부드럽게 보이기 위함)
-        draggedShape->gridPos.x = newPosX / CELL_WIDTH;
-        draggedShape->gridPos.y = newPosY / CELL_HEIGHT;
-
-        glutPostRedisplay();
-    }
-}
-
-// 키보드 입력 콜백 함수
-void keyboard(unsigned char key, int x, int y) {
-    switch (key)
-    {
-        case 'q': [[fallthrough]];
-        case 'Q':
-        {
-            glutLeaveMainLoop();
+            Initialize();
             break;
         }
-        case 'r': [[fallthrough]];
-        case 'R':
+        case GLFW_KEY_Q:
         {
-            init();
+            glfwSetWindowShouldClose(window_, true);
             break;
         }
         default:
@@ -324,92 +316,261 @@ void keyboard(unsigned char key, int x, int y) {
             break;
         }
     }
-
-    glutPostRedisplay();
 }
 
-
-// 그리드를 그리는 함수
-void drawGrid(float startX)
+void OnButtonInteracted(GLFWwindow* const window_,
+                        const int         button_,
+                        const int         action_,
+                        const int         mods_) noexcept
 {
-    glColor3f(0.2f, 0.2f, 0.25f);
-    glLineWidth(1.0f);
-    glBegin(GL_LINES);
-    for (int i = 0; i <= GRID_SIZE; ++i)
+    if (isGameOver)
     {
-        // Vertical lines
-        glVertex2f(startX + i * CELL_WIDTH, 0);
-        glVertex2f(startX + i * CELL_WIDTH, WINDOW_HEIGHT);
-        // Horizontal lines
-        glVertex2f(startX, i * CELL_HEIGHT);
-        glVertex2f(startX + PANEL_PIXEL_WIDTH, i * CELL_HEIGHT);
+        return;
     }
-    glEnd();
-}
 
-// 도형들을 그리는 함수
-void drawShapes(const std::vector<Block>& shapes, float startX)
-{
-    for (const auto& shape : shapes)
+    static glm::vec2 offset;
+
+    if (button_ == GLFW_MOUSE_BUTTON_LEFT)
     {
-        glColor3f(shape.color.r, shape.color.g, shape.color.b);
+        if (action_ == GLFW_PRESS)
+        {
+            for (Block& block : answer)
+            {
+                if (block.IsInteract(cursorPosition))
+                {
+                    dragged = &block;
+                    break;
+                }
+            }
+        }
+        else if (action_ == GLFW_RELEASE)
+        {
+            if (!dragged)
+            {
+                return;
+            }
 
-        float drawX = startX + shape.gridPos.x * CELL_WIDTH;
-        float drawY = shape.gridPos.y * CELL_HEIGHT;
-        float width = shape.size.x * CELL_WIDTH;
-        float height = shape.size.y * CELL_HEIGHT;
+            const glm::vec2 currentTopLeft = dragged->GetMin();
 
-        glRectf(drawX, drawY, drawX + width, drawY + height);
+            int gridX = static_cast<int>(round(currentTopLeft.x / CELL_WIDTH));
+            int gridY = static_cast<int>(round(currentTopLeft.y / CELL_HEIGHT));
 
-        // 드래그 중일 때 테두리 추가
-        if(shape.isDragging){
-            glColor3f(1.0f, 1.0f, 0.0f); // 노란색 테두리
-            glLineWidth(3.0f);
-            glBegin(GL_LINE_LOOP);
-            glVertex2f(drawX, drawY);
-            glVertex2f(drawX + width, drawY);
-            glVertex2f(drawX + width, drawY + height);
-            glVertex2f(drawX, drawY + height);
-            glEnd();
+            int blockGridWidth = static_cast<int>(dragged->size.x / CELL_WIDTH);
+            int blockGridHeight = static_cast<int>(dragged->size.y / CELL_HEIGHT);
+
+            gridX = std::max(GRID_SIZE, gridX);
+            gridX = std::min(gridX, 2 * GRID_SIZE - blockGridWidth);
+            gridY = std::max(0, std::min(gridY, GRID_SIZE - blockGridHeight));
+
+            dragged->position.x = (gridX * CELL_WIDTH) + dragged->size.x * 0.5f;
+            dragged->position.y = (gridY * CELL_HEIGHT) + dragged->size.y * 0.5f;
+
+            dragged = nullptr;
+            CheckComplete();
         }
     }
 }
 
-
-// 화면에 텍스트를 그리는 함수
-void drawText(float x, float y, const std::string& text, void* font)
+void OnCursorMoved(GLFWwindow* const window_,
+                   const double      x_,
+                   const double      y_) noexcept
 {
-    glRasterPos2f(x, y);
-    std::ranges::for_each(text, [&font](const char c)
+    if (isGameOver)
     {
-        glutBitmapCharacter(font, c);
-    });
-}
-
-// 게임 완료 조건을 확인하는 함수
-void checkCompletion() {
-    if (question.size() != answer.size()) {
-        isGameComplete = false;
         return;
     }
-    bool allMatch = true;
-    for (const auto& block : answer) {
+
+    const glm::vec2 lastCursorPosition = cursorPosition;
+    cursorPosition = { static_cast<float>(x_), static_cast<float>(WINDOW_HEIGHT - y_) };
+
+    if (dragged != nullptr)
+    {
+        // int gridX = static_cast<int>(cursorPosition.x / CELL_WIDTH);
+        // int gridY = static_cast<int>(cursorPosition.y / CELL_HEIGHT);
+
+        // float targetX = (gridX * CELL_WIDTH) + (CELL_WIDTH * 0.5f);
+        // float targetY = (gridY * CELL_HEIGHT) + (CELL_HEIGHT * 0.5f);
+
+        // dragged->position = { targetX, targetY };
+        glm::vec2 delta = cursorPosition - lastCursorPosition;
+        dragged->position += delta;
+    }
+}
+
+static constexpr unsigned int BLOCK_COUNTS = 10;
+
+void Initialize() noexcept
+{
+    isGameOver = false;
+
+    std::random_device rd;
+    std::mt19937 gen(rd());
+
+    std::uniform_real_distribution<float> colorDist(0.3f, 1.0f);
+    std::uniform_int_distribution<int> sizeDist(1, 3);
+    std::uniform_int_distribution<int> posDist(0, GRID_SIZE - 3);
+
+    question.clear();
+    for (unsigned int count = 0; count < BLOCK_COUNTS; ++count)
+    {
+        Block newBlock;
+        newBlock.id     = count;
+        newBlock.size= { sizeDist(gen) * CELL_WIDTH, sizeDist(gen) * CELL_WIDTH };
+
+        bool positionFound = false;
+
+        while(!positionFound)
+        {
+            const glm::vec2 gridPos = { posDist(gen), posDist(gen) };
+
+            newBlock.position = { (gridPos.x * CELL_WIDTH) + newBlock.size.x * 0.5f,
+                                     (gridPos.y * CELL_HEIGHT) + newBlock.size.y * 0.5f };
+
+            positionFound = true;
+
+            if (newBlock.GetMax().x > PANEL_PIXEL_WIDTH ||
+                newBlock.GetMax().y > WINDOW_HEIGHT)
+            {
+                positionFound = false;
+                continue;
+            }
+
+            for(const Block& other : question)
+            {
+                if ((newBlock.GetMin().x < other.GetMax().x) &&
+                    (newBlock.GetMax().x > other.GetMin().x) &&
+                    (newBlock.GetMin().y < other.GetMax().y) &&
+                    (newBlock.GetMax().y > other.GetMin().y))
+                {
+                    positionFound = false;
+                    break;
+                }
+            }
+        }
+
+        newBlock.color = { colorDist(gen), colorDist(gen), colorDist(gen) };
+        question.push_back(newBlock);
+    }
+
+    answer.assign(question.begin(), question.end());
+
+    std::uniform_int_distribution<int> userPosDistX(0, GRID_SIZE - 3);
+    std::uniform_int_distribution<int> userPosDistY(0, GRID_SIZE - 3);
+
+    for (Block& block : answer)
+    {
+        bool isFound = false;
+
+        while (!isFound)
+        {
+            const glm::vec2 gridPos = { userPosDistX(gen), userPosDistY(gen) };
+
+            block.position = { PANEL_PIXEL_WIDTH + (gridPos.x * CELL_WIDTH) + block.size.x * 0.5f,
+                                  (gridPos.y * CELL_HEIGHT) + block.size.y * 0.5f };
+
+            isFound = true;
+
+            for (const Block& other : answer)
+            {
+                if (block.id == other.id)
+                {
+                    continue;
+                }
+
+                if ((block.GetMin().x < other.GetMax().x) &&
+                    (block.GetMax().x > other.GetMin().x) &&
+                    (block.GetMin().y < other.GetMax().y) &&
+                    (block.GetMax().y > other.GetMin().y))
+                {
+                    isFound = false;
+                    break;
+                }
+            }
+        }
+    }
+
+    dragged = nullptr;
+}
+
+void Update(const float deltaTime_) noexcept
+{
+
+}
+
+void Render() noexcept
+{
+    // 격자.
+    {
+        glColor3f(0.2, 0.2, 0.2);
+        glLineWidth(1.0f);
+        glBegin(GL_LINES);
+        {
+            for (unsigned int index = 0; index <= GRID_SIZE * 2; ++index)
+            {
+                glVertex2f(index * CELL_WIDTH, 0);
+                glVertex2f(index * CELL_WIDTH, WINDOW_HEIGHT);
+            }
+
+            for (unsigned int index = 0; index <= GRID_SIZE; ++index)
+            {
+                glVertex2f(0, index * CELL_HEIGHT);
+                glVertex2f(WINDOW_WIDTH, index * CELL_HEIGHT);
+            }
+        }
+        glEnd();
+
+        glColor3f(1.0f, 1.0f, 1.0f);
+        glLineWidth(2.0f);
+        glBegin(GL_LINES);
+        {
+            glVertex2f(WINDOW_WIDTH / 2.0f, 0);
+            glVertex2f(WINDOW_WIDTH / 2.0f, WINDOW_HEIGHT);
+        }
+        glEnd();
+
+    }
+    // 블록.
+    {
+        for (const Block& block : question)
+        {
+            block.Render();
+        }
+
+        for (const Block& block : answer)
+        {
+            block.Render();
+        }
+    }
+}
+
+void CheckComplete() noexcept
+{
+    for (const auto& ans_block : answer)
+    {
         bool foundMatch = false;
-        for (const auto& pShape : question) {
-            // ID가 같고, 사용자 도형의 위치가 문제 패널의 그리드 좌표와 일치하는지 확인
-            // 사용자 도형의 x좌표는 오른쪽 패널에 있으므로 GRID_SIZE만큼 빼서 비교
-            if (block.id == pShape.id &&
-                static_cast<int>(round(block.gridPos.x)) - GRID_SIZE == static_cast<int>(pShape.gridPos.x) &&
-                static_cast<int>(round(block.gridPos.y)) == static_cast<int>(pShape.gridPos.y)) {
-                foundMatch = true;
+        for (const auto& q_block : question)
+        {
+            if (ans_block.id == q_block.id)
+            {
+                glm::vec2 converted_pos = ans_block.position;
+                converted_pos.x -= PANEL_PIXEL_WIDTH;
+
+                constexpr float THRESHOLD = 1.0f;
+                if (glm::distance(converted_pos, q_block.position) < THRESHOLD)
+                {
+                    foundMatch = true;
+                }
                 break;
             }
         }
-        if (!foundMatch) {
-            allMatch = false;
-            break;
+        if (!foundMatch)
+        {
+            isGameOver = false;
+            return;
         }
     }
 
-    isGameComplete = allMatch;
+    // 모든 블록이 매치되었으면 게임 완료
+    std::cout << "All blocks are in place! Game Over." << std::endl;
+    isGameOver = true;
 }
