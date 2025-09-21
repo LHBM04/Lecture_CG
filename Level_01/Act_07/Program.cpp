@@ -181,19 +181,24 @@ static glm::vec2 cursorPosition = { 0, 0 };
 static constexpr int GRID_SIZE = 10;
 
 /**
- * @brief 화면의 절반(왼쪽 패널)의 너비
+ * @brief 화면의 절반(왼쪽 패널)의 너비.
  */
 static constexpr int PANEL_PIXEL_WIDTH = WINDOW_WIDTH / 2;
 
 /**
- * @brief
+ * @brief 셀 너비.
  */
 static constexpr float CELL_WIDTH = static_cast<float>(PANEL_PIXEL_WIDTH) / GRID_SIZE;
 
 /**
- * @brief
+ * @brief 셀 높이.
  */
 static constexpr float CELL_HEIGHT = static_cast<float>(WINDOW_HEIGHT) / GRID_SIZE;
+
+/**
+ * @brief 블럭 개수.
+ */
+static constexpr unsigned int BLOCK_COUNTS = 10;
 
 /**
  * @brief 문제.
@@ -397,8 +402,6 @@ void OnCursorMoved(GLFWwindow* const window_,
     }
 }
 
-static constexpr unsigned int BLOCK_COUNTS = 10;
-
 void Initialize() noexcept
 {
     isGameOver = false;
@@ -539,6 +542,13 @@ void Render() noexcept
         for (const Block& block : answer)
         {
             block.Render();
+        }
+    }
+    {
+        if (isGameOver)
+        {
+            glColor4f(0.0f, 0.0f, 0.0f, 0.5f);
+            glRectf(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
         }
     }
 }
