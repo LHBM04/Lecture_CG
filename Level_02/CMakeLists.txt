@@ -24,9 +24,3 @@ set_target_properties(GLM PROPERTIES
 
 add_subdirectory("Act_01")
 add_subdirectory("Act_02")
-add_subdirectory("Act_03")
-add_subdirectory("Act_04")
-add_subdirectory("Act_05")
-add_subdirectory("Act_06")
-add_subdirectory("Act_07")
-add_subdirectory("Act_08")

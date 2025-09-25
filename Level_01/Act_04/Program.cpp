@@ -139,7 +139,7 @@ static constexpr int WINDOW_HEIGHT = 600;
 /**
  * @brief 윈도우 제목.
  */
-static constexpr const char* const WINDOW_TITLE = "Animation Simulator";
+static constexpr const char* const WINDOW_TITLE = "Level 01 - Act 04";
 
 /**
  * @brief GL 메이저 버전.
@@ -562,6 +562,11 @@ void OnButtonInteracted(GLFWwindow* window_,
 {
     if (button_ == GLFW_MOUSE_BUTTON_LEFT)
     {
+        if (rects.size() <= 5)
+        {
+            return;
+        }
+
         if (action_ == GLFW_PRESS)
         {
             if (currentMoveType != MoveType::None ||

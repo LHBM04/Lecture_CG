@@ -193,7 +193,7 @@ static constexpr unsigned int WINDOW_HEIGHT = 600;
 /**
  * @brief 애플리케이션 타이틀.
  */
-static constexpr const char* const WINDOW_TITLE = "Effect Simulator";
+static constexpr const char* const WINDOW_TITLE = "Level 01 - Act 06";
 
 /**
  * @brief GL 메이저 버전.

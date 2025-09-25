@@ -24,7 +24,7 @@ void OnKeyDown(GLFWwindow* window_,
 /**
  * @brief 윈도우 타이틀.
  */
-static constexpr const char* const WINDOW_TITLE = "Level 01 - Act 01";
+static constexpr const char* const WINDOW_TITLE = "OpenGL Color Simulator";
 
 /**
  * @brief 윈도우 너비.

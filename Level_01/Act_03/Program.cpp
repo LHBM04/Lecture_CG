@@ -80,7 +80,7 @@ static void OnCursorMoved(GLFWwindow* window_,
 /**
  * @brief 윈도우 타이틀.
  */
-static constexpr const char* const WINDOW_TITLE = "Interact Simulator";
+static constexpr const char* const WINDOW_TITLE = "Level 01 - Act 03";
 
 /**
  * @brief 윈도우 너비.

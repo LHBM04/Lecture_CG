@@ -12,5 +12,8 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 # Lv.0 [Warming Up (01 ~ 06)]
 add_subdirectory("Level_00")
 
-# Lv.1 [OpenGL Basic (01 ~ 07)]
+# Lv.1 [OpenGL Basic (01 ~ 12)]
 add_subdirectory("Level_01")
+
+# Lv.2 [OpenGL Basic (01 ~ 12)]
+add_subdirectory("Level_02")

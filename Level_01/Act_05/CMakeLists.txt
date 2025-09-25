@@ -1,6 +1,6 @@
-add_executable(1_Act_05 Program.cpp)
+add_executable(Level_01_Act_05 Program.cpp)
 
-target_link_libraries(1_Act_05 PRIVATE
+target_link_libraries(Level_01_Act_05 PRIVATE
         GLAD
         GLFW
         GLM
@@ -8,12 +8,12 @@ target_link_libraries(1_Act_05 PRIVATE
         glu32
 )
 
-set_target_properties(1_Act_05 PROPERTIES
-        RUNTIME_OUTPUT_NAME "Act 5"
+set_target_properties(Level_01_Act_05 PROPERTIES
+        RUNTIME_OUTPUT_NAME "Level 01 - Act 05"
 )
 
-add_custom_command(TARGET 1_Act_05 POST_BUILD
+add_custom_command(TARGET Level_01_Act_05 POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
         "${CMAKE_SOURCE_DIR}/External/Binaries/$<CONFIG>/glfw3.dll"
-        "$<TARGET_FILE_DIR:1_Act_05>/glfw3.dll"
+        "$<TARGET_FILE_DIR:Level_01_Act_05>/glfw3.dll"
 )

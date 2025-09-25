@@ -85,7 +85,7 @@ struct Block
 };
 
 /**
-* @brief 키와 상호작용할 때 호출됩니다.
+ * @brief 키와 상호작용할 때 호출됩니다.
  *
  * @param window_ 윈도우.
  * @param key_ 눌린 키.
@@ -158,7 +158,7 @@ static constexpr unsigned int WINDOW_HEIGHT = 600;
 /**
  * @brief 애플리케이션 타이틀.
  */
-static constexpr const char* const WINDOW_TITLE = "Puzzle Game";
+static constexpr const char* const WINDOW_TITLE = "Level 01 - Act 07";
 
 /**
  * @brief GL 메이저 버전.
@@ -316,8 +316,35 @@ void OnKeyInteracted(GLFWwindow* const window_,
             glfwSetWindowShouldClose(window_, true);
             break;
         }
-        default:
+        case GLFW_KEY_SPACE:
         {
+            for (Block& userBlock : answer)
+            {
+                const Block* targetBlock = nullptr;
+                for (const auto& q_block : question)
+                {
+                    if (userBlock.id == q_block.id)
+                    {
+                        targetBlock = &q_block;
+                        break;
+                    }
+                }
+
+                if (targetBlock)
+                {
+                    glm::vec2 hintPosition = targetBlock->position;
+                    hintPosition.x += PANEL_PIXEL_WIDTH;
+
+                    constexpr float THRESHOLD = 0.5f;
+                    if (glm::distance(userBlock.position, hintPosition) >= THRESHOLD)
+                    {
+                        userBlock.position = hintPosition;
+
+                        CheckComplete();
+                        return;
+                    }
+                }
+            }
             break;
         }
     }

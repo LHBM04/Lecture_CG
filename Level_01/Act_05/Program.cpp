@@ -14,9 +14,65 @@
 struct Rect
 {
     /**
+     * @brief 해당 사각형의 최소 좌표를 반환합니다.
+     *
+     * @return glm::vec2 최소 좌표.
+     */
+    [[nodiscard]]
+    constexpr inline glm::vec2 GetMin() const noexcept
+    {
+        return { position.x - size.x * 0.5f, position.y - size.y * 0.5f };
+    }
+
+    /**
+     * @brief 해당 사각형의 최대 좌표를 반환합니다.
+     *
+     * @return glm::vec2 최대 좌표.
+     */
+    [[nodiscard]]
+    constexpr inline glm::vec2 GetMax() const noexcept
+    {
+        return { position.x + size.x * 0.5f, position.y + size.y * 0.5f };
+    }
+
+    /**
+     * @brief 해당 사각형과 지정한 사각형이 접촉하는지 여부를 반환합니다.
+     *
+     * @param other_ 지정할 사각형.
+     *
+     * @return bool 접촉 여부.
+     */
+    [[nodiscard]]
+    constexpr inline bool IsInteract(const Rect& other_) const noexcept
+    {
+        const glm::vec2 min = Rect::GetMin();
+        const glm::vec2 max = Rect::GetMax();
+
+        const glm::vec2 otherMin = other_.GetMin();
+        const glm::vec2 otherMax = other_.GetMax();
+
+        return (min.x < otherMax.x) &&
+               (max.x > otherMin.x) &&
+               (min.y < otherMax.y) &&
+               (max.y > otherMin.y);
+    }
+
+    /**
+     * @brief 해당 사각형을 그립니다.
+     */
+    void Render() const noexcept
+    {
+        const glm::vec2 min = GetMin();
+        const glm::vec2 max = GetMax();
+
+        glColor3f(color.r, color.g, color.b);
+        glRectf(min.x, min.y, max.x, max.y);
+    }
+
+    /**
      * @brief 위치.
      */
-    glm::vec2 pos;
+    glm::vec2 position;
 
     /**
      * @brief 크기.
@@ -28,17 +84,6 @@ struct Rect
      */
     glm::vec3 color;
 };
-
-/**
- * @brief 두 사각형이 충돌하는지 검사합니다.
- *
- * @param left_ 비교할 첫 번째 사각형.
- * @param right_ 비교할 두 번째 사각형.
- *
- * @return bool 충돌 여부.
- */
-static bool IsCollide(const Rect& left_,
-                      const Rect& right_) noexcept;
 
 /**
  * @brief 키와 상호작용할 때 호출됩니다.
@@ -92,7 +137,7 @@ static constexpr unsigned int WINDOW_HEIGHT = 600;
 /**
  * @brief 애플리케이션 타이틀.
  */
-static constexpr const char* const WINDOW_TITLE = "Animation Simulator";
+static constexpr const char* const WINDOW_TITLE = "Level 01 - Act 05";
 
 /**
  * @brief GL 메이저 버전.
@@ -133,8 +178,8 @@ int main(int argc_, char** argv_)
 {
     for (size_t count = 0; count < CREATE_RECT_COUNTS; ++count)
     {
-        const float fx = static_cast<float>(std::rand() % (WINDOW_WIDTH - 50));
-        const float fy = static_cast<float>(std::rand() % (WINDOW_HEIGHT - 50));
+        const float fx = 25.0f + static_cast<float>(std::rand() % (WINDOW_WIDTH - 50));
+        const float fy = 25.0f + static_cast<float>(std::rand() % (WINDOW_HEIGHT - 50));
 
         rects.push_back(
         {
@@ -198,41 +243,20 @@ int main(int argc_, char** argv_)
             glClearColor(0.15f, 0.15f, 0.15f, 1.0f);
             glClear(GL_COLOR_BUFFER_BIT);
 
-            for (const auto&[position, size, color] : rects)
+            for (const Rect& rect : rects)
             {
-                glColor3f(color.r, color.g, color.b);
-                glRectf(position.x, position.y, position.x + size.x, position.y + size.y);
+                rect.Render();
             }
 
             if (shouldEnableEraser)
             {
-                glColor3f(eraser.color.r, eraser.color.g, eraser.color.b);
-
-                if (currentEraseCounts > 0)
-                {
-                    glRectf(eraser.pos.x, eraser.pos.y,
-                  eraser.pos.x + eraser.size.x * currentEraseCounts,
-                  eraser.pos.y + eraser.size.y * currentEraseCounts);
-                }
-                else
-                {
-                    glRectf(eraser.pos.x, eraser.pos.y, (eraser.pos.x + eraser.size.x), (eraser.pos.y + eraser.size.y));
-                }
+                eraser.Render();
             }
         }
         glfwSwapBuffers(window);
     }
 
     return 0;
-}
-
-bool IsCollide(const Rect& left_,
-               const Rect& right_) noexcept
-{
-    return !(left_.pos.x + left_.size.x < right_.pos.x ||
-             right_.pos.x + right_.size.x < left_.pos.x ||
-             left_.pos.y + left_.size.y < right_.pos.y ||
-             right_.pos.y + right_.size.y < left_.pos.y );
 }
 
 void OnKeyInteracted(GLFWwindow* window_,
@@ -253,8 +277,8 @@ void OnKeyInteracted(GLFWwindow* window_,
             rects.clear();
             for (size_t count = 0; count < CREATE_RECT_COUNTS; ++count)
             {
-                const float fx = static_cast<float>(std::rand() % (WINDOW_WIDTH - 50));
-                const float fy = static_cast<float>(std::rand() % (WINDOW_HEIGHT - 50));
+                const float fx = 25.0f + static_cast<float>(std::rand() % (WINDOW_WIDTH - 50));
+                const float fy = 25.0f + static_cast<float>(std::rand() % (WINDOW_HEIGHT - 50));
 
                 rects.push_back(
                 {
@@ -287,22 +311,22 @@ void OnButtonInteracted(GLFWwindow* window_,
                         int         action_,
                         int         mods_)
 {
-    double mouseX, mouseY;
-    glfwGetCursorPos(window_, &mouseX, &mouseY);
-
     if (button_ == GLFW_MOUSE_BUTTON_LEFT)
     {
         if (action_ == GLFW_PRESS)
         {
             shouldEnableEraser = true;
 
+            double mouseX;
+            double mouseY;
+            glfwGetCursorPos(window_, &mouseX, &mouseY);
+
             const float fixedX = static_cast<float>(mouseX);
             const float fixedY = static_cast<float>(WINDOW_HEIGHT - mouseY);
 
-            eraser.pos   = { fixedX - eraser.size.x * 0.5f,
-                                fixedY - eraser.size.y * 0.5f };;
-            eraser.size  = {20, 20};
-            eraser.color = {0.0f, 0.0f, 0.0f};
+            eraser.position= { fixedX, fixedY };
+            eraser.size    = { 20, 20 };
+            eraser.color   = { 0.0f, 0.0f, 0.0f };
         }
         else if (action_ == GLFW_RELEASE)
         {
@@ -346,21 +370,25 @@ void OnCursorMoved(GLFWwindow* window_,
         return;
     }
 
-    float fixedX = static_cast<float>(x_);
-    float fixedY = static_cast<float>(WINDOW_HEIGHT - y_);
+    const float fixedX = static_cast<float>(x_);
+    const float fixedY = static_cast<float>(WINDOW_HEIGHT - y_);
 
-    eraser.pos = { fixedX - eraser.size.x * 0.5f,
-                      fixedY - eraser.size.y * 0.5f };
+    eraser.position = { fixedX, fixedY };
 
+    auto toErase = rects.end();
     for (auto iter = rects.begin(); iter != rects.end(); ++iter)
     {
-        if (IsCollide(eraser, *iter))
+        if (eraser.IsInteract(*iter))
         {
+            toErase = iter;
+            eraser.size += glm::vec2(7.5f, 7.5f);
             eraser.color = iter->color;
-            currentEraseCounts++;
-
-            rects.erase(iter);
             break;
         }
+    }
+
+    if (toErase != rects.end())
+    {
+        rects.erase(toErase);
     }
 }
