@@ -14,6 +14,3 @@ add_subdirectory("Level_00")
 
 # Lv.1 [OpenGL Basic (01 ~ 12)]
 add_subdirectory("Level_01")
-
-# Lv.2 [OpenGL Basic (01 ~ 12)]
-add_subdirectory("Level_02")

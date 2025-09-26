@@ -14,7 +14,7 @@
  *
  * @brief 셰이더를 정의합니다.
  */
-class Shader
+class Shader final
 {
 public:
     /**
@@ -563,7 +563,7 @@ static constexpr unsigned int WINDOW_HEIGHT = 600;
 /**
  * @brief 애플리케이션 타이틀.
  */
-static constexpr const char* const WINDOW_TITLE = "Level 01 - Act 07";
+static constexpr const char* const WINDOW_TITLE = "Level 01 - Act 08";
 
 /**
  * @brief GL 메이저 버전.
