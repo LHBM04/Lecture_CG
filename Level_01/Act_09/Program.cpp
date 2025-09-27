@@ -22,6 +22,9 @@ class Shader final
 public:
     /**
      * @brief 생성자.
+     *
+     * @param vertexSource_   버텍스 셰이더 소스 코드.
+     * @param fragmentSource_ 프래그먼트 셰이더 소스 코드
      */
     explicit Shader(const char* const vertexSource_,
                     const char* const fragmentSource_) noexcept;
@@ -72,10 +75,20 @@ private:
 class Triangle final
 {
 public:
+    /**
+     * @brief 생성자.
+     *
+     * @param position_ 삼각형 위치.
+     * @param size_     삼각형 크기.
+     * @param color_    삼각형 색상.
+     */
     explicit Triangle(const glm::vec2& position_,
                       const float      size_,
                       const glm::vec3& color_) noexcept;
 
+    /**
+     * @brief 소멸자.
+     */
     ~Triangle() noexcept;
 
     /**
@@ -231,7 +244,7 @@ private:
  * @param message_   메시지 내용.
  * @param userParam_ 사용자 매개변수.
  */
-static void GLAPIENTRY MessageCallback(GLenum        source_,
+static void GLAPIENTRY OnDebugMessage(GLenum        source_,
                                        GLenum        type_,
                                        GLuint        id_,
                                        GLenum        severity_,
@@ -374,7 +387,7 @@ int main()
     }
 
     glEnable(GL_DEBUG_OUTPUT);
-    glDebugMessageCallback(MessageCallback, 0);
+    glDebugMessageCallback(OnDebugMessage, nullptr);
 
     glfwSetKeyCallback(window, OnKeyInteracted);
     glfwSetMouseButtonCallback(window, OnButtonInteracted);
@@ -457,9 +470,9 @@ Triangle::Triangle(const glm::vec2& position_,
 {
     constexpr std::array<GLfloat, 6> vertices_
     {
-        0.0f, 0.5f,
-        -0.5f, -0.5f,
-        0.5f, -0.5f
+         0.0f,  1.0f,
+        -0.25f, -0.25f,
+         0.25f, -0.25f
     };
 
     constexpr std::array<GLuint, 3> indices_
@@ -616,7 +629,7 @@ void Quadrant::Draw(const Shader& shader_) const noexcept
     glLineWidth(1.0f);
 }
 
-void MessageCallback(const GLenum        source_,
+void OnDebugMessage(const GLenum        source_,
                      const GLenum        type_,
                      const GLuint        id_,
                      const GLenum        severity_,
