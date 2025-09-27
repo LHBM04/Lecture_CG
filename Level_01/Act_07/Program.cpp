@@ -593,6 +593,7 @@ void CheckComplete() noexcept
                 converted_pos.x -= PANEL_PIXEL_WIDTH;
 
                 constexpr float THRESHOLD = 1.0f;
+
                 if (glm::distance(converted_pos, q_block.position) < THRESHOLD)
                 {
                     foundMatch = true;

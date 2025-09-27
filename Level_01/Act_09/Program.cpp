@@ -3,6 +3,7 @@
 #include <fstream>
 #include <ios>
 #include <iostream>
+#include <random>
 #include <string>
 #include <vector>
 
@@ -23,37 +24,12 @@ public:
      * @brief 생성자.
      */
     explicit Shader(const char* const vertexSource_,
-                    const char* const fragmentSource_) noexcept
-    {
-        GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
-        glShaderSource(vertexShader, 1, &vertexSource_, nullptr);
-        glCompileShader(vertexShader);
-
-        GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-        glShaderSource(fragmentShader, 1, &fragmentSource_, nullptr);
-        glCompileShader(fragmentShader);
-
-        programID = glCreateProgram();
-        glAttachShader(programID, vertexShader);
-        glAttachShader(programID, fragmentShader);
-        glLinkProgram(programID);
-
-        glDeleteShader(vertexShader);
-        glDeleteShader(fragmentShader);
-
-        isCompiled = true;
-    }
+                    const char* const fragmentSource_) noexcept;
 
     /**
      * @brief 소멸자.
      */
-    ~Shader() noexcept
-    {
-        if (isCompiled)
-        {
-            glDeleteProgram(programID);
-        }
-    }
+    ~Shader() noexcept;
 
     /**
      * @brief 셰이더를 사용합니다.
@@ -96,71 +72,18 @@ private:
 class Triangle final
 {
 public:
-    explicit Triangle(const glm::vec2 position_,
-                      const float     size_,
-                      const glm::vec3 color_) noexcept
-        : vao(0)
-        , vbo(0)
-        , ebo(0)
-        , position(position_)
-        , size(size_)
-        , color(color_)
-    {
-        constexpr std::array<GLfloat, 6> vertices_
-        {
-            0.0f,  0.5f,
-           -0.5f, -0.5f,
-            0.5f, -0.5f
-        };
+    explicit Triangle(const glm::vec2& position_,
+                      const float      size_,
+                      const glm::vec3& color_) noexcept;
 
-        constexpr std::array<GLuint, 3> indices_
-        {
-            0, 1, 2
-        };
-
-        glGenVertexArrays(1, &vao);
-        glBindVertexArray(vao);
-
-        glGenBuffers(1, &vbo);
-        glBindBuffer(GL_ARRAY_BUFFER, vbo);
-        glBufferData(GL_ARRAY_BUFFER, vertices_.size() * sizeof(GLfloat), vertices_.data(), GL_STATIC_DRAW);
-
-        glGenBuffers(1, &ebo);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices_.size() * sizeof(GLuint), indices_.data(), GL_STATIC_DRAW);
-
-        glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
-        glEnableVertexAttribArray(0);
-
-        glBindVertexArray(0);
-    }
-
-    ~Triangle() noexcept
-    {
-        glDeleteVertexArrays(1, &vao);
-        glDeleteBuffers(1, &vbo);
-    }
+    ~Triangle() noexcept;
 
     /**
      * @brief 해당 삼각형을 그립니다.
      *
      * @param shader_ 사용할 셰이더.
      */
-    inline void Draw(const Shader& shader_) const noexcept
-    {
-        glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(position, 0.0f));
-        model = glm::scale(model, glm::vec3(size, size, 1.0f));
-
-        const GLint modelLoc = glGetUniformLocation(shader_.GetProgramID(), "u_Model");
-        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, &model[0][0]);
-
-        const GLint colorLoc = glGetUniformLocation(shader_.GetProgramID(), "u_Color");
-        glUniform3fv(colorLoc, 1, &color[0]);
-
-        glBindVertexArray(vao);
-        glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, nullptr);
-        glBindVertexArray(0);
-    }
+    void Draw(const Shader& shader_) const noexcept;
 
 private:
     /**
@@ -194,6 +117,128 @@ private:
     glm::vec3 color;
 };
 
+class Quadrant final
+{
+public:
+    explicit Quadrant(const float x_,
+                      const float y_,
+                      const float width_,
+                      const float height_) noexcept;
+
+    ~Quadrant() noexcept;
+
+    /**
+     * @brief 해당 사분면을 초기화합니다.
+     *
+     * @param shouldAddOne_ 삼각형을 하나 추가할지 여부.
+     */
+    void Reset(const bool shouldAddOne_) noexcept;
+
+    /**
+     * @brief 해당 사분면에 삼각형을 추가합니다.
+     *
+     * @param position_ 삼각형 위치.
+     * @param size_     삼각형 크기.
+     * @param color_    삼각형 색상.
+     *
+     * @return bool 추가 성공 여부.
+     */
+    bool Add(const glm::vec2& position_,
+             const float      size_,
+             const glm::vec3& color_) noexcept;
+
+    /**
+     * @brief 해당 사분면에 삼각형을 추가합니다.
+     *
+     * @param shader_ 사용할 셰이더.
+     */
+    void Draw(const Shader& shader_) const noexcept;
+
+    /**
+     * @brief 해당 사분면이 포화 상태인지에 대한 여부를 반환합니다.
+     *
+     * @return bool 포화 상태 여부.
+     */
+    [[nodiscard]]
+    constexpr bool IsFull() const noexcept
+    {
+        return triangles.size() >= MAX_TRIANGLE_COUNTS;
+    }
+
+    /**
+   * @brief 해당 사분면과 지정한 점이 접촉하는지 여부를 반환합니다.
+   *
+   * @param position_ 지정할 점.
+   *
+   * @return bool 접촉 여부.
+   */
+    [[nodiscard]]
+    constexpr bool IsInteract(const glm::vec2& position_) const noexcept
+    {
+        return position_.x >= x && position_.x <= x + width &&
+               position_.y >= y && position_.y <= y + height;
+    }
+private:
+    /**
+     * @brief 해당 사분면의 정점 배열 객체.
+     */
+    GLuint vao;
+
+    /**
+     * @brief 해당 사분면의 정점 버퍼 객체.
+     */
+    GLuint vbo;
+
+    /**
+     * @brief x.
+     */
+    float x;
+
+    /**
+     * @brief y.
+     */
+    float y;
+
+    /**
+     * @brief 너비.
+     */
+    float width;
+
+    /**
+     * @brief 높이.
+     */
+    float height;
+
+    /**
+     * @brief 최대 삼각형 개수.
+     */
+    static constexpr std::size_t MAX_TRIANGLE_COUNTS = 4;
+
+    /**
+     * @brief 해당 사분면에 위치하는 삼각형들.
+     */
+    std::vector<std::unique_ptr<Triangle>> triangles;
+};
+
+/**
+ * @brief OpenGL 디버그 메시지 콜백 함수.
+ *
+ * @param source_    메시지 출처.
+ * @param type_      메시지 유형.
+ * @param id_        메시지 ID.
+ * @param severity_  메시지 심각도.
+ * @param length_    메시지 길이.
+ * @param message_   메시지 내용.
+ * @param userParam_ 사용자 매개변수.
+ */
+static void GLAPIENTRY MessageCallback(GLenum        source_,
+                                       GLenum        type_,
+                                       GLuint        id_,
+                                       GLenum        severity_,
+                                       GLsizei       length_,
+                                       const GLchar* message_,
+                                       const void*   userParam_);
+
 /**
  * @brief 키와 상호작용할 때 호출됩니다.
  *
@@ -217,10 +262,10 @@ static void OnKeyInteracted(GLFWwindow* window_,
  * @param action_ 버튼 액션.
  * @param mods_   버튼 상태.
  */
-static void OnButtonInteracted(GLFWwindow* window_,
-                               int         button_,
-                               int         action_,
-                               int         mods_) noexcept;
+static void OnButtonInteracted(GLFWwindow* const window_,
+                               const int         button_,
+                               const int         action_,
+                               const int         mods_) noexcept;
 
 /**
  * @brief 커서가 움직일 때 호출됩니다.
@@ -229,9 +274,9 @@ static void OnButtonInteracted(GLFWwindow* window_,
  * @param x_      마우스 X 좌표.
  * @param y_      마우스 Y 좌표.
  */
-static void OnCursorMoved(GLFWwindow* window_,
-                          double      x_,
-                          double      y_) noexcept;
+static void OnCursorMoved(GLFWwindow* const window_,
+                          const double      x_,
+                          const double      y_) noexcept;
 
 /**
  * @brief 셰이더 소스 코드.
@@ -274,66 +319,24 @@ static constexpr unsigned char CONTEXT_MINOR_VERSION = 5;
 static glm::vec2 cursorPosition;
 
 /**
+ * @brief 난수 생성기.
+ */
+static std::random_device rd;
+
+/**
+ * @brief 난수 생성 엔진.
+ */
+static std::mt19937 gen(rd());
+
+/**
  * @brief 선으로 그릴지 여부.
  */
 static bool shouldDrawWithLines = false;
 
 /**
- * @struct Quadrant
- *
- * @brief 나눌 사분면의 위치, 크기를 정의합니다.
- */
-struct Quadrant
-{
-    /**
-     * @brief 해당 사분면과 지정한 점이 접촉하는지 여부를 반환합니다.
-     *
-     * @param position_ 지정할 점.
-     *
-     * @return bool 접촉 여부.
-     */
-    [[nodiscard]]
-    constexpr bool IsInteract(const glm::vec2& position_) const noexcept
-    {
-        return position_.x >= x && position_.x <= x + width &&
-               position_.y >= y && position_.y <= y + height;
-    }
-
-    /**
-     * @brief x.
-     */
-    float x;
-
-    /**
-     * @brief y.
-     */
-    float y;
-
-    /**
-     * @brief 너비.
-     */
-    float width;
-
-    /**
-     * @brief 높이.
-     */
-    float height;
-};
-
-/**
  * @brief 사분면들.
  */
-static std::array<Quadrant, 4> quadrants
-{
-    Quadrant{ WINDOW_WIDTH / 2.0f, WINDOW_HEIGHT / 2.0f, WINDOW_WIDTH / 2.0f, WINDOW_HEIGHT / 2.0f }, // Top-left (1사분면, index 0)
-    Quadrant{ 0.0f,                WINDOW_HEIGHT / 2.0f, WINDOW_WIDTH / 2.0f, WINDOW_HEIGHT / 2.0f }, // Top-right (2사분면, index 1)
-    Quadrant{ 0.0f,                0.0f,                 WINDOW_WIDTH / 2.0f, WINDOW_HEIGHT / 2.0f }, // Bottom-left (3사분면, index 2)
-    Quadrant{ WINDOW_WIDTH / 2.0f, 0.0f,                 WINDOW_WIDTH / 2.0f, WINDOW_HEIGHT / 2.0f }  // Bottom-right (4사분면, index 3)
-};
-/**
- * @brief 각 사분면에 위치하는 삼각형들.
- */
-static std::array<std::vector<Triangle>, 4> triangles;
+static std::array<std::unique_ptr<Quadrant>, 4> quadrants;
 
 int main()
 {
@@ -345,7 +348,8 @@ int main()
 
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, CONTEXT_MAJOR_VERSION);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, CONTEXT_MINOR_VERSION);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_COMPAT_PROFILE);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE);
     glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
     window = glfwCreateWindow(WINDOW_WIDTH,
@@ -369,6 +373,9 @@ int main()
         return -1;
     }
 
+    glEnable(GL_DEBUG_OUTPUT);
+    glDebugMessageCallback(MessageCallback, 0);
+
     glfwSetKeyCallback(window, OnKeyInteracted);
     glfwSetMouseButtonCallback(window, OnButtonInteracted);
     glfwSetCursorPosCallback(window, OnCursorMoved);
@@ -379,24 +386,248 @@ int main()
     const std::string fragmentShaderFile   = GetFile("Fragment.glsl");
     const char* const fragmentShaderSource = fragmentShaderFile.c_str();
 
-    Shader shader(vertexShaderSource, fragmentShaderSource);
+    const Shader shader(vertexShaderSource, fragmentShaderSource);
     shader.Use();
+
+    constexpr float halfWidth  = WINDOW_WIDTH / 2.0f;
+    constexpr float halfHeight = WINDOW_HEIGHT / 2.0f;
+
+    quadrants[0] = std::make_unique<Quadrant>(halfWidth, halfHeight, halfWidth, halfHeight);
+    quadrants[1] = std::make_unique<Quadrant>(0.0f,      halfHeight, halfWidth, halfHeight);
+    quadrants[2] = std::make_unique<Quadrant>(0.0f,      0.0f,       halfWidth, halfHeight);
+    quadrants[3] = std::make_unique<Quadrant>(halfWidth, 0.0f,       halfWidth, halfHeight);
 
     while (!glfwWindowShouldClose(window))
     {
+        glClearColor(0.15f, 0.15f, 0.15f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
         glPolygonMode(GL_FRONT_AND_BACK, shouldDrawWithLines ? GL_LINE : GL_FILL);
 
-        for (const auto& triangle : triangles)
+        for (const std::unique_ptr<Quadrant>& quadrant : quadrants)
         {
-            std::ranges::for_each(triangle, [&shader](const Triangle& tri) {
-                tri.Draw(shader);
-            });
+            quadrant->Draw(shader);
         }
 
         glfwPollEvents();
         glfwSwapBuffers(window);
+    }
+}
+
+Shader::Shader(const char* const vertexSource_,
+               const char* const fragmentSource_) noexcept
+{
+    const GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
+    glShaderSource(vertexShader, 1, &vertexSource_, nullptr);
+    glCompileShader(vertexShader);
+
+    const GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+    glShaderSource(fragmentShader, 1, &fragmentSource_, nullptr);
+    glCompileShader(fragmentShader);
+
+    programID = glCreateProgram();
+    glAttachShader(programID, vertexShader);
+    glAttachShader(programID, fragmentShader);
+
+    glLinkProgram(programID);
+
+    glDeleteShader(vertexShader);
+    glDeleteShader(fragmentShader);
+
+    isCompiled = true;
+}
+
+Shader::~Shader() noexcept
+{
+    if (isCompiled)
+    {
+        glDeleteProgram(programID);
+    }
+}
+
+Triangle::Triangle(const glm::vec2& position_,
+                   const float      size_,
+                   const glm::vec3& color_) noexcept
+    : vao(0)
+    , vbo(0)
+    , ebo(0)
+    , position(position_)
+    , size(size_)
+    , color(color_)
+{
+    constexpr std::array<GLfloat, 6> vertices_
+    {
+        0.0f, 0.5f,
+        -0.5f, -0.5f,
+        0.5f, -0.5f
+    };
+
+    constexpr std::array<GLuint, 3> indices_
+    {
+        0, 1, 2
+    };
+
+    glGenVertexArrays(1, &vao);
+    glBindVertexArray(vao);
+
+    glGenBuffers(1, &vbo);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    glBufferData(GL_ARRAY_BUFFER, vertices_.size() * sizeof(GLfloat), vertices_.data(), GL_STATIC_DRAW);
+
+    glGenBuffers(1, &ebo);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices_.size() * sizeof(GLuint), indices_.data(), GL_STATIC_DRAW);
+
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), nullptr);
+    glEnableVertexAttribArray(0);
+
+    glBindVertexArray(0);
+}
+
+Triangle::~Triangle() noexcept
+{
+    glDeleteVertexArrays(1, &vao);
+    glDeleteBuffers(1, &vbo);
+    glDeleteBuffers(1, &ebo);
+}
+
+void Triangle::Draw(const Shader& shader_) const noexcept
+{
+    glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(position, 0.0f));
+    model = glm::scale(model, glm::vec3(size, size, 1.0f));
+
+    const GLint modelLoc = glGetUniformLocation(shader_.GetProgramID(), "u_Model");
+    glUniformMatrix4fv(modelLoc, 1, GL_FALSE, &model[0][0]);
+
+    const GLint colorLoc = glGetUniformLocation(shader_.GetProgramID(), "u_Color");
+    glUniform3fv(colorLoc, 1, &color[0]);
+
+    glBindVertexArray(vao);
+    glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, nullptr);
+    glBindVertexArray(0);
+}
+
+Quadrant::Quadrant(const float x_,
+                   const float y_,
+                   const float width_,
+                   const float height_) noexcept
+    : vao(0)
+    , vbo(0)
+    , x(x_)
+    , y(y_)
+    , width(width_)
+    , height(height_)
+    , triangles(MAX_TRIANGLE_COUNTS)
+{
+    const float x2 = x_ + width_;
+    const float y2 = y_ + height_;
+
+    const std::array<glm::vec2, 4> vertices_pixels
+    {
+        glm::vec2{x_, y_}, // 좌측 하단
+        glm::vec2{x2, y_}, // 우측 하단
+        glm::vec2{x2, y2}, // 우측 상단
+        glm::vec2{x_, y2} // 좌측 상단
+    };
+
+    std::array<glm::vec2, 4> vertices_ndc{ };
+    for (size_t i = 0; i < vertices_pixels.size(); ++i)
+    {
+        vertices_ndc[i].x = (vertices_pixels[i].x / 1200 * 2.0f) - 1.0f;
+        vertices_ndc[i].y = (vertices_pixels[i].y / 600 * 2.0f) - 1.0f;
+    }
+
+    glGenVertexArrays(1, &vao);
+    glBindVertexArray(vao);
+
+    glGenBuffers(1, &vbo);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec2) * vertices_ndc.size(), vertices_ndc.data(), GL_STATIC_DRAW);
+
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(glm::vec2), nullptr);
+    glEnableVertexAttribArray(0);
+
+    glBindVertexArray(0);
+
+    Reset(true);
+}
+
+Quadrant::~Quadrant() noexcept
+{
+    glDeleteVertexArrays(1, &vao);
+    glDeleteBuffers(1, &vbo);
+
+    triangles.clear();
+}
+
+void Quadrant::Reset(const bool shouldAddOne_) noexcept
+{
+    triangles.clear();
+
+    if (shouldAddOne_)
+    {
+        const float ndcX = ((x + width / 2.0f) / WINDOW_WIDTH * 2.0f) - 1.0f;
+        const float ndcY = (((WINDOW_HEIGHT - (y + height / 2.0f))) / WINDOW_HEIGHT * 2.0f) - 1.0f;
+        const glm::vec2 position{ndcX, ndcY};
+
+        std::uniform_real_distribution<float> sizeDist(0.1f, 0.25f);
+        const float size{ sizeDist(gen) };
+
+        std::uniform_real_distribution<float> colorDist(0.0f, 1.0f);
+        const glm::vec3 color{ colorDist(gen), colorDist(gen), colorDist(gen) };
+
+        triangles.emplace_back(std::make_unique<Triangle>(position, size, color));
+    }
+}
+
+bool Quadrant::Add(const glm::vec2& position_,
+                   const float      size_,
+                   const glm::vec3& color_) noexcept
+{
+    if (IsFull())
+    {
+        return false;
+    }
+
+    triangles.emplace_back(std::make_unique<Triangle>(position_, size_, color_));
+    return true;
+}
+
+void Quadrant::Draw(const Shader& shader_) const noexcept
+{
+    for (const std::unique_ptr<Triangle>& triangle : triangles)
+    {
+        triangle->Draw(shader_);
+    }
+
+    constexpr glm::mat4 model       = glm::mat4(1.0f);
+    constexpr glm::vec3 borderColor = {1.0f, 1.0f, 1.0f};
+
+    const GLint modelLoc = glGetUniformLocation(shader_.GetProgramID(), "u_Model");
+    glUniformMatrix4fv(modelLoc, 1, GL_FALSE, &model[0][0]);
+
+    const GLint colorLoc = glGetUniformLocation(shader_.GetProgramID(), "u_Color");
+    glUniform3fv(colorLoc, 1, &borderColor[0]);
+
+    glBindVertexArray(vao);
+    glDrawArrays(GL_LINE_LOOP, 0, 4);
+
+    glBindVertexArray(0);
+    glLineWidth(1.0f);
+}
+
+void MessageCallback(const GLenum        source_,
+                     const GLenum        type_,
+                     const GLuint        id_,
+                     const GLenum        severity_,
+                     const GLsizei       length_,
+                     const GLchar* const message_,
+                     const void* const   userParam_)
+{
+    if (type_ == GL_DEBUG_TYPE_ERROR)
+    {
+        std::cerr << std::format("GL ERROR: type = {:x}, severity = {:x}, message = {}\n",
+                type_, severity_, message_);
     }
 }
 
@@ -427,9 +658,9 @@ void OnKeyInteracted(GLFWwindow* const window_,
         }
         case GLFW_KEY_C:
         {
-            for (auto& triangleList : triangles)
+            for (std::unique_ptr<Quadrant>& quadrant : quadrants)
             {
-                triangleList.clear();
+                quadrant->Reset(true);
             }
             std::cout << "[Info] All triangles cleared.\n";
             break;
@@ -446,7 +677,6 @@ void OnKeyInteracted(GLFWwindow* const window_,
     }
 }
 
-// OnButtonInteracted 함수 수정
 void OnButtonInteracted(GLFWwindow* const window_,
                         const int         button_,
                         const int         action_,
@@ -457,46 +687,47 @@ void OnButtonInteracted(GLFWwindow* const window_,
         return;
     }
 
-    // 마우스 좌표를 NDC(-1 to 1)로 변환
-    const float ndcX = (cursorPosition.x / WINDOW_WIDTH  * 2.0f) - 1.0f;
-    const float ndcY = (cursorPosition.y / WINDOW_HEIGHT * 2.0f) - 1.0f;
-    const glm::vec2 position = { ndcX, ndcY };
-
-    // NDC에 적합한 작은 크기 값
-    constexpr float     size     = 0.2f;
-    constexpr glm::vec3 color    = { 1.0f, 1.0f, 1.0f };
-
     if (button_ == GLFW_MOUSE_BUTTON_LEFT)
     {
-        for (std::size_t index = 0; index < quadrants.size(); ++index)
+        for (const auto& quadrant : quadrants)
         {
-            if (quadrants.at(index).IsInteract(cursorPosition))
+            if (quadrant->IsInteract(cursorPosition))
             {
-                triangles.at(index).clear();
-                triangles.at(index).emplace_back(position, size, color);
+                quadrant->Reset(false);
 
-                std::cout << std::format("[Info] Triangle created at position ");
-                std::cout << std::format("({:.1f}, {:.1f}) in Quadrant {}.\n", cursorPosition.x, cursorPosition.y, index + 1);
+                const float ndcX = (cursorPosition.x / WINDOW_WIDTH * 2.0f) - 1.0f;
+                const float ndcY = ((WINDOW_HEIGHT - cursorPosition.y) / WINDOW_HEIGHT * 2.0f) - 1.0f;
+                const glm::vec2 position = {ndcX, ndcY};
+
+                std::uniform_real_distribution<float> sizeDist(0.1f, 0.25f);
+                const float size{ sizeDist(gen) };
+
+                std::uniform_real_distribution<float> colorDist(0.0f, 1.0f);
+                const glm::vec3 color{ colorDist(gen), colorDist(gen), colorDist(gen) };
+
+                quadrant->Add(position, size, color);
                 break;
             }
         }
     }
     else if (button_ == GLFW_MOUSE_BUTTON_RIGHT)
     {
-        for (std::size_t index = 0; index < quadrants.size(); ++index)
+        for (const auto& quadrant : quadrants)
         {
-            if (quadrants.at(index).IsInteract(cursorPosition))
+            if (quadrant->IsInteract(cursorPosition))
             {
-                if (triangles.at(index).size() >= 4)
-                {
-                    std::cout << "[Warning] Cannot create more triangles in this quadrant!\n";
-                    break;
-                }
+                const float ndcX = (cursorPosition.x / WINDOW_WIDTH * 2.0f) - 1.0f;
+                const float ndcY = ((WINDOW_HEIGHT - cursorPosition.y) / WINDOW_HEIGHT * 2.0f) - 1.0f;
+                const glm::vec2 position = {ndcX, ndcY};
 
-                triangles.at(index).emplace_back(position, size, color);
+                std::uniform_real_distribution<float> sizeDist(0.1f, 0.25f);
+                const float size{ sizeDist(gen) };
 
-                std::cout << std::format("[Info] Triangle created at position ");
-                std::cout << std::format("({:.1f}, {:.1f}) in Quadrant {}.\n", cursorPosition.x, cursorPosition.y, index + 1);
+                std::uniform_real_distribution<float> colorDist(0.0f, 1.0f);
+                const glm::vec3 color{ colorDist(gen), colorDist(gen), colorDist(gen) };
+
+                quadrant->Add(position, size, color);
+
                 break;
             }
         }
@@ -508,18 +739,27 @@ void OnCursorMoved(GLFWwindow* const window_,
                    const double      y_) noexcept
 {
     cursorPosition.x = static_cast<float>(x_);
-    cursorPosition.y = static_cast<float>(WINDOW_HEIGHT - y_);
+    cursorPosition.y = static_cast<float>(y_);
 }
 
 std::string GetFile(const std::filesystem::path& path_)
 {
     std::ifstream file(path_, std::ios::in | std::ios::binary);
-
-    if (!file)
+    if (!file.is_open())
     {
-        throw std::runtime_error("Could not open file");
+        return "";
     }
 
-    return { std::istreambuf_iterator<char>(file),
-                std::istreambuf_iterator<char>() };
+    file.seekg(0, std::ios::end);
+    const long long size = file.tellg();
+    if (size == -1)
+    {
+        return "";
+    }
+
+    std::string result(size, '\0');
+    file.seekg(0, std::ios::beg);
+    file.read(result.data(), size);
+
+    return result;
 }
