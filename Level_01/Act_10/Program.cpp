@@ -184,6 +184,18 @@ public:
     {
         velocity = velocity_;
     }
+
+    /**
+     * @brief 해당 삼각형이 지정한 점과 접촉하는지 여부를 반환합니다.
+     *
+     * @return bool 접촉 여부.
+     */
+    [[nodiscard]]
+    constexpr bool IsInteract(const glm::vec2 point_) const noexcept
+    {
+        return point_.x >= position.x - size * 0.25f && point_.x <= position.x + size * 0.25f &&
+               point_.y >= position.y - size * 0.25f && point_.y <= position.y + size * 0.75f;
+    }
 private:
     /**
      * @brief 해당 삼각형의 정점 배열 객체.
@@ -633,12 +645,11 @@ void BounceAnimation::Update(const float deltaTime_) noexcept
         glm::vec2 velocity = triangle->GetVelocity();
         float     size     = triangle->GetSize();
 
-        // 실제 반폭/반높이
-        float halfTriW = 0.5f * size;
-        float halfTriH = 0.5f * size;
+        const float halfTriW = 0.5f * size;
+        const float halfTriH = 0.5f * size;
 
-        const float halfWorldW = WINDOW_WIDTH  / 2.0f;
-        const float halfWorldH = WINDOW_HEIGHT / 2.0f;
+        constexpr float halfWorldW = WINDOW_WIDTH  / 2.0f;
+        constexpr float halfWorldH = WINDOW_HEIGHT / 2.0f;
 
         position += velocity * deltaTime_;
 
@@ -663,17 +674,76 @@ void BounceAnimation::Update(const float deltaTime_) noexcept
 
 void ZigzagAnimation::Update(const float deltaTime_) noexcept
 {
+    for (const std::unique_ptr<Triangle>& triangle : triangles)
+    {
+        glm::vec2 position = triangle->GetPosition();
+        glm::vec2 velocity = triangle->GetVelocity();
+        float     size     = triangle->GetSize();
 
+        const float halfWorldW = WINDOW_WIDTH  / 2.0f;
+        const float halfWorldH = WINDOW_HEIGHT / 2.0f;
+        
+        position.x += velocity.x * deltaTime_;
+
+        if (position.x - size < -halfWorldW || position.x + size > halfWorldW)
+        {
+            velocity.x = -velocity.x;
+            position.x = glm::clamp(position.x, -halfWorldW + size, halfWorldW - size);
+
+            const float step = size * 2.0f;
+            position.y -= step;
+        }
+
+        if (position.y - size < -halfWorldH)
+        {
+            position.y = halfWorldH - size;
+        }
+
+        triangle->SetPosition(position);
+        triangle->SetVelocity(velocity);
+    }
 }
 
 void OrthogonalAnimation::Update(const float deltaTime_) noexcept
 {
+    for (const std::unique_ptr<Triangle>& triangle : triangles)
+    {
+        glm::vec2 position = triangle->GetPosition();
+        glm::vec2 velocity = triangle->GetVelocity();
+        float     size     = triangle->GetSize();
 
+        const float halfWorldW = WINDOW_WIDTH  / 2.0f;
+        const float halfWorldH = WINDOW_HEIGHT / 2.0f;
+
+        // 기본 X 이동
+        position.x += velocity.x * deltaTime_;
+
+        // TODO: 좌우 벽 충돌 → X 반전 + Y 한 스텝 내려옴
+
+        triangle->SetPosition(position);
+        triangle->SetVelocity(velocity);
+    }
 }
 
 void SpiralAnimation::Update(const float deltaTime_) noexcept
 {
+    for (const std::unique_ptr<Triangle>& triangle : triangles)
+    {
+        glm::vec2 position = triangle->GetPosition();
+        glm::vec2 velocity = triangle->GetVelocity();
+        float     size     = triangle->GetSize();
 
+        const float halfWorldW = WINDOW_WIDTH  / 2.0f;
+        const float halfWorldH = WINDOW_HEIGHT / 2.0f;
+
+        // 기본 X 이동
+        position.x += velocity.x * deltaTime_;
+
+        // TODO: 좌우 벽 충돌 → X 반전 + Y 한 스텝 내려옴
+
+        triangle->SetPosition(position);
+        triangle->SetVelocity(velocity);
+    }
 }
 
 void OnDebugMessage(const GLenum        source_,
@@ -807,24 +877,18 @@ void OnButtonInteracted(GLFWwindow* const window_,
     }
     else if (button_ == GLFW_MOUSE_BUTTON_RIGHT)
     {
-        // auto target = triangles.end();
+        for (auto iter = triangles.begin(); iter != triangles.end(); ++iter)
+        {
+            if ((*iter)->IsInteract(cursorPosition))
+            {
+                triangles.erase(iter);
 
-        // for (auto iter = triangles.begin(); iter != triangles.end(); ++iter)
-        // {
-        //     if ((*iter)->IsInteract(cursorPosition))
-        //     {
-        //         target = iter;
-        //         break;
-        //     }
-        // }
+                std::cout << std::format("[Info] Triangle removed at ({:.1f}, {:.1f}). ", cursorPosition.x, cursorPosition.y)
+                          << std::format("Total Counts: {:d}\n", static_cast<int>(triangles.size()) );
 
-        // if (target == triangles.end())
-        // {
-        //     triangles.erase(target);
-        //
-        //     std::cout << std::format("[Info] Triangle removed at ({:.1f}, {:.1f}). ", cursorPosition.x, cursorPosition.y)
-        //               << std::format("Total Counts: {:d}\n", static_cast<int>(triangles.size()) );
-        // }
+                return;
+            }
+        }
     }
 }
 
@@ -837,7 +901,7 @@ void OnCursorMoved(GLFWwindow* const window_,
 
     cursorPosition = glm::vec2(ndcX, ndcY);
 
-    std::cout << std::format("[Trace] Cursor moved to ({:.1f}, {:.1f}).\n", cursorPosition.x, cursorPosition.y);
+    // std::cout << std::format("[Trace] Cursor moved to ({:.1f}, {:.1f}).\n", cursorPosition.x, cursorPosition.y);
 }
 
 std::string GetFile(const std::filesystem::path& path_)
