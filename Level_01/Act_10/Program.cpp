@@ -1,4 +1,5 @@
 ﻿#include <array>
+#include <cmath>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
@@ -86,8 +87,7 @@ public:
      */
     explicit Triangle(const glm::vec2& position_,
                       const float      size_,
-                      const glm::vec3& color_,
-                      const glm::vec2& velocity_) noexcept;
+                      const glm::vec3& color_) noexcept;
 
     /**
      * @brief 소멸자.
@@ -382,6 +382,20 @@ static void OnCursorMoved(GLFWwindow* const window_,
 static std::string GetFile(const std::filesystem::path& path_);
 
 /**
+ * @brief 애니메이션을 시작합니다.
+ *
+ * @tparam TAnimation 시작할 애니메이션 타입.
+ */
+template <typename TAnimation>
+    requires std::is_base_of_v<Animation, TAnimation>
+static void StartAnimation();
+
+/**
+ * @brief 애니메이션을 중지합니다.
+ */
+static void StopAnimation() noexcept;
+
+/**
  * @brief GLFW 윈도우.
  */
 static GLFWwindow* window = nullptr;
@@ -563,15 +577,14 @@ Shader::~Shader() noexcept
 
 Triangle::Triangle(const glm::vec2& position_,
                    const float      size_,
-                   const glm::vec3& color_,
-                   const glm::vec2& velocity_) noexcept
+                   const glm::vec3& color_) noexcept
     : vao(0)
     , vbo(0)
     , ebo(0)
     , position(position_)
     , size(size_)
     , color(color_)
-    , velocity(velocity_)
+    , velocity(0.0f, 0.0f)
 {
     constexpr std::array<GLfloat, 6> vertices
     {
@@ -641,17 +654,17 @@ void BounceAnimation::Update(const float deltaTime_) noexcept
 {
     for (const std::unique_ptr<Triangle>& triangle : triangles)
     {
-        glm::vec2 position = triangle->GetPosition();
-        glm::vec2 velocity = triangle->GetVelocity();
-        float     size     = triangle->GetSize();
+        glm::vec2   position = triangle->GetPosition();
+        glm::vec2   velocity = triangle->GetVelocity();
+        const float size     = triangle->GetSize();
+
+        position += velocity * deltaTime_;
 
         const float halfTriW = 0.5f * size;
         const float halfTriH = 0.5f * size;
 
         constexpr float halfWorldW = WINDOW_WIDTH  / 2.0f;
         constexpr float halfWorldH = WINDOW_HEIGHT / 2.0f;
-
-        position += velocity * deltaTime_;
 
         if (position.x - halfTriW < -halfWorldW ||
             position.x + halfTriW >  halfWorldW)
@@ -676,16 +689,17 @@ void ZigzagAnimation::Update(const float deltaTime_) noexcept
 {
     for (const std::unique_ptr<Triangle>& triangle : triangles)
     {
-        glm::vec2 position = triangle->GetPosition();
-        glm::vec2 velocity = triangle->GetVelocity();
-        float     size     = triangle->GetSize();
+        glm::vec2   position = triangle->GetPosition();
+        glm::vec2   velocity = triangle->GetVelocity();
+        const float size     = triangle->GetSize();
 
         const float halfWorldW = WINDOW_WIDTH  / 2.0f;
         const float halfWorldH = WINDOW_HEIGHT / 2.0f;
         
         position.x += velocity.x * deltaTime_;
 
-        if (position.x - size < -halfWorldW || position.x + size > halfWorldW)
+        if (position.x - size < -halfWorldW ||
+            position.x + size > halfWorldW)
         {
             velocity.x = -velocity.x;
             position.x = glm::clamp(position.x, -halfWorldW + size, halfWorldW - size);
@@ -696,7 +710,7 @@ void ZigzagAnimation::Update(const float deltaTime_) noexcept
 
         if (position.y - size < -halfWorldH)
         {
-            position.y = halfWorldH - size;
+            velocity = -velocity;
         }
 
         triangle->SetPosition(position);
@@ -708,17 +722,29 @@ void OrthogonalAnimation::Update(const float deltaTime_) noexcept
 {
     for (const std::unique_ptr<Triangle>& triangle : triangles)
     {
-        glm::vec2 position = triangle->GetPosition();
-        glm::vec2 velocity = triangle->GetVelocity();
-        float     size     = triangle->GetSize();
+        glm::vec2   position = triangle->GetPosition();
+        glm::vec2   velocity = triangle->GetVelocity();
+        const float size     = triangle->GetSize();
 
         const float halfWorldW = WINDOW_WIDTH  / 2.0f;
         const float halfWorldH = WINDOW_HEIGHT / 2.0f;
 
-        // 기본 X 이동
         position.x += velocity.x * deltaTime_;
+        position.y += velocity.y * deltaTime_;
 
-        // TODO: 좌우 벽 충돌 → X 반전 + Y 한 스텝 내려옴
+        if (position.x - size < -halfWorldW ||
+            position.x + size >  halfWorldW)
+        {
+            velocity.x = -velocity.x;
+            position.x = glm::clamp(position.x, -halfWorldW + size, halfWorldW - size);
+        }
+
+        if (position.y - size < -halfWorldH ||
+            position.y + size >  halfWorldH)
+        {
+            velocity.y = -velocity.y;
+            position.y = glm::clamp(position.y, -halfWorldH + size, halfWorldH - size);
+        }
 
         triangle->SetPosition(position);
         triangle->SetVelocity(velocity);
@@ -729,17 +755,46 @@ void SpiralAnimation::Update(const float deltaTime_) noexcept
 {
     for (const std::unique_ptr<Triangle>& triangle : triangles)
     {
-        glm::vec2 position = triangle->GetPosition();
-        glm::vec2 velocity = triangle->GetVelocity();
-        float     size     = triangle->GetSize();
+        glm::vec2   position = triangle->GetPosition();
+        glm::vec2   velocity = triangle->GetVelocity();
+        const float size     = triangle->GetSize();
 
         const float halfWorldW = WINDOW_WIDTH  / 2.0f;
         const float halfWorldH = WINDOW_HEIGHT / 2.0f;
 
-        // 기본 X 이동
-        position.x += velocity.x * deltaTime_;
+        position += velocity * deltaTime_;
 
-        // TODO: 좌우 벽 충돌 → X 반전 + Y 한 스텝 내려옴
+        const float speed = glm::length(velocity);
+
+        if (speed > 0)
+        {
+            constexpr float rotationRate = 1.0f;
+            const float     angle        = rotationRate * deltaTime_;
+            const float     cosA         = std::cos(angle);
+            const float     sinA         = std::sin(angle);
+            const float     shrinkRate = 0.98f;
+
+            glm::vec2 newVelocity;
+
+            newVelocity.x = (velocity.x * cosA - velocity.y * sinA) * shrinkRate;
+            newVelocity.y = (velocity.x * sinA + velocity.y * cosA) * shrinkRate;
+
+            velocity = newVelocity;
+        }
+
+        if (position.x - size < -halfWorldW ||
+            position.x + size >  halfWorldW)
+        {
+            velocity.x = -velocity.x;
+            position.x = glm::clamp(position.x, -halfWorldW + size, halfWorldW - size);
+        }
+
+        if (position.y - size < -halfWorldH ||
+            position.y + size >  halfWorldH)
+        {
+            velocity.y = -velocity.y;
+            position.y = glm::clamp(position.y, -halfWorldH + size, halfWorldH - size);
+        }
 
         triangle->SetPosition(position);
         triangle->SetVelocity(velocity);
@@ -776,31 +831,31 @@ void OnKeyInteracted(GLFWwindow* const window_,
     {
         case GLFW_KEY_1:
         {
-            currentAnimation = std::make_unique<BounceAnimation>();
+            StartAnimation<BounceAnimation>();
             std::cout << "[Info] Bounce animation started.\n";
             break;
         }
         case GLFW_KEY_2:
         {
-            currentAnimation = std::make_unique<ZigzagAnimation>();
+            StartAnimation<ZigzagAnimation>();
             std::cout << "[Info] Zigzag animation started.\n";
             break;
         }
         case GLFW_KEY_3:
         {
-            currentAnimation = std::make_unique<OrthogonalAnimation>();
+            StartAnimation<OrthogonalAnimation>();
             std::cout << "[Info] Orthogonal animation started.\n";
             break;
         }
         case GLFW_KEY_4:
         {
-            currentAnimation = std::make_unique<SpiralAnimation>();
+            StartAnimation<SpiralAnimation>();
             std::cout << "[Info] Spiral animation started.\n";
             break;
         }
         case GLFW_KEY_0:
         {
-            currentAnimation.reset();
+            StopAnimation();
             std::cout << "[Info] Animation stopped.\n";
             break;
         }
@@ -867,10 +922,7 @@ void OnButtonInteracted(GLFWwindow* const window_,
         std::uniform_real_distribution<float> colorDist(0.0f, 1.0f);
         const glm::vec3 color = glm::vec3(colorDist(gen), colorDist(gen), colorDist(gen));
 
-        std::uniform_real_distribution<float> velDist(-200.0f,  200.0f);
-        const glm::vec2 velocity = glm::vec2(velDist(gen), velDist(gen));
-
-        triangles.push_back(std::make_unique<Triangle>(position, size, color, velocity));
+        triangles.push_back(std::make_unique<Triangle>(position, size, color));
 
         std::cout << std::format("[Info] New triangle created at ({:.1f}, {:.1f}). ", position.x, position.y)
                   << std::format("Total Counts: {:d}\n", static_cast<int>(triangles.size()));
@@ -925,4 +977,28 @@ std::string GetFile(const std::filesystem::path& path_)
     file.read(result.data(), size);
 
     return result;
+}
+
+template <typename TAnimation>
+    requires std::is_base_of_v<Animation, TAnimation>
+void StartAnimation()
+{
+    std::uniform_real_distribution<float>velDist(-100.0f, 100.0f);
+
+    for (const std::unique_ptr<Triangle>& triangle : triangles)
+    {
+        triangle->SetVelocity({ velDist(gen), velDist(gen) });
+    }
+
+    currentAnimation = std::make_unique<TAnimation>();
+}
+
+void StopAnimation() noexcept
+{
+    currentAnimation.reset();
+
+    for (const std::unique_ptr<Triangle>& triangle : triangles)
+    {
+        triangle->SetVelocity({ 0.0f, 0.0f });
+    }
 }
