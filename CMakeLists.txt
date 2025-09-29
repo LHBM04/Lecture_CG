@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 4.0)
+cmake_minimum_required(VERSION 3.26)
 project(Lecture_CG LANGUAGES C CXX)
 
 set (CMAKE_C_STANDARD 17)
@@ -14,3 +14,6 @@ add_subdirectory("Level_00")
 
 # Lv.1 [OpenGL Basic (01 ~ 12)]
 add_subdirectory("Level_01")
+
+# Lv.2 [OpenGL Basic (01 ~ 12)]
+add_subdirectory("Level_02")
