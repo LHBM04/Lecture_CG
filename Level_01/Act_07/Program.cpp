@@ -443,7 +443,7 @@ void Initialize() noexcept
     question.clear();
     for (unsigned int count = 0; count < BLOCK_COUNTS; ++count)
     {
-        Block newBlock;
+        Block newBlock{};
         newBlock.id     = count;
         newBlock.size= { sizeDist(gen) * CELL_WIDTH, sizeDist(gen) * CELL_WIDTH };
 
