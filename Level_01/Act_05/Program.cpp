@@ -51,10 +51,8 @@ struct Rect
         const glm::vec2 otherMin = other_.GetMin();
         const glm::vec2 otherMax = other_.GetMax();
 
-        return (min.x < otherMax.x) &&
-               (max.x > otherMin.x) &&
-               (min.y < otherMax.y) &&
-               (max.y > otherMin.y);
+        return (min.x < otherMax.x) && (max.x > otherMin.x) &&
+               (min.y < otherMax.y) && (max.y > otherMin.y);
     }
 
     /**
