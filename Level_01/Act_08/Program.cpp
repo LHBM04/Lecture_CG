@@ -23,11 +23,11 @@ public:
     explicit Shader(const char* const vertexSource_,
                     const char* const fragmentSource_) noexcept
     {
-        GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
+        const GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
         glShaderSource(vertexShader, 1, &vertexSource_, nullptr);
         glCompileShader(vertexShader);
 
-        GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+        const GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
         glShaderSource(fragmentShader, 1, &fragmentSource_, nullptr);
         glCompileShader(fragmentShader);
 
@@ -334,6 +334,7 @@ public:
 
         glUniform3fv(colorLoc, 1, &color[0]);
         glBindVertexArray(vao);
+        glPointSize(size);
         glDrawArrays(GL_POINTS, 0, 1);
         glBindVertexArray(0);
     };
@@ -415,23 +416,12 @@ public:
     [[nodiscard]]
     virtual constexpr bool IsInteract(const glm::vec2& position_) const noexcept override
     {
-        // 삼각형 내에 점이 위치하는지 검사하는 함수
-        const glm::vec2 p = position_;
-        const glm::vec2 a = position + glm::vec2(0.0f, size * 0.5f);
-        const glm::vec2 b = position + glm::vec2(-size * 0.5f, -size * 0.5f);
-        const glm::vec2 c = position + glm::vec2(size * 0.5f, -size * 0.5f);
+        const float halfSize = size * 0.5f;
 
-        // 벡터 크로스 곱을 이용한 내부 판정
-        auto sign = [](const glm::vec2& p1, const glm::vec2& p2, const glm::vec2& p3) {
-            return (p1.x - p3.x) * (p2.y - p3.y) - (p2.x - p3.x) * (p1.y - p3.y);
-        };
-
-        const float d1 = sign(p, a, b);
-        const float d2 = sign(p, b, c);
-        const float d3 = sign(p, c, a);
-
-        return (d1 >= 0.0f && d2 >= 0.0f && d3 >= 0.0f) ||
-               (d1 <= 0.0f && d2 <= 0.0f && d3 <= 0.0f);
+        return (position_.x >= position.x - halfSize) &&
+               (position_.x <= position.x + halfSize) &&
+               (position_.y >= position.y - halfSize) &&
+               (position_.y <= position.y + halfSize);
     }
 
     /**
