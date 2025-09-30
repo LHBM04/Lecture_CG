@@ -562,7 +562,7 @@ void OnButtonInteracted(GLFWwindow* window_,
 {
     if (button_ == GLFW_MOUSE_BUTTON_LEFT)
     {
-        if (rects.size() <= 5)
+        if (rects.size() >= 5)
         {
             return;
         }
@@ -578,6 +578,7 @@ void OnButtonInteracted(GLFWwindow* window_,
 
             double mouseX, mouseY;
             glfwGetCursorPos(window_, &mouseX, &mouseY);
+
             float fixedY = static_cast<float>(WINDOW_HEIGHT - mouseY);
 
             newRect = new Rect();
