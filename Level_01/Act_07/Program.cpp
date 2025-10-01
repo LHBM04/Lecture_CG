@@ -321,6 +321,7 @@ void OnKeyInteracted(GLFWwindow* const window_,
             for (Block& userBlock : answer)
             {
                 const Block* targetBlock = nullptr;
+
                 for (const auto& q_block : question)
                 {
                     if (userBlock.id == q_block.id)
@@ -387,8 +388,8 @@ void OnButtonInteracted(GLFWwindow* const window_,
             int gridX = static_cast<int>(round(currentTopLeft.x / CELL_WIDTH));
             int gridY = static_cast<int>(round(currentTopLeft.y / CELL_HEIGHT));
 
-            int blockGridWidth = static_cast<int>(dragged->size.x / CELL_WIDTH);
-            int blockGridHeight = static_cast<int>(dragged->size.y / CELL_HEIGHT);
+            const int blockGridWidth  = static_cast<int>(dragged->size.x / CELL_WIDTH);
+            const int blockGridHeight = static_cast<int>(dragged->size.y / CELL_HEIGHT);
 
             gridX = std::max(GRID_SIZE, gridX);
             gridX = std::min(gridX, 2 * GRID_SIZE - blockGridWidth);
@@ -398,6 +399,7 @@ void OnButtonInteracted(GLFWwindow* const window_,
             dragged->position.y = (gridY * CELL_HEIGHT) + dragged->size.y * 0.5f;
 
             dragged = nullptr;
+
             CheckComplete();
         }
     }
@@ -585,6 +587,7 @@ void CheckComplete() noexcept
     for (const auto& ans_block : answer)
     {
         bool foundMatch = false;
+
         for (const auto& q_block : question)
         {
             if (ans_block.id == q_block.id)
@@ -608,7 +611,7 @@ void CheckComplete() noexcept
         }
     }
 
-    // 모든 블록이 매치되었으면 게임 완료
     std::cout << "All blocks are in place! Game Over." << std::endl;
+
     isGameOver = true;
 }

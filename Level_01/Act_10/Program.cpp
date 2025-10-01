@@ -193,8 +193,10 @@ public:
     [[nodiscard]]
     constexpr bool IsInteract(const glm::vec2 point_) const noexcept
     {
-        return point_.x >= position.x - size * 0.25f && point_.x <= position.x + size * 0.25f &&
-               point_.y >= position.y - size * 0.25f && point_.y <= position.y + size * 0.75f;
+        return (point_.x >= position.x - size * 0.25f) &&
+               (point_.x <= position.x + size * 0.25f) &&
+               (point_.y >= position.y - size * 0.25f) &&
+               (point_.y <= position.y + size * 0.75f);
     }
 private:
     /**
@@ -523,12 +525,6 @@ int main()
         glClearColor(backgroundColor.r, backgroundColor.b, backgroundColor.g, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        shader.Use();
-        for (const auto& triangle : triangles)
-        {
-            triangle->Draw(shader);
-        }
-
         if (currentAnimation != nullptr)
         {
             const float currentTime = static_cast<float>(glfwGetTime());
@@ -537,6 +533,12 @@ int main()
             currentAnimation->Update(deltaTime);
 
             lastTime = currentTime;
+        }
+
+        shader.Use();
+        for (const auto& triangle : triangles)
+        {
+            triangle->Draw(shader);
         }
 
         glfwPollEvents();
@@ -586,14 +588,14 @@ Triangle::Triangle(const glm::vec2& position_,
     , color(color_)
     , velocity(0.0f, 0.0f)
 {
-    constexpr std::array<GLfloat, 6> vertices
+    constexpr std::array<float, 6> vertices
     {
          0.0f,  1.0f,
         -1.0f, -1.0f,
          1.0f, -1.0f
     };
 
-    constexpr std::array<GLuint, 3> indices
+    constexpr std::array<unsigned int, 3> indices
     {
         0, 1, 2
     };
@@ -624,7 +626,15 @@ Triangle::~Triangle() noexcept
 
 void Triangle::Draw(const Shader& shader_) const noexcept
 {
+    float angle = 0.0f;
+    if (glm::length(velocity) > 0.01f) // Avoid division by zero
+    {
+        glm::vec2 direction = glm::normalize(velocity);
+        angle = std::atan2(direction.y, direction.x);
+    }
+
     glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(position, 0.0f));
+    model = glm::rotate(model, angle, glm::vec3(0.0f, 0.0f, 1.0f));
     model = glm::scale(model, glm::vec3(size, size, 1.0f));
 
     glm::mat4 projection = glm::ortho(
@@ -632,8 +642,8 @@ void Triangle::Draw(const Shader& shader_) const noexcept
          static_cast<float>(WINDOW_WIDTH)  / 2.0f, // 오른쪽
         -static_cast<float>(WINDOW_HEIGHT) / 2.0f, // 아래
          static_cast<float>(WINDOW_HEIGHT) / 2.0f, // 위
-        -1.0f,  // near
-         1.0f   // far
+        -1.0f,                                     // near
+         1.0f                                      // far
     );
 
     const GLint projLoc = glGetUniformLocation(shader_.GetProgramID(), "u_Projection");
@@ -652,153 +662,172 @@ void Triangle::Draw(const Shader& shader_) const noexcept
 
 void BounceAnimation::Update(const float deltaTime_) noexcept
 {
-    for (const std::unique_ptr<Triangle>& triangle : triangles)
+    static std::vector<glm::vec2> velocities;
+
+    if (velocities.size() != triangles.size())
     {
-        glm::vec2   position = triangle->GetPosition();
-        glm::vec2   velocity = triangle->GetVelocity();
-        const float size     = triangle->GetSize();
+        std::uniform_real_distribution<float> directionDist(-1.0f, 1.0f);
+        std::uniform_real_distribution<float> speedDist(100.0f, 250.0f);
+
+        const float s = speedDist(gen);
+
+        velocities.resize(triangles.size(), glm::vec2(directionDist(gen) * s, directionDist(gen) * s));
+    }
+
+    for (std::size_t index = 0; index < triangles.size(); ++index)
+    {
+        glm::vec2 position = triangles.at(index)->GetPosition();
+        glm::vec2 velocity = velocities.at(index);
 
         position += velocity * deltaTime_;
 
-        const float halfTriW = 0.5f * size;
-        const float halfTriH = 0.5f * size;
+        const float size = triangles.at(index)->GetSize();
 
-        constexpr float halfWorldW = WINDOW_WIDTH  / 2.0f;
-        constexpr float halfWorldH = WINDOW_HEIGHT / 2.0f;
+        const float halfTriangleWidth  = 0.5f * size;
+        const float halfTriangleHeight = 0.5f * size;
 
-        if (position.x - halfTriW < -halfWorldW ||
-            position.x + halfTriW >  halfWorldW)
+        constexpr float halfWorldWidth  = WINDOW_WIDTH  / 2.0f;
+        constexpr float halfWorldHeight = WINDOW_HEIGHT / 2.0f;
+
+        if ((position.x - halfTriangleWidth) < -halfWorldWidth ||
+            (position.x + halfTriangleWidth) >  halfWorldWidth)
         {
             velocity.x = -velocity.x;
-            position.x = glm::clamp(position.x, -halfWorldW + halfTriW, halfWorldW - halfTriW);
+
+            const float max =  halfWorldWidth - halfTriangleWidth;
+            const float min = -halfWorldWidth + halfTriangleWidth;
+            position.y = glm::clamp(position.y, min, max);
         }
 
-        if (position.y - halfTriH < -halfWorldH ||
-            position.y + halfTriH >  halfWorldH)
+        if (position.y - halfTriangleHeight < -halfWorldHeight ||
+            position.y + halfTriangleHeight >  halfWorldHeight)
         {
             velocity.y = -velocity.y;
-            position.y = glm::clamp(position.y, -halfWorldH + halfTriH, halfWorldH - halfTriH);
+
+            const float max =  halfWorldHeight - halfTriangleHeight;
+            const float min = -halfWorldHeight + halfTriangleHeight;
+            position.y = glm::clamp(position.y, min, max);
         }
 
-        triangle->SetPosition(position);
-        triangle->SetVelocity(velocity);
+        triangles.at(index)->SetPosition(position);
+        velocities.at(index) = velocity;
     }
 }
 
 void ZigzagAnimation::Update(const float deltaTime_) noexcept
 {
-    for (const std::unique_ptr<Triangle>& triangle : triangles)
+    static std::vector<bool> descendingTriggers;
+
+    if (descendingTriggers.size() != triangles.size())
     {
-        glm::vec2   position = triangle->GetPosition();
-        glm::vec2   velocity = triangle->GetVelocity();
-        const float size     = triangle->GetSize();
+        descendingTriggers.resize(triangles.size(), false);
+    }
 
-        const float halfWorldW = WINDOW_WIDTH  / 2.0f;
-        const float halfWorldH = WINDOW_HEIGHT / 2.0f;
-        
-        position.x += velocity.x * deltaTime_;
+    struct State
+    {
+        glm::vec2 velocity;
+        bool descending;
+        float descendStartY;
+    };
+    static std::vector<State> states;
 
-        if (position.x - size < -halfWorldW ||
-            position.x + size > halfWorldW)
+    constexpr float xSpeed          = 100.0f;
+    constexpr float descendDistance = 100.0f;
+
+    if (states.size() != triangles.size())
+    {
+        states.clear();
+        for (const auto& triangle : triangles)
         {
-            velocity.x = -velocity.x;
-            position.x = glm::clamp(position.x, -halfWorldW + size, halfWorldW - size);
+            states.push_back({ glm::vec2(xSpeed, 0.0f), false, triangle->GetPosition().y });
+        }
+    }
 
-            const float step = size * 2.0f;
-            position.y -= step;
+    for (std::size_t i = 0; i < triangles.size(); ++i)
+    {
+        glm::vec2 position = triangles[i]->GetPosition();
+        State& state = states[i];
+
+        position += state.velocity * deltaTime_;
+
+        const float size = triangles[i]->GetSize();
+        const float halfTriangleWidth  = 0.5f * size;
+        const float halfTriangleHeight = 0.5f * size;
+        constexpr float halfWorldWidth  = WINDOW_WIDTH  / 2.0f;
+        constexpr float halfWorldHeight = WINDOW_HEIGHT / 2.0f;
+
+        // Hit left or right wall
+        if (!state.descending &&
+            ((position.x - halfTriangleWidth) < -halfWorldWidth ||
+             (position.x + halfTriangleWidth) > halfWorldWidth))
+        {
+            constexpr float ySpeed = 150.0f;
+            state.velocity         = glm::vec2(0.0f, -ySpeed);
+            state.descending       = true;
+            state.descendStartY    = position.y;
         }
 
-        if (position.y - size < -halfWorldH)
+        // Bounce off floor or ceiling
+        if (state.descending)
         {
-            velocity = -velocity;
+            if ((position.y - halfTriangleHeight) < -halfWorldHeight)
+            {
+                state.velocity.y = std::abs(state.velocity.y); // move up
+            }
+            else if ((position.y + halfTriangleHeight) > halfWorldHeight)
+            {
+                state.velocity.y = -std::abs(state.velocity.y); // move down
+            }
+
+            if (std::abs(position.y - state.descendStartY) >= descendDistance)
+            {
+                float newXSpeed = (position.x < 0) ? xSpeed : -xSpeed;
+                state.velocity = glm::vec2(newXSpeed, 0.0f);
+                state.descending = false;
+            }
         }
 
-        triangle->SetPosition(position);
-        triangle->SetVelocity(velocity);
+        position.x = glm::clamp(position.x, -halfWorldWidth + halfTriangleWidth, halfWorldWidth - halfTriangleWidth);
+        position.y = glm::clamp(position.y, -halfWorldHeight + halfTriangleHeight, halfWorldHeight - halfTriangleHeight);
+
+        triangles[i]->SetPosition(position);
     }
 }
 
 void OrthogonalAnimation::Update(const float deltaTime_) noexcept
 {
-    for (const std::unique_ptr<Triangle>& triangle : triangles)
-    {
-        glm::vec2   position = triangle->GetPosition();
-        glm::vec2   velocity = triangle->GetVelocity();
-        const float size     = triangle->GetSize();
 
-        const float halfWorldW = WINDOW_WIDTH  / 2.0f;
-        const float halfWorldH = WINDOW_HEIGHT / 2.0f;
-
-        position.x += velocity.x * deltaTime_;
-        position.y += velocity.y * deltaTime_;
-
-        if (position.x - size < -halfWorldW ||
-            position.x + size >  halfWorldW)
-        {
-            velocity.x = -velocity.x;
-            position.x = glm::clamp(position.x, -halfWorldW + size, halfWorldW - size);
-        }
-
-        if (position.y - size < -halfWorldH ||
-            position.y + size >  halfWorldH)
-        {
-            velocity.y = -velocity.y;
-            position.y = glm::clamp(position.y, -halfWorldH + size, halfWorldH - size);
-        }
-
-        triangle->SetPosition(position);
-        triangle->SetVelocity(velocity);
-    }
 }
 
 void SpiralAnimation::Update(const float deltaTime_) noexcept
 {
-    for (const std::unique_ptr<Triangle>& triangle : triangles)
-    {
-        glm::vec2   position = triangle->GetPosition();
-        glm::vec2   velocity = triangle->GetVelocity();
-        const float size     = triangle->GetSize();
-
-        const float halfWorldW = WINDOW_WIDTH  / 2.0f;
-        const float halfWorldH = WINDOW_HEIGHT / 2.0f;
-
-        position += velocity * deltaTime_;
-
-        const float speed = glm::length(velocity);
-
-        if (speed > 0)
-        {
-            constexpr float rotationRate = 1.0f;
-            const float     angle        = rotationRate * deltaTime_;
-            const float     cosA         = std::cos(angle);
-            const float     sinA         = std::sin(angle);
-            const float     shrinkRate = 0.98f;
-
-            glm::vec2 newVelocity;
-
-            newVelocity.x = (velocity.x * cosA - velocity.y * sinA) * shrinkRate;
-            newVelocity.y = (velocity.x * sinA + velocity.y * cosA) * shrinkRate;
-
-            velocity = newVelocity;
-        }
-
-        if (position.x - size < -halfWorldW ||
-            position.x + size >  halfWorldW)
-        {
-            velocity.x = -velocity.x;
-            position.x = glm::clamp(position.x, -halfWorldW + size, halfWorldW - size);
-        }
-
-        if (position.y - size < -halfWorldH ||
-            position.y + size >  halfWorldH)
-        {
-            velocity.y = -velocity.y;
-            position.y = glm::clamp(position.y, -halfWorldH + size, halfWorldH - size);
-        }
-
-        triangle->SetPosition(position);
-        triangle->SetVelocity(velocity);
-    }
+    // static std::vector<glm::vec2> originalPositions;
+//
+    // if (originalPositions.size() != triangles.size())
+    // {
+    //     originalPositions.clear();
+//
+    //     for (const std::unique_ptr<Triangle>& triangle : triangles)
+    //     {
+    //         originalPositions.push_back(triangle->GetPosition());
+    //     }
+    // }
+//
+    // static float theta  = 0.0f;
+    // static float radius = 0.0f;
+//
+    // for (std::size_t i = 0; i < triangles.size(); ++i)
+    // {
+    //     const glm::vec2 center = originalPositions[i];
+//
+    //     const float newX = center.x + std::cos(theta) * radius;
+    //     const float newY = center.y + std::sin(theta) * radius;
+//
+    //     triangles[i]->SetPosition(glm::vec2(newX, newY));
+    // }
+//
+    // theta  += deltaTime_ * 5.0f;
+    // radius += deltaTime_ * 10.0f;
 }
 
 void OnDebugMessage(const GLenum        source_,
@@ -861,20 +890,44 @@ void OnKeyInteracted(GLFWwindow* const window_,
         }
         case GLFW_KEY_UP:
         {
-            timeScale += 1.0f;
+            if (constexpr float MAX_TIME_SCALE = 30.0f; (timeScale += 1.0f) > MAX_TIME_SCALE)
+            {
+                timeScale = MAX_TIME_SCALE;
+                std::cout << std::format("[Warning] Time scale cannot be greater than {:.0f}.\n", MAX_TIME_SCALE);
+                break;
+            }
+
             std::cout << std::format("[Info] Time scale set to {:.1f}.\n", timeScale);
             break;
         }
         case GLFW_KEY_DOWN:
         {
-            if (timeScale <= 1.0f)
+            if (constexpr float MIN_TIME_SCALE = 1.0f; (timeScale -= 1.0f) < MIN_TIME_SCALE)
             {
-                std::cout << "[Warning] Time scale cannot be less than or equal to zero.\n";
+                timeScale = MIN_TIME_SCALE;
+                std::cout << std::format("[Warning] Time scale cannot be less than or equal to zero.\n");
                 break;
             }
 
-            timeScale -= 1.0f;
             std::cout << std::format("[Info] Time scale set to {:.1f}.\n", timeScale);
+            break;
+        }
+        case GLFW_KEY_ENTER:
+        {
+            static float previousTimeScale = timeScale;
+
+            if (timeScale != 0.0f)
+            {
+                previousTimeScale = timeScale;
+                timeScale = 0.0f;
+                std::cout << "[Info] Animation paused.\n";
+            }
+            else
+            {
+                timeScale = previousTimeScale;
+                std::cout << "[Info] Animation resumed.\n";
+            }
+
             break;
         }
         case GLFW_KEY_C:

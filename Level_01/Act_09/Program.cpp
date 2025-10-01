@@ -153,10 +153,8 @@ public:
      * @param position_ 삼각형 위치.
      * @param size_     삼각형 크기.
      * @param color_    삼각형 색상.
-     *
-     * @return bool 추가 성공 여부.
      */
-    bool Add(const glm::vec2& position_,
+    void Add(const glm::vec2& position_,
              const float      size_,
              const glm::vec3& color_) noexcept;
 
@@ -593,17 +591,16 @@ void Quadrant::Reset(const bool shouldAddOne_) noexcept
     }
 }
 
-bool Quadrant::Add(const glm::vec2& position_,
+void Quadrant::Add(const glm::vec2& position_,
                    const float      size_,
                    const glm::vec3& color_) noexcept
 {
     if (IsFull())
     {
-        return false;
+        triangles.erase(triangles.begin());
     }
 
     triangles.emplace_back(std::make_unique<Triangle>(position_, size_, color_));
-    return true;
 }
 
 void Quadrant::Draw(const Shader& shader_) const noexcept
@@ -630,12 +627,12 @@ void Quadrant::Draw(const Shader& shader_) const noexcept
 }
 
 void OnDebugMessage(const GLenum        source_,
-                     const GLenum        type_,
-                     const GLuint        id_,
-                     const GLenum        severity_,
-                     const GLsizei       length_,
-                     const GLchar* const message_,
-                     const void* const   userParam_)
+                    const GLenum        type_,
+                    const GLuint        id_,
+                    const GLenum        severity_,
+                    const GLsizei       length_,
+                    const GLchar* const message_,
+                    const void* const   userParam_)
 {
     if (type_ == GL_DEBUG_TYPE_ERROR)
     {
@@ -719,6 +716,7 @@ void OnButtonInteracted(GLFWwindow* const window_,
                 const glm::vec3 color{ colorDist(gen), colorDist(gen), colorDist(gen) };
 
                 quadrant->Add(position, size, color);
+
                 break;
             }
         }
