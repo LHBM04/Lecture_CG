@@ -1,6 +1,7 @@
 ﻿#include <array>
 #include <cmath>
 #include <filesystem>
+#include <format>
 #include <fstream>
 #include <iostream>
 #include <random>
@@ -270,6 +271,11 @@ public:
      * @param deltaTime_ 이전 프레임과 현재 프레임 사이의 간격.
      */
     virtual void Update(const float deltaTime_) noexcept override;
+private:
+    /**
+     * @brief 각 삼각형의 속도 벡터.
+     */
+    std::vector<glm::vec2> velocities;
 };
 
 /**
@@ -286,6 +292,18 @@ public:
      * @param deltaTime_ 이전 프레임과 현재 프레임 사이의 간격.
      */
     virtual void Update(const float deltaTime_) noexcept override;
+private:
+    struct State
+    {
+        glm::vec2 initialPos; // [수정] 애니메이션 시작 위치
+        glm::vec2 pos;
+        glm::vec2 dir;
+        float remaining; // 현재 구간에 남은 거리
+        int row;         // 현재 몇 번째 줄인지
+        bool goingRight; // 진행 방향 (true=→, false=←)
+    };
+
+    std::vector<State> s;
 };
 
 /**
@@ -415,7 +433,7 @@ static constexpr unsigned int WINDOW_HEIGHT = 600;
 /**
  * @brief 애플리케이션 타이틀.
  */
-static constexpr const char* const WINDOW_TITLE = "Level 01 - Act 09";
+static constexpr const char* const WINDOW_TITLE = "Level 01 - Act 10";
 
 /**
  * @brief GL 메이저 버전.
@@ -522,7 +540,7 @@ int main()
 
     while (!glfwWindowShouldClose(window))
     {
-        glClearColor(backgroundColor.r, backgroundColor.b, backgroundColor.g, 1.0f);
+        glClearColor(backgroundColor.r, backgroundColor.g, backgroundColor.b, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
         if (currentAnimation != nullptr)
@@ -662,8 +680,6 @@ void Triangle::Draw(const Shader& shader_) const noexcept
 
 void BounceAnimation::Update(const float deltaTime_) noexcept
 {
-    static std::vector<glm::vec2> velocities;
-
     if (velocities.size() != triangles.size())
     {
         std::uniform_real_distribution<float> directionDist(-1.0f, 1.0f);
@@ -689,14 +705,14 @@ void BounceAnimation::Update(const float deltaTime_) noexcept
         constexpr float halfWorldWidth  = WINDOW_WIDTH  / 2.0f;
         constexpr float halfWorldHeight = WINDOW_HEIGHT / 2.0f;
 
-        if ((position.x - halfTriangleWidth) < -halfWorldWidth ||
-            (position.x + halfTriangleWidth) >  halfWorldWidth)
+        if (position.x - halfTriangleWidth < -halfWorldWidth ||
+            position.x + halfTriangleWidth >  halfWorldWidth)
         {
             velocity.x = -velocity.x;
 
             const float max =  halfWorldWidth - halfTriangleWidth;
             const float min = -halfWorldWidth + halfTriangleWidth;
-            position.y = glm::clamp(position.y, min, max);
+            position.x = glm::clamp(position.x, min, max); // x를 클램프
         }
 
         if (position.y - halfTriangleHeight < -halfWorldHeight ||
@@ -716,118 +732,260 @@ void BounceAnimation::Update(const float deltaTime_) noexcept
 
 void ZigzagAnimation::Update(const float deltaTime_) noexcept
 {
-    static std::vector<bool> descendingTriggers;
+    // ====== 파라미터 ======
+    const float speed            = 200.0f;
+    const float horizontalLength = 300.0f;
+    const float verticalStep     = 80.0f;
+    const int   maxRows          = 6;
 
-    if (descendingTriggers.size() != triangles.size())
+    // static 키워드 제거됨. 이제 이들은 멤버 변수입니다.
+    // struct State { ... };
+    // std::vector<State> s;
+    // bool initialized = false;
+
+    // ====== 초기화 ======
+    if (s.size() != triangles.size())
     {
-        descendingTriggers.resize(triangles.size(), false);
-    }
+        s.clear();
+        s.reserve(triangles.size());
 
-    struct State
-    {
-        glm::vec2 velocity;
-        bool descending;
-        float descendStartY;
-    };
-    static std::vector<State> states;
-
-    constexpr float xSpeed          = 100.0f;
-    constexpr float descendDistance = 100.0f;
-
-    if (states.size() != triangles.size())
-    {
-        states.clear();
-        for (const auto& triangle : triangles)
+        for (const auto& t : triangles)
         {
-            states.push_back({ glm::vec2(xSpeed, 0.0f), false, triangle->GetPosition().y });
+            State st{};
+            st.initialPos = t->GetPosition();
+            st.pos        = st.initialPos;
+            st.dir        = glm::vec2(1.0f, 0.0f);
+            st.remaining  = horizontalLength;
+            st.row        = 0;
+            st.goingRight = true;
+            s.push_back(st);
+
+            t->SetPosition(st.pos);
+            t->SetVelocity(st.dir * speed);
         }
     }
 
     for (std::size_t i = 0; i < triangles.size(); ++i)
     {
-        glm::vec2 position = triangles[i]->GetPosition();
-        State& state = states[i];
+        auto& st  = s[i];
+        auto& tri = triangles[i];
 
-        position += state.velocity * deltaTime_;
+        float dist = speed * deltaTime_;
 
-        const float size = triangles[i]->GetSize();
-        const float halfTriangleWidth  = 0.5f * size;
-        const float halfTriangleHeight = 0.5f * size;
-        constexpr float halfWorldWidth  = WINDOW_WIDTH  / 2.0f;
-        constexpr float halfWorldHeight = WINDOW_HEIGHT / 2.0f;
-
-        // Hit left or right wall
-        if (!state.descending &&
-            ((position.x - halfTriangleWidth) < -halfWorldWidth ||
-             (position.x + halfTriangleWidth) > halfWorldWidth))
+        while (dist > 0.0f)
         {
-            constexpr float ySpeed = 150.0f;
-            state.velocity         = glm::vec2(0.0f, -ySpeed);
-            state.descending       = true;
-            state.descendStartY    = position.y;
+            if (dist < st.remaining)
+            {
+                st.pos += st.dir * dist;
+                st.remaining -= dist;
+                dist = 0.0f;
+            }
+            else
+            {
+                st.pos += st.dir * st.remaining;
+                dist   -= st.remaining;
+
+                if (st.dir.x != 0.0f)
+                {
+                    st.dir = glm::vec2(0.0f, -1.0f);
+                    st.remaining = verticalStep;
+                }
+                else
+                {
+                    st.dir = glm::vec2(st.goingRight ? -1.0f : 1.0f, 0.0f);
+                    st.goingRight = !st.goingRight;
+                    st.remaining = horizontalLength;
+                    ++st.row;
+                }
+            }
+
+            const float limitY = -WINDOW_HEIGHT * 0.5f;
+            if (st.pos.y < limitY || st.row >= maxRows)
+            {
+                st.pos        = st.initialPos;
+                st.dir        = glm::vec2(1.0f, 0.0f);
+                st.remaining  = horizontalLength;
+                st.row        = 0;
+                st.goingRight = true;
+                break;
+            }
         }
 
-        // Bounce off floor or ceiling
-        if (state.descending)
-        {
-            if ((position.y - halfTriangleHeight) < -halfWorldHeight)
-            {
-                state.velocity.y = std::abs(state.velocity.y); // move up
-            }
-            else if ((position.y + halfTriangleHeight) > halfWorldHeight)
-            {
-                state.velocity.y = -std::abs(state.velocity.y); // move down
-            }
-
-            if (std::abs(position.y - state.descendStartY) >= descendDistance)
-            {
-                float newXSpeed = (position.x < 0) ? xSpeed : -xSpeed;
-                state.velocity = glm::vec2(newXSpeed, 0.0f);
-                state.descending = false;
-            }
-        }
-
-        position.x = glm::clamp(position.x, -halfWorldWidth + halfTriangleWidth, halfWorldWidth - halfTriangleWidth);
-        position.y = glm::clamp(position.y, -halfWorldHeight + halfTriangleHeight, halfWorldHeight - halfTriangleHeight);
-
-        triangles[i]->SetPosition(position);
+        tri->SetPosition(st.pos);
+        tri->SetVelocity(st.dir * speed);
     }
 }
 
 void OrthogonalAnimation::Update(const float deltaTime_) noexcept
 {
+    // 파라미터(원하시면 키 입력으로 조정 가능)
+    const float StepLen = 40.0f;   // 기본 코너 간 거리(픽셀)
+    const float Speed   = 160.0f;  // 픽셀/초
 
+    // 삼각형 수 변화에 대응하기 위해 static 상태 컨테이너 사용
+    struct State { glm::vec2 origin, pos, dir; float segLeft; int turnCount; int lenFactor; };
+    static std::vector<State> s;
+
+    auto rot90 = [](const glm::vec2& v) -> glm::vec2 { return glm::vec2(-v.y, v.x); };
+
+    // 크기 불일치 시 재초기화
+    if (s.size() != triangles.size())
+    {
+        s.clear();
+        s.reserve(triangles.size());
+        for (const auto& t : triangles)
+        {
+            State st{};
+            st.origin    = t->GetPosition();    // 각 삼각형 현재 위치를 중심으로 시작
+            st.pos       = st.origin;
+            st.dir       = glm::vec2(1.0f, 0.0f); // +X 방향에서 시작
+            st.turnCount = 0;
+            st.lenFactor = 1;
+            st.segLeft   = StepLen * float(st.lenFactor);
+            s.push_back(st);
+
+            // 초기 velocity 동기화(시각적 회전)
+            t->SetVelocity(st.dir * Speed);
+        }
+    }
+
+    // 각 삼각형 업데이트
+    for (std::size_t i = 0; i < triangles.size(); ++i)
+    {
+        auto& st = s[i];
+        float dist = Speed * deltaTime_;
+
+        while (dist > 0.0f)
+        {
+            if (dist < st.segLeft)
+            {
+                st.pos    += st.dir * dist;
+                st.segLeft = st.segLeft - dist;
+                dist       = 0.0f;
+            }
+            else
+            {
+                st.pos    += st.dir * st.segLeft;
+                dist      -= st.segLeft;
+
+                // 다음 세그먼트로 전환(90° 회전)
+                st.dir = rot90(st.dir);
+                ++st.turnCount;
+
+                // 두 번 회전할 때마다 길이 증가
+                if ((st.turnCount % 2) == 0)
+                {
+                    ++st.lenFactor;
+                }
+                st.segLeft = StepLen * float(st.lenFactor);
+            }
+        }
+
+        // 위치/시각화 갱신
+        triangles[i]->SetPosition(st.pos);
+        triangles[i]->SetVelocity(st.dir * Speed); // 진행 방향을 렌더 회전에 반영
+
+        // 너무 멀리 나가면 원점 기준으로 리셋(옵션)
+        const float halfW = WINDOW_WIDTH  * 0.5f;
+        const float halfH = WINDOW_HEIGHT * 0.5f;
+        const float maxExtent = std::max(halfW, halfH) * 1.2f;
+        if (glm::length(st.pos - st.origin) > maxExtent)
+        {
+            st.pos       = st.origin;
+            st.dir       = glm::vec2(1.0f, 0.0f);
+            st.turnCount = 0;
+            st.lenFactor = 1;
+            st.segLeft   = StepLen * float(st.lenFactor);
+        }
+    }
 }
 
 void SpiralAnimation::Update(const float deltaTime_) noexcept
 {
-    // static std::vector<glm::vec2> originalPositions;
-//
-    // if (originalPositions.size() != triangles.size())
-    // {
-    //     originalPositions.clear();
-//
-    //     for (const std::unique_ptr<Triangle>& triangle : triangles)
-    //     {
-    //         originalPositions.push_back(triangle->GetPosition());
-    //     }
-    // }
-//
-    // static float theta  = 0.0f;
-    // static float radius = 0.0f;
-//
-    // for (std::size_t i = 0; i < triangles.size(); ++i)
-    // {
-    //     const glm::vec2 center = originalPositions[i];
-//
-    //     const float newX = center.x + std::cos(theta) * radius;
-    //     const float newY = center.y + std::sin(theta) * radius;
-//
-    //     triangles[i]->SetPosition(glm::vec2(newX, newY));
-    // }
-//
-    // theta  += deltaTime_ * 5.0f;
-    // radius += deltaTime_ * 10.0f;
+    // 파라미터 (필요 시 UI/키로 조절)
+    const float kStep   = 24.0f;   // k: 한 바퀴당 반경 증가량(픽셀/라디안)에 비례 (실감상 16~48 적당)
+    const float speed   = 160.0f;  // 거의 일정한 화면상 속도(픽셀/초)
+    const float r0      = 0.0f;    // 시작 반경
+    const float maxOut  = std::max(WINDOW_WIDTH, WINDOW_HEIGHT) * 0.7f;
+
+    struct State
+    {
+        glm::vec2 origin;
+        float theta;
+        float k;
+        float r0;
+        float speed;
+    };
+    static std::vector<State> s;
+
+    // 삼각형 수 변화 대응
+    if (s.size() != triangles.size())
+    {
+        s.clear();
+        s.reserve(triangles.size());
+
+        // 각 삼각형을 현재 위치를 중심으로 시작
+        for (const auto& t : triangles)
+        {
+            State st{};
+            st.origin = t->GetPosition();
+            st.theta  = 0.0f;
+            st.k      = kStep;
+            st.r0     = r0;
+            st.speed  = speed;
+            s.push_back(st);
+
+            // 초기 위치/방향 반영
+            const float r   = st.r0 + st.k * st.theta;
+            const float cs  = std::cos(st.theta);
+            const float sn  = std::sin(st.theta);
+            const glm::vec2 pos = st.origin + glm::vec2(r * cs, r * sn);
+            t->SetPosition(pos);
+
+            // 초기 접선 방향 (d/dθ [r(θ)(cosθ, sinθ)] = (r'cosθ - r sinθ, r' sinθ + r cosθ))
+            const float rp  = st.k;
+            glm::vec2 tangent(rp*cs - r*sn, rp*sn + r*cs);
+            if (glm::dot(tangent, tangent) > 0.0f) tangent = glm::normalize(tangent);
+            t->SetVelocity(tangent * st.speed);
+        }
+    }
+
+    // 업데이트
+    for (std::size_t i = 0; i < triangles.size(); ++i)
+    {
+        auto& st = s[i];
+        auto& tri = triangles[i];
+
+        // 현재 r와 호길이 미분에 따른 theta 증가율
+        const float r   = st.r0 + st.k * st.theta;
+        const float dsd = std::sqrt(r*r + st.k*st.k); // ds/dθ
+        float dtheta_dt = 0.0f;
+        if (dsd > 0.0f)
+        {
+            dtheta_dt = st.speed / dsd;
+        }
+
+        st.theta += dtheta_dt * deltaTime_;
+
+        // 새 좌표
+        const float cs  = std::cos(st.theta);
+        const float sn  = std::sin(st.theta);
+        const float r2  = st.r0 + st.k * st.theta;
+        const glm::vec2 pos = st.origin + glm::vec2(r2 * cs, r2 * sn);
+        tri->SetPosition(pos);
+
+        // 접선 벡터(정규화) → velocity 동기화(시각적 회전 재사용)
+        const float rp  = st.k;
+        glm::vec2 tangent(rp*cs - r2*sn, rp*sn + r2*cs);
+        if (glm::dot(tangent, tangent) > 0.0f) tangent = glm::normalize(tangent);
+        tri->SetVelocity(tangent * st.speed);
+
+        // 너무 멀리 나가면 리셋(원점에서 다시 시작)
+        if (glm::length(pos - st.origin) > maxOut)
+        {
+            st.theta = 0.0f;
+        }
+    }
 }
 
 void OnDebugMessage(const GLenum        source_,
