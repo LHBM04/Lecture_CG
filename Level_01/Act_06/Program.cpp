@@ -25,7 +25,7 @@ struct Rect
     [[nodiscard]]
     constexpr inline glm::vec2 GetMin() const noexcept
     {
-        return { position.x - size.x * 0.5f, position.y - size.y * 0.5f };
+        return { currentPosition.x - size.x * 0.5f, currentPosition.y - size.y * 0.5f };
     }
 
     /**
@@ -36,7 +36,7 @@ struct Rect
     [[nodiscard]]
     constexpr inline glm::vec2 GetMax() const noexcept
     {
-        return { position.x + size.x * 0.5f, position.y + size.y * 0.5f };
+        return { currentPosition.x + size.x * 0.5f, currentPosition.y + size.y * 0.5f };
     }
 
     /**
@@ -62,7 +62,7 @@ struct Rect
      */
     void Update(const float deltaTime_) noexcept
     {
-        if (!glm::all(glm::epsilonEqual(direction, glm::vec2(0, 0), 1e-6f)))
+        if (!glm::all(glm::epsilonEqual(currentDirection, glm::vec2(0, 0), 1e-6f)))
         {
             constexpr float shrinkSpeed = 75.0f;
             float shrinkAmount = shrinkSpeed * deltaTime_;
@@ -74,7 +74,7 @@ struct Rect
             }
 
             constexpr float speed = 300.0f;
-            position += direction * (speed * deltaTime_);
+            currentPosition += currentDirection * (speed * deltaTime_);
         }
     }
 
@@ -100,7 +100,7 @@ struct Rect
     /**
      * @brief 위치.
      */
-    glm::vec2 position;
+    glm::vec2 currentPosition;
 
     /**
      * @brief 크기.
@@ -115,7 +115,7 @@ struct Rect
     /**
      * @brief 이동 방향.
      */
-    glm::vec2 direction;
+    glm::vec2 currentDirection;
 };
 
 enum class EffectType
@@ -221,7 +221,7 @@ int main(int, char**)
 
     for (std::size_t count = 0; count < 20; ++count)
     {
-        const glm::vec2 position   = { static_cast<float>(std::rand() % (WINDOW_WIDTH - 50)),
+        const glm::vec2 currentPosition   = { static_cast<float>(std::rand() % (WINDOW_WIDTH - 50)),
                                        static_cast<float>(std::rand() % (WINDOW_HEIGHT - 50)) };
         const glm::vec2 size       = { static_cast<float>((std::rand() % 100) + 20),
                                        static_cast<float>((std::rand() % 100) + 20) };
@@ -229,7 +229,7 @@ int main(int, char**)
                                        static_cast<float>(std::rand() % 256) / 255.0f,
                                        static_cast<float>(std::rand() % 256) / 255.0f };
 
-        rects.push_back({ position, size, color, {0.0f, 0.0f} });
+        rects.push_back({ currentPosition, size, color, {0.0f, 0.0f} });
     }
 
     if (!::glfwInit())
@@ -335,7 +335,7 @@ void OnButtonInteracted(GLFWwindow* const window_,
 
         if (toErase != rects.end())
         {
-            const glm::vec2 center = toErase->position;
+            const glm::vec2 center = toErase->currentPosition;
             const glm::vec2 size   = toErase->size;
             const glm::vec3 color  = toErase->color;
 
@@ -354,9 +354,9 @@ void OnButtonInteracted(GLFWwindow* const window_,
                         {1.0f,  0.0f}
                     };
 
-                    for (auto direction : directions)
+                    for (auto currentDirection : directions)
                     {
-                        rects.push_back({ center, size, color, direction });
+                        rects.push_back({ center, size, color, currentDirection });
                     }
                     break;
                 }
@@ -369,9 +369,9 @@ void OnButtonInteracted(GLFWwindow* const window_,
                         { -1.0f,  1.0f }
                     };
 
-                    for (auto direction : directions)
+                    for (auto currentDirection : directions)
                     {
-                        rects.push_back({ center, size, color, direction });
+                        rects.push_back({ center, size, color, currentDirection });
                     }
                     break;
                 }
@@ -402,9 +402,9 @@ void OnButtonInteracted(GLFWwindow* const window_,
                         {-1.0f, -1.0f}, {- 1.0f,  1.0f}
                     };
 
-                    for (auto direction : directions)
+                    for (auto currentDirection : directions)
                     {
-                        rects.push_back({ center, size, color, direction });
+                        rects.push_back({ center, size, color, currentDirection });
                     }
                     break;
                 }

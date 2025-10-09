@@ -216,12 +216,12 @@ void OnKeyInteracted(GLFWwindow* window_,
                 return;
             }
 
-            const glm::vec2 pos   = { static_cast<float>(std::rand() % 800),
+            const glm::vec2 currentPosition   = { static_cast<float>(std::rand() % 800),
                                       static_cast<float>(std::rand() % 600) };
-            const glm::vec2 min   = { pos.x - Rect::SCALE_MULTIPLIER / 2.0f,
-                                      pos.y - Rect::SCALE_MULTIPLIER / 2.0f };
-            const glm::vec2 max   = { pos.x + Rect::SCALE_MULTIPLIER / 2.0f,
-                                      pos.y + Rect::SCALE_MULTIPLIER / 2.0f };
+            const glm::vec2 min   = { currentPosition.x - Rect::SCALE_MULTIPLIER / 2.0f,
+                                      currentPosition.y - Rect::SCALE_MULTIPLIER / 2.0f };
+            const glm::vec2 max   = { currentPosition.x + Rect::SCALE_MULTIPLIER / 2.0f,
+                                      currentPosition.y + Rect::SCALE_MULTIPLIER / 2.0f };
             const glm::vec3 color = { static_cast<float>(std::rand() % 256) / 255.0f,
                                       static_cast<float>(std::rand() % 256) / 255.0f,
                                       static_cast<float>(std::rand() % 256) / 255.0f };
@@ -229,7 +229,7 @@ void OnKeyInteracted(GLFWwindow* window_,
             rects.push_back({ min, max, color });
             currentCreateCounts++;
 
-            std::cout << std::format("[Info] new rectangle created at ({:.1f}, {:.1f}) ", pos.x, pos.y);
+            std::cout << std::format("[Info] new rectangle created at ({:.1f}, {:.1f}) ", currentPosition.x, currentPosition.y);
             std::cout << std::format("Total Counts: {:d}\n", currentCreateCounts);
 
             break;

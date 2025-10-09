@@ -16,7 +16,7 @@ struct Block
     [[nodiscard]]
     constexpr inline glm::vec2 GetMin() const noexcept
     {
-        return { position.x - size.x * 0.5f, position.y - size.y * 0.5f };
+        return { currentPosition.x - size.x * 0.5f, currentPosition.y - size.y * 0.5f };
     }
 
     /**
@@ -27,7 +27,7 @@ struct Block
     [[nodiscard]]
     constexpr inline glm::vec2 GetMax() const noexcept
     {
-        return { position.x + size.x * 0.5f, position.y + size.y * 0.5f };
+        return { currentPosition.x + size.x * 0.5f, currentPosition.y + size.y * 0.5f };
     }
 
     /**
@@ -71,7 +71,7 @@ struct Block
     /**
      * @brief 위치.
      */
-    glm::vec2 position;
+    glm::vec2 currentPosition;
 
     /**
      * @brief 크기.
@@ -126,7 +126,7 @@ static void OnCursorMoved(GLFWwindow* const window_,
 /**
  * @brief 게임을 초기화합니다.
  */
-static void Initialize() noexcept;
+static void InitializeWindow() noexcept;
 
 /**
  * @brief 매 프레임마다 호출됩니다.
@@ -258,7 +258,7 @@ int main()
     glfwSetMouseButtonCallback(window, OnButtonInteracted);
     glfwSetCursorPosCallback(window, OnCursorMoved);
 
-    Initialize();
+    InitializeWindow();
 
     float lastTime = static_cast<float>(glfwGetTime());
 
@@ -308,7 +308,7 @@ void OnKeyInteracted(GLFWwindow* const window_,
     {
         case GLFW_KEY_R:
         {
-            Initialize();
+            InitializeWindow();
             break;
         }
         case GLFW_KEY_Q:
@@ -333,13 +333,13 @@ void OnKeyInteracted(GLFWwindow* const window_,
 
                 if (targetBlock)
                 {
-                    glm::vec2 hintPosition = targetBlock->position;
+                    glm::vec2 hintPosition = targetBlock->currentPosition;
                     hintPosition.x += PANEL_PIXEL_WIDTH;
 
                     constexpr float THRESHOLD = 0.5f;
-                    if (glm::distance(userBlock.position, hintPosition) >= THRESHOLD)
+                    if (glm::distance(userBlock.currentPosition, hintPosition) >= THRESHOLD)
                     {
-                        userBlock.position = hintPosition;
+                        userBlock.currentPosition = hintPosition;
 
                         CheckComplete();
                         return;
@@ -395,8 +395,8 @@ void OnButtonInteracted(GLFWwindow* const window_,
             gridX = std::min(gridX, 2 * GRID_SIZE - blockGridWidth);
             gridY = std::max(0, std::min(gridY, GRID_SIZE - blockGridHeight));
 
-            dragged->position.x = (gridX * CELL_WIDTH) + dragged->size.x * 0.5f;
-            dragged->position.y = (gridY * CELL_HEIGHT) + dragged->size.y * 0.5f;
+            dragged->currentPosition.x = (gridX * CELL_WIDTH) + dragged->size.x * 0.5f;
+            dragged->currentPosition.y = (gridY * CELL_HEIGHT) + dragged->size.y * 0.5f;
 
             dragged = nullptr;
 
@@ -427,11 +427,11 @@ void OnCursorMoved(GLFWwindow* const window_,
 
         // dragged->position = { targetX, targetY };
         glm::vec2 delta = cursorPosition - lastCursorPosition;
-        dragged->position += delta;
+        dragged->currentPosition += delta;
     }
 }
 
-void Initialize() noexcept
+void InitializeWindow() noexcept
 {
     isGameOver = false;
 
@@ -455,7 +455,7 @@ void Initialize() noexcept
         {
             const glm::vec2 gridPos = { posDist(gen), posDist(gen) };
 
-            newBlock.position = { (gridPos.x * CELL_WIDTH) + newBlock.size.x * 0.5f,
+            newBlock.currentPosition = { (gridPos.x * CELL_WIDTH) + newBlock.size.x * 0.5f,
                                      (gridPos.y * CELL_HEIGHT) + newBlock.size.y * 0.5f };
 
             positionFound = true;
@@ -497,7 +497,7 @@ void Initialize() noexcept
         {
             const glm::vec2 gridPos = { userPosDistX(gen), userPosDistY(gen) };
 
-            block.position = { PANEL_PIXEL_WIDTH + (gridPos.x * CELL_WIDTH) + block.size.x * 0.5f,
+            block.currentPosition = { PANEL_PIXEL_WIDTH + (gridPos.x * CELL_WIDTH) + block.size.x * 0.5f,
                                   (gridPos.y * CELL_HEIGHT) + block.size.y * 0.5f };
 
             isFound = true;
@@ -592,12 +592,12 @@ void CheckComplete() noexcept
         {
             if (ans_block.id == q_block.id)
             {
-                glm::vec2 converted_pos = ans_block.position;
+                glm::vec2 converted_pos = ans_block.currentPosition;
                 converted_pos.x -= PANEL_PIXEL_WIDTH;
 
                 constexpr float THRESHOLD = 1.0f;
 
-                if (glm::distance(converted_pos, q_block.position) < THRESHOLD)
+                if (glm::distance(converted_pos, q_block.currentPosition) < THRESHOLD)
                 {
                     foundMatch = true;
                 }

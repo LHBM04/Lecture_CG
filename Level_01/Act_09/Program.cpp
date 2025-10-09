@@ -117,7 +117,7 @@ private:
     /**
      * @brief 해당 도형의 위치.
      */
-    glm::vec2 position;
+    glm::vec2 currentPosition;
 
     /**
      * @brief 해당 도형의 크기.
@@ -462,7 +462,7 @@ Triangle::Triangle(const glm::vec2& position_,
     : vao(0)
     , vbo(0)
     , ebo(0)
-    , position(position_)
+    , currentPosition(position_)
     , size(size_)
     , color(color_)
 {
@@ -504,7 +504,7 @@ Triangle::~Triangle() noexcept
 
 void Triangle::Draw(const Shader& shader_) const noexcept
 {
-    glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(position, 0.0f));
+    glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(currentPosition, 0.0f));
     model = glm::scale(model, glm::vec3(size, size, 1.0f));
 
     const GLint modelLoc = glGetUniformLocation(shader_.GetProgramID(), "u_Model");
@@ -579,7 +579,7 @@ void Quadrant::Reset(const bool shouldAddOne_) noexcept
     {
         const float ndcX = ((x + width / 2.0f) / WINDOW_WIDTH * 2.0f) - 1.0f;
         const float ndcY = (((WINDOW_HEIGHT - (y + height / 2.0f))) / WINDOW_HEIGHT * 2.0f) - 1.0f;
-        const glm::vec2 position{ndcX, ndcY};
+        const glm::vec2 currentPosition{ndcX, ndcY};
 
         std::uniform_real_distribution<float> sizeDist(0.1f, 0.25f);
         const float size{ sizeDist(gen) };
@@ -587,7 +587,7 @@ void Quadrant::Reset(const bool shouldAddOne_) noexcept
         std::uniform_real_distribution<float> colorDist(0.0f, 1.0f);
         const glm::vec3 color{ colorDist(gen), colorDist(gen), colorDist(gen) };
 
-        triangles.emplace_back(std::make_unique<Triangle>(position, size, color));
+        triangles.emplace_back(std::make_unique<Triangle>(currentPosition, size, color));
     }
 }
 
@@ -707,7 +707,7 @@ void OnButtonInteracted(GLFWwindow* const window_,
 
                 const float ndcX = (cursorPosition.x / WINDOW_WIDTH * 2.0f) - 1.0f;
                 const float ndcY = ((WINDOW_HEIGHT - cursorPosition.y) / WINDOW_HEIGHT * 2.0f) - 1.0f;
-                const glm::vec2 position = {ndcX, ndcY};
+                const glm::vec2 currentPosition = {ndcX, ndcY};
 
                 std::uniform_real_distribution<float> sizeDist(0.1f, 0.25f);
                 const float size{ sizeDist(gen) };
@@ -715,7 +715,7 @@ void OnButtonInteracted(GLFWwindow* const window_,
                 std::uniform_real_distribution<float> colorDist(0.0f, 1.0f);
                 const glm::vec3 color{ colorDist(gen), colorDist(gen), colorDist(gen) };
 
-                quadrant->Add(position, size, color);
+                quadrant->Add(currentPosition, size, color);
 
                 break;
             }
@@ -729,7 +729,7 @@ void OnButtonInteracted(GLFWwindow* const window_,
             {
                 const float ndcX = (cursorPosition.x / WINDOW_WIDTH * 2.0f) - 1.0f;
                 const float ndcY = ((WINDOW_HEIGHT - cursorPosition.y) / WINDOW_HEIGHT * 2.0f) - 1.0f;
-                const glm::vec2 position = {ndcX, ndcY};
+                const glm::vec2 currentPosition = {ndcX, ndcY};
 
                 std::uniform_real_distribution<float> sizeDist(0.1f, 0.25f);
                 const float size{ sizeDist(gen) };
@@ -737,7 +737,7 @@ void OnButtonInteracted(GLFWwindow* const window_,
                 std::uniform_real_distribution<float> colorDist(0.0f, 1.0f);
                 const glm::vec3 color{ colorDist(gen), colorDist(gen), colorDist(gen) };
 
-                quadrant->Add(position, size, color);
+                quadrant->Add(currentPosition, size, color);
 
                 break;
             }

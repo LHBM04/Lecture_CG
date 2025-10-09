@@ -21,7 +21,7 @@ struct Rect
     [[nodiscard]]
     constexpr inline glm::vec2 GetMin() const noexcept
     {
-        return { position.x - size.x * 0.5f, position.y - size.y * 0.5f };
+        return { currentPosition.x - size.x * 0.5f, currentPosition.y - size.y * 0.5f };
     }
 
     /**
@@ -32,7 +32,7 @@ struct Rect
     [[nodiscard]]
     constexpr inline glm::vec2 GetMax() const noexcept
     {
-        return { position.x + size.x * 0.5f, position.y + size.y * 0.5f };
+        return { currentPosition.x + size.x * 0.5f, currentPosition.y + size.y * 0.5f };
     }
 
     /**
@@ -70,7 +70,7 @@ struct Rect
     /**
      * @brief 위치.
      */
-    glm::vec2 position;
+    glm::vec2 currentPosition;
 
     /**
      * @brief 크기.
@@ -322,7 +322,7 @@ void OnButtonInteracted(GLFWwindow* window_,
             const float fixedX = static_cast<float>(mouseX);
             const float fixedY = static_cast<float>(WINDOW_HEIGHT - mouseY);
 
-            eraser.position= { fixedX, fixedY };
+            eraser.currentPosition= { fixedX, fixedY };
             eraser.size    = { 20, 20 };
             eraser.color   = { 0.0f, 0.0f, 0.0f };
         }
@@ -371,7 +371,7 @@ void OnCursorMoved(GLFWwindow* window_,
     const float fixedX = static_cast<float>(x_);
     const float fixedY = static_cast<float>(WINDOW_HEIGHT - y_);
 
-    eraser.position = { fixedX, fixedY };
+    eraser.currentPosition = { fixedX, fixedY };
 
     auto toErase = rects.end();
     for (auto iter = rects.begin(); iter != rects.end(); ++iter)

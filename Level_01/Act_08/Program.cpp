@@ -133,7 +133,7 @@ public:
         : vao(0)
         , vbo(0)
         , ebo(0)
-        , position(0.0f)
+        , currentPosition(0.0f)
         , size(10.0f)
         , color(1.0f)
     {
@@ -178,7 +178,7 @@ public:
     [[nodiscard]]
     constexpr const glm::vec2& GetPosition() const noexcept
     {
-        return position;
+        return currentPosition;
     }
 
     /**
@@ -188,7 +188,7 @@ public:
      */
     inline void SetPosition(const glm::vec2& position_) noexcept
     {
-        position = position_;
+        currentPosition = position_;
     }
 
     /**
@@ -268,7 +268,7 @@ protected:
     /**
      * @brief 해당 도형의 타입.
      */
-    glm::vec2 position{};
+    glm::vec2 currentPosition{};
 
     /**
      * @brief 해당 도형의 크기.
@@ -312,10 +312,10 @@ public:
     {
         const float halfSize = size * 0.5f;
 
-        return position_.x >= position.x - halfSize &&
-               position_.x <= position.x + halfSize &&
-               position_.y >= position.y - halfSize &&
-               position_.y <= position.y + halfSize;
+        return position_.x >= currentPosition.x - halfSize &&
+               position_.x <= currentPosition.x + halfSize &&
+               position_.y >= currentPosition.y - halfSize &&
+               position_.y <= currentPosition.y + halfSize;
     }
 
     /**
@@ -323,7 +323,7 @@ public:
      */
     virtual inline void Draw(const Shader& shader_) const noexcept override
     {
-        glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(position, 0.0f));
+        glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(currentPosition, 0.0f));
         model = glm::scale(model, glm::vec3(size, size, 1.0f));
 
         const GLint modelLoc = glGetUniformLocation(shader_.GetProgramID(), "u_Model");
@@ -366,10 +366,10 @@ public:
     {
         const float halfSize = size * 0.5f;
 
-        return position_.x >= position.x - halfSize &&
-               position_.x <= position.x + halfSize &&
-               position_.y >= position.y - halfSize &&
-               position_.y <= position.y + halfSize;
+        return position_.x >= currentPosition.x - halfSize &&
+               position_.x <= currentPosition.x + halfSize &&
+               position_.y >= currentPosition.y - halfSize &&
+               position_.y <= currentPosition.y + halfSize;
     }
 
     /**
@@ -377,7 +377,7 @@ public:
      */
     virtual inline void Draw(const Shader& shader_) const noexcept override
     {
-        glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(position, 0.0f));
+        glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(currentPosition, 0.0f));
         model = glm::scale(model, glm::vec3(size, size, 1.0f));
 
         const GLint modelLoc = glGetUniformLocation(shader_.GetProgramID(), "u_Model");
@@ -418,10 +418,10 @@ public:
     {
         const float halfSize = size * 0.5f;
 
-        return (position_.x >= position.x - halfSize) &&
-               (position_.x <= position.x + halfSize) &&
-               (position_.y >= position.y - halfSize) &&
-               (position_.y <= position.y + halfSize);
+        return (position_.x >= currentPosition.x - halfSize) &&
+               (position_.x <= currentPosition.x + halfSize) &&
+               (position_.y >= currentPosition.y - halfSize) &&
+               (position_.y <= currentPosition.y + halfSize);
     }
 
     /**
@@ -429,7 +429,7 @@ public:
      */
     virtual inline void Draw(const Shader& shader_) const noexcept override
     {
-        glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(position, 0.0f));
+        glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(currentPosition, 0.0f));
         model = glm::scale(model, glm::vec3(size, size, 1.0f));
 
         const GLint modelLoc = glGetUniformLocation(shader_.GetProgramID(), "u_Model");
@@ -465,10 +465,10 @@ public:
     {
         const float halfSize = size * 0.5f;
 
-        return position_.x >= position.x - halfSize &&
-               position_.x <= position.x + halfSize &&
-               position_.y >= position.y - halfSize &&
-               position_.y <= position.y + halfSize;
+        return position_.x >= currentPosition.x - halfSize &&
+               position_.x <= currentPosition.x + halfSize &&
+               position_.y >= currentPosition.y - halfSize &&
+               position_.y <= currentPosition.y + halfSize;
     }
 
     /**
@@ -476,7 +476,7 @@ public:
      */
     virtual inline void Draw(const Shader& shader_) const noexcept override
     {
-        glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(position, 0.0f));
+        glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(currentPosition, 0.0f));
         model = glm::scale(model, glm::vec3(size, size, 1.0f));
 
         const GLint modelLoc = glGetUniformLocation(shader_.GetProgramID(), "u_Model");
