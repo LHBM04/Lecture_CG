@@ -110,7 +110,7 @@ public:
     [[nodiscard]]
     constexpr glm::vec2 GetPosition() const noexcept
     {
-        return currentPosition;
+        return position;
     }
 
     /**
@@ -120,7 +120,7 @@ public:
      */
     inline void SetPosition(const glm::vec2& position_) noexcept
     {
-        currentPosition = position_;
+        position = position_;
     }
 
     /**
@@ -194,10 +194,10 @@ public:
     [[nodiscard]]
     constexpr bool IsInteract(const glm::vec2 point_) const noexcept
     {
-        return (point_.x >= currentPosition.x - size * 0.25f) &&
-               (point_.x <= currentPosition.x + size * 0.25f) &&
-               (point_.y >= currentPosition.y - size * 0.25f) &&
-               (point_.y <= currentPosition.y + size * 0.75f);
+        return (point_.x >= position.x - size * 0.25f) &&
+               (point_.x <= position.x + size * 0.25f) &&
+               (point_.y >= position.y - size * 0.25f) &&
+               (point_.y <= position.y + size * 0.75f);
     }
 private:
     /**
@@ -218,7 +218,7 @@ private:
     /**
      * @brief 해당 삼각형의 위치.
      */
-    glm::vec2 currentPosition;
+    glm::vec2 position;
 
     /**
      * @brief 해당 삼각형의 크기.
@@ -294,8 +294,8 @@ public:
     virtual void Update(const float deltaTime_) noexcept override;
 private:
     static constexpr float speed = 200.0f;
-    static constexpr float horizontalLength = 300.0f;
     static constexpr float verticalStep = 80.0f;
+    static constexpr float horizontalLength = 500.0f;
     static constexpr int   maxRows = 6;
     /**
      * @struct State
@@ -332,7 +332,7 @@ private:
         /**
          * @brief 현재 진행 방향 (true=→, false=←)
          */
-        bool IsGoingRight;
+        bool isGoingRight;
     };
 
     /**
@@ -679,7 +679,7 @@ Triangle::Triangle(const glm::vec2& position_,
     : vao(0)
     , vbo(0)
     , ebo(0)
-    , currentPosition(position_)
+    , position(position_)
     , size(size_)
     , color(color_)
     , velocity(0.0f, 0.0f)
@@ -729,7 +729,7 @@ void Triangle::Draw(const Shader& shader_) const noexcept
         angle = std::atan2(currentDirection.y, currentDirection.x);
     }
 
-    glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(currentPosition, 0.0f));
+    glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(position, 0.0f));
     model = glm::rotate(model, angle, glm::vec3(0.0f, 0.0f, 1.0f));
     model = glm::scale(model, glm::vec3(size, size, 1.0f));
 
@@ -810,8 +810,6 @@ void BounceAnimation::Update(const float deltaTime_) noexcept
 
 void ZigzagAnimation::Update(const float deltaTime_) noexcept
 {
-    // ====== 초기화 ======
-    // 애니메이션이 처음 시작되거나, 삼각형 개수가 바뀌면 상태를 새로 구성합니다.
     if (states.size() != triangles.size())
     {
         states.clear();
@@ -819,14 +817,13 @@ void ZigzagAnimation::Update(const float deltaTime_) noexcept
 
         for (const auto& t : triangles)
         {
-            State state = { }; // state 구조체를 0으로 초기화
-            // [핵심] 아래의 모든 초기화가 정확히 이루어지는지 확인하십시오.
+            State state = { };
             state.originPosition = t->GetPosition();
             state.currentPosition = state.originPosition;
             state.currentDirection = glm::vec2(1.0f, 0.0f);
             state.remaining = horizontalLength;
-            state.row = 0; // state.row가 0으로 명시적으로 초기화됩니다.
-            state.IsGoingRight = true;
+            state.row = 0;
+            state.isGoingRight = true;
 
             states.push_back(state);
 
@@ -835,52 +832,62 @@ void ZigzagAnimation::Update(const float deltaTime_) noexcept
         }
     }
 
-    // ====== 업데이트 ======
     for (std::size_t i = 0; i < triangles.size(); ++i)
     {
-        State& state = states[i];
-        std::unique_ptr<Triangle>& triangle = triangles[i];
+        auto& state = states[i];
+        auto& triangle = triangles[i];
 
-        float dist = speed * deltaTime_;
-
-        while (dist > 0.0f)
+        if (state.currentDirection.x != 0.0f)
         {
-            if (dist < state.remaining)
+            state.currentPosition.x += state.currentDirection.x * speed * deltaTime_;
+
+            const float horizontalBoundary = WINDOW_WIDTH / 2.0f;
+            const float triangleSize = triangle->GetSize();
+            bool hasHitWall = false;
+
+            if (state.currentDirection.x > 0 && state.currentPosition.x > horizontalBoundary - triangleSize) // 오른쪽 벽
             {
-                state.currentPosition += state.currentDirection * dist;
-                state.remaining -= dist;
-                dist = 0.0f;
+                state.currentPosition.x = horizontalBoundary - triangleSize; // 벽에 붙이기
+                hasHitWall = true;
+            }
+            else if (state.currentDirection.x < 0 && state.currentPosition.x < -horizontalBoundary + triangleSize) // 왼쪽 벽
+            {
+                state.currentPosition.x = -horizontalBoundary + triangleSize; // 벽에 붙이기
+                hasHitWall = true;
+            }
+
+            if (hasHitWall)
+            {
+                state.currentDirection = glm::vec2(0.0f, -1.0f);
+                state.remaining = verticalStep;
+            }
+        }
+        else
+        {
+            float distanceToMove = speed * deltaTime_;
+
+            if (distanceToMove < state.remaining)
+            {
+                state.currentPosition.y += state.currentDirection.y * distanceToMove;
+                state.remaining -= distanceToMove;
             }
             else
             {
-                state.currentPosition += state.currentDirection * state.remaining;
-                dist -= state.remaining;
+                state.currentPosition.y += state.currentDirection.y * state.remaining;
+                state.remaining = 0;
 
-                if (state.currentDirection.x != 0.0f)
-                {
-                    state.currentDirection = glm::vec2(0.0f, -1.0f);
-                    state.remaining = verticalStep;
-                }
-                else
-                {
-                    state.currentDirection = glm::vec2(state.IsGoingRight ? -1.0f : 1.0f, 0.0f);
-                    state.IsGoingRight = !state.IsGoingRight;
-                    state.remaining = horizontalLength;
-                    ++state.row;
-                }
+                state.isGoingRight = !state.isGoingRight;
+                state.currentDirection = glm::vec2(state.isGoingRight ? 1.0f : -1.0f, 0.0f);
+                ++state.row;
             }
+        }
 
-            // 리셋 조건
-            const float limitY = -WINDOW_HEIGHT * 0.5f;
-            if (state.currentPosition.y < limitY || state.row >= maxRows)
-            {
-                state.currentPosition = state.originPosition;
-                state.currentDirection = glm::vec2(1.0f, 0.0f);
-                state.remaining = horizontalLength;
-                state.row = 0;
-                state.IsGoingRight = true;
-                break;
-            }
+        const float boundary = WINDOW_HEIGHT / 2.0f;
+        const float triangleSize = triangle->GetSize();
+
+        if (state.currentPosition.y < -boundary - triangleSize)
+        {
+            state.currentPosition.y = boundary + triangleSize;
         }
 
         triangle->SetPosition(state.currentPosition);
@@ -896,18 +903,19 @@ void OrthogonalAnimation::Update(const float deltaTime_) noexcept
     {
         states.clear();
         states.reserve(triangles.size());
-        for (const auto& t : triangles)
-        {
-            State st{};
-            st.origin    = t->GetPosition();    // 각 삼각형 현재 위치를 중심으로 시작
-            st.currentPosition       = st.origin;
-            st.currentDirection       = glm::vec2(1.0f, 0.0f); // +X 방향에서 시작
-            st.turnCount = 0;
-            st.lenFactor = 1;
-            st.segLeft   = StepLen * float(st.lenFactor);
-            states.push_back(st);
 
-            t->SetVelocity(st.currentDirection * Speed);
+        for (const auto& triangle : triangles)
+        {
+            State state = { };
+            state.origin           = triangle->GetPosition();    // 각 삼각형 현재 위치를 중심으로 시작
+            state.currentPosition  = state.origin;
+            state.currentDirection = glm::vec2(1.0f, 0.0f); // +X 방향에서 시작
+            state.turnCount        = 0;
+            state.lenFactor        = 1;
+            state.segLeft          = StepLen * static_cast<float>(state.lenFactor);
+            states.push_back(state);
+
+            triangle->SetVelocity(state.currentDirection * Speed);
         }
     }
 
@@ -920,43 +928,40 @@ void OrthogonalAnimation::Update(const float deltaTime_) noexcept
         {
             if (dist < st.segLeft)
             {
-                st.currentPosition    += st.currentDirection * dist;
+                st.currentPosition += st.currentDirection * dist;
                 st.segLeft = st.segLeft - dist;
-                dist       = 0.0f;
+                dist = 0.0f;
             }
             else
             {
-                st.currentPosition    += st.currentDirection * st.segLeft;
-                dist      -= st.segLeft;
+                st.currentPosition += st.currentDirection * st.segLeft;
+                dist -= st.segLeft;
 
-                // 다음 세그먼트로 전환(90° 회전)
                 st.currentDirection = rot90(st.currentDirection);
                 ++st.turnCount;
 
-                // 두 번 회전할 때마다 길이 증가
                 if ((st.turnCount % 2) == 0)
                 {
                     ++st.lenFactor;
                 }
-                st.segLeft = StepLen * float(st.lenFactor);
+                st.segLeft = StepLen * static_cast<float>(st.lenFactor);
             }
         }
 
-        // 위치/시각화 갱신
         triangles[i]->SetPosition(st.currentPosition);
-        triangles[i]->SetVelocity(st.currentDirection * Speed); // 진행 방향을 렌더 회전에 반영
+        triangles[i]->SetVelocity(st.currentDirection * Speed);
 
-        // 너무 멀리 나가면 원점 기준으로 리셋(옵션)
-        const float halfW = WINDOW_WIDTH  * 0.5f;
-        const float halfH = WINDOW_HEIGHT * 0.5f;
+        const float halfW     = WINDOW_WIDTH  * 0.5f;
+        const float halfH     = WINDOW_HEIGHT * 0.5f;
         const float maxExtent = std::max(halfW, halfH) * 1.2f;
+
         if (glm::length(st.currentPosition - st.origin) > maxExtent)
         {
-            st.currentPosition       = st.origin;
-            st.currentDirection       = glm::vec2(1.0f, 0.0f);
-            st.turnCount = 0;
-            st.lenFactor = 1;
-            st.segLeft   = StepLen * float(st.lenFactor);
+            st.currentPosition  = st.origin;
+            st.currentDirection = glm::vec2(1.0f, 0.0f);
+            st.turnCount        = 0;
+            st.lenFactor        = 1;
+            st.segLeft          = StepLen * float(st.lenFactor);
         }
     }
 }

@@ -117,7 +117,7 @@ private:
     /**
      * @brief 해당 도형의 위치.
      */
-    glm::vec2 currentPosition;
+    glm::vec2 position;
 
     /**
      * @brief 해당 도형의 크기.
@@ -462,7 +462,7 @@ Triangle::Triangle(const glm::vec2& position_,
     : vao(0)
     , vbo(0)
     , ebo(0)
-    , currentPosition(position_)
+    , position(position_)
     , size(size_)
     , color(color_)
 {
@@ -504,7 +504,7 @@ Triangle::~Triangle() noexcept
 
 void Triangle::Draw(const Shader& shader_) const noexcept
 {
-    glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(currentPosition, 0.0f));
+    glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(position, 0.0f));
     model = glm::scale(model, glm::vec3(size, size, 1.0f));
 
     const GLint modelLoc = glGetUniformLocation(shader_.GetProgramID(), "u_Model");

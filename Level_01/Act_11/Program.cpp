@@ -6,9 +6,10 @@
 #include <glad/glad.h>
 
 #include <glfw/glfw3.h>
-#include <glfw/glfw3native.h>
 
 #include <glm/glm.hpp>
+#include <glm/ext/matrix_clip_space.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 /**
  * @class Shader
@@ -70,26 +71,69 @@ class Spiral
 public:
     /**
      * @brief 생성자.
+     *
+     * @param center_ 중심 좌표.
      */
-    explicit Spiral(const glm::vec2 center_,
-                    const bool      clockwise_) noexcept;
+    explicit Spiral(const glm::vec2 center_) noexcept;
+
+    /**
+     * @brief 소멸자.
+     */
+    ~Spiral() noexcept;
 
     /**
      * @brief 스파이럴을 그립니다.
      *
-     * @param shader_ 사용할 셰이더.
+     * @param shader_    사용할 셰이더.
+     * @param deltaTime_ 시간 변화량.
      */
-    void Draw(const Shader& shader_) const noexcept;
+    void Draw(const Shader& shader_,
+              const float   deltaTime_) noexcept;
 private:
-    static constexpr float pitch   = 28.0f; // 팔 간격(px)
-    static constexpr float turns   = 3.0f;
-    static constexpr float spacing = 8.0f;  // 점 간격(px)
-    static constexpr float start   = 0.0f;
+    /**
+     * @brief 중심점.
+     */
+    static constexpr float pitch = 28.0f;
+
+    /**
+     * @brief 회전 수.
+     */
+    static constexpr float turns = 3.0f;
+
+    /**
+     * @brief 시계 방향 여부.
+     */
+    static constexpr float spacing = 8.0f;
+
+    /**
+     * @brief 시작 각도.
+     */
+    static constexpr float start = 0.0f;
+
+    /**
+     * @brief 정점 배열 객체.
+     */
+    unsigned int vao = 0;
+
+    /**
+     * @brief 정점 버퍼 객체.
+     */
+    unsigned int vbo = 0;
+
+    /**
+     * @brief 현재 위치.
+     */
+    glm::vec2 position;
 
     /**
      * @brief 점들.
      */
     std::vector<glm::vec2> points;
+
+    /**
+     * @brief 현재 진행률.
+     */
+    float progress = 0.0f;
 };
 
 /**
@@ -145,6 +189,23 @@ static void OnButtonInteracted(GLFWwindow* const window_,
 static std::string GetFile(const std::filesystem::path& path_);
 
 /**
+ * @brief 스파이럴 점들을 생성합니다.
+ *
+ * @param pitch_         피치.
+ * @param turns_         회전 수.
+ * @param spacing_       점 간격.
+ * @param start_         시작 각도.
+ * @param shouldReverse_ 시계 반대 방향 여부.
+ *
+ * @return std::vector<glm::vec2> 생성된 점들.
+ */
+static std::vector<glm::vec2> GenerateSpiralPoints(const float     pitch_,
+                                                   const float     turns_,
+                                                   const float     spacing_,
+                                                   const float     start_,
+                                                   const bool      shouldReverse_);
+
+/**
  * @brief 애플리케이션 너비.
  */
 static constexpr unsigned int WINDOW_WIDTH  = 1200;
@@ -172,12 +233,12 @@ static constexpr unsigned char CONTEXT_MINOR_VERSION = 5;
 /**
  * @brief GLFW 윈도우 핸들.
  */
-static GLFWwindow* window = nullptr;
+static constinit GLFWwindow* window = nullptr;
 
 /**
  * @brief 배경 색상.
  */
-static glm::vec3 backgroundColor = {0.1f, 0.1f, 0.1f};
+static constinit glm::vec3 backgroundColor = {0.1f, 0.1f, 0.1f};
 
 /**
  * @brief 난수 생성기.
@@ -192,12 +253,27 @@ static std::mt19937 gen(rd());
 /**
  * @brief 시간 배율.
  */
-static float timeScale = 1.0f;
+static constinit float timeScale = 1.0f;
 
 /**
- * @brief 선으로 그릴지 여부. (true: 선, false: 점)
+ * @brief 원주율.
  */
-static bool isLineMode = false;
+static constexpr float PI  = 3.14159265358979323846f;
+
+/**
+ * @brief 스파이럴을 선으로 그릴지 여부. (true: 선, false: 점)
+ */
+static constinit bool isLineMode = false;
+
+/**
+ * @brief 월드 내 스파이럴들.
+ */
+static std::vector<std::unique_ptr<Spiral>> spirals;
+
+/**
+ * @brief 월드 내 있을 수 있는 스파이럴의 최대 갯수.
+ */
+static std::size_t maxSpiralCount = 5;
 
 int main()
 {
@@ -263,6 +339,11 @@ int main()
 
         shader.Use();
 
+        for (std::unique_ptr<Spiral>& spiral : spirals)
+        {
+            spiral->Draw(shader, deltaTime);
+        }
+
         glfwPollEvents();
         glfwSwapBuffers(window);
     }
@@ -299,6 +380,105 @@ Shader::~Shader() noexcept
     }
 }
 
+Spiral::Spiral(const glm::vec2 center_) noexcept
+    : position(center_)
+{
+    std::uniform_int_distribution<int> distReverse(0, 1);
+
+    if (static_cast<bool>(distReverse(gen)))
+    {
+        std::vector<glm::vec2> left  = GenerateSpiralPoints(pitch, turns, spacing, start, true);
+        std::vector<glm::vec2> right = GenerateSpiralPoints(pitch, turns, spacing, start, false);
+
+        std::ranges::reverse(right);
+
+        for (auto& p : right) { p.x = 170 - p.x; }
+
+        points.insert(points.end(), left.begin(), left.end());
+        points.insert(points.end(), right.begin(), right.end());
+    }
+    else
+    {
+        std::vector<glm::vec2> left  = GenerateSpiralPoints(pitch, turns, spacing, start, true);
+        std::vector<glm::vec2> right = GenerateSpiralPoints(pitch, turns, spacing, start, false);
+
+        for (auto& p : left) { p.x = 170 - p.x; }
+
+        std::ranges::reverse(left);
+
+        points.insert(points.end(), right.begin(), right.end());
+        points.insert(points.end(), left.begin(), left.end());
+    }
+
+    glGenVertexArrays(1, &vao);
+    glBindVertexArray(vao);
+
+    glGenBuffers(1, &vbo);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    glBufferData(GL_ARRAY_BUFFER, points.size() * sizeof(glm::vec2), points.data(), GL_STATIC_DRAW);
+
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(glm::vec2), nullptr);
+
+    glBindVertexArray(0);
+}
+
+Spiral::~Spiral() noexcept
+{
+    if (vbo)
+    {
+        glDeleteBuffers(1, &vbo);
+    }
+
+    if (vao)
+    {
+        glDeleteVertexArrays(1, &vao);
+    }
+}
+
+void Spiral::Draw(const Shader& shader_,
+                  const float   deltaTime_) noexcept
+{
+    constexpr float thetaMax = 2.0f * PI * turns;
+
+    if ((progress += 2.5f * deltaTime_) > thetaMax)
+    {
+        progress = thetaMax;
+    }
+
+    const size_t maxCount = (progress / thetaMax) * points.size();
+    if (maxCount == 0)
+    {
+        return;
+    }
+
+    glm::mat4 projection = glm::ortho(
+       -static_cast<float>(WINDOW_WIDTH)  / 2.0f, // 왼쪽
+        static_cast<float>(WINDOW_WIDTH)  / 2.0f, // 오른쪽
+       -static_cast<float>(WINDOW_HEIGHT) / 2.0f, // 아래
+        static_cast<float>(WINDOW_HEIGHT) / 2.0f, // 위
+       -1.0f,                                     // near
+        1.0f                                      // far
+   );
+
+    const GLint projLoc = glGetUniformLocation(shader_.GetProgramID(), "u_Projection");
+    glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(projection));
+
+    glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(position, 0.0f));
+    model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));
+
+    const GLint modelLoc = glGetUniformLocation(shader_.GetProgramID(), "u_Model");
+    glUniformMatrix4fv(modelLoc, 1, GL_FALSE, &model[0][0]);
+
+    const GLint colorLoc = glGetUniformLocation(shader_.GetProgramID(), "u_Color");
+    glUniform3f(colorLoc, 1.0f, 1.0f, 1.0f);
+
+    glBindVertexArray(vao);
+    glPointSize(3.0f);
+    glDrawArrays(isLineMode ? GL_LINE_STRIP : GL_POINTS, 0, static_cast<GLsizei>(maxCount));
+    glBindVertexArray(0);
+}
+
 void OnDebugMessage(const GLenum        source_,
                     const GLenum        type_,
                     const GLuint        id_,
@@ -329,30 +509,94 @@ void OnKeyInteracted(GLFWwindow* const window_,
     {
         case GLFW_KEY_P:
         {
+            isLineMode = !isLineMode;
+            std::cout << (isLineMode ? "[Info] Line mode.\n" : "[Info] Point mode.\n");
+
             break;
         }
         case GLFW_KEY_1:
         {
+            if (spirals.size() >= 1)
+            {
+                std::cout << std::format("[Warning] Cannot set max spiral count to {:d} because there are already {:d} spirals.\n",
+                        1, static_cast<int>(spirals.size()));
+                break;
+            }
+
+            maxSpiralCount = 1;
+            spirals.reserve(1);
+
+            std::cout << std::format("[Info] Max spiral count set to {:d}.\n", static_cast<int>(maxSpiralCount));
+
             break;
         }
         case GLFW_KEY_2:
         {
+            if (spirals.size() >= 2)
+            {
+                std::cout << std::format("[Warning] Cannot set max spiral count to {:d} because there are already {:d} spirals.\n",
+                        2, static_cast<int>(spirals.size()));
+                break;
+            }
+
+            maxSpiralCount = 2;
+            spirals.reserve(2);
+
+            std::cout << std::format("[Info] Max spiral count set to {:d}.\n", static_cast<int>(maxSpiralCount));
+
             break;
         }
         case GLFW_KEY_3:
         {
+            if (spirals.size() >= 3)
+            {
+                std::cout << std::format("[Warning] Cannot set max spiral count to {:d} because there are already {:d} spirals.\n",
+                       3, static_cast<int>(spirals.size()));
+                break;
+            }
+
+            maxSpiralCount = 3;
+            spirals.reserve(3);
+
+            std::cout << std::format("[Info] Max spiral count set to {:d}.\n", static_cast<int>(maxSpiralCount));
+
             break;
         }
         case GLFW_KEY_4:
         {
+            if (spirals.size() >= 4)
+            {
+                std::cout << std::format("[Warning] Cannot set max spiral count to {:d} because there are already {:d} spirals.\n",
+                     4, static_cast<int>(spirals.size()));
+                break;
+            }
+
+            maxSpiralCount = 4;
+            spirals.reserve(4);
+
+            std::cout << std::format("[Info] Max spiral count set to {:d}.\n", static_cast<int>(maxSpiralCount));
+
             break;
         }
         case GLFW_KEY_5:
         {
+            if (spirals.size() >= 5)
+            {
+                std::cout << std::format("[Warning] Cannot set max spiral count to {:d} because there are already {:d} spirals.\n",
+                     5, static_cast<int>(spirals.size()));
+                break;
+            }
+
+            maxSpiralCount = 5;
+            spirals.reserve(5);
+
+            std::cout << std::format("[Info] Max spiral count set to {:d}.\n", static_cast<int>(maxSpiralCount));
+
             break;
         }
         case GLFW_KEY_C:
         {
+            spirals.clear();
             break;
         }
         case GLFW_KEY_UP:
@@ -416,6 +660,12 @@ void OnButtonInteracted(GLFWwindow* const window_,
 {
     if ((button_ == GLFW_MOUSE_BUTTON_LEFT) && (action_ == GLFW_PRESS))
     {
+        if (spirals.size() >= maxSpiralCount)
+        {
+            std::cout << std::format("[Warning] Cannot create more than {:d} spirals.\n", static_cast<int>(maxSpiralCount));
+            return;
+        }
+
         double x_, y_;
         glfwGetCursorPos(window_, &x_, &y_);
 
@@ -424,7 +674,10 @@ void OnButtonInteracted(GLFWwindow* const window_,
 
         const glm::vec2 cursorPosition = {ndcX, ndcY};
 
+        spirals.emplace_back(std::make_unique<Spiral>(cursorPosition));
 
+        std::uniform_real_distribution<float> distColor(0.0f, 1.0f);
+        backgroundColor = {distColor(gen), distColor(gen), distColor(gen)};
     }
 }
 
@@ -449,4 +702,34 @@ std::string GetFile(const std::filesystem::path& path_)
     file.read(result.data(), size);
 
     return result;
+}
+
+std::vector<glm::vec2> GenerateSpiralPoints(const float     pitch_,
+                                            const float     turns_,
+                                            const float     spacing_,
+                                            const float     start_,
+                                            const bool      shouldReverse_)
+{
+    std::vector<glm::vec2> points;
+
+    const float k         = pitch_ / (2.0f * PI);
+    const float direction = shouldReverse_ ? -1.0f : 1.0f;
+
+    const float thetaMax = 2.0f * PI * turns_;
+    float       theta    = 0.0f;
+
+    while (theta <= thetaMax)
+    {
+        const float range = k * theta;
+        const float angle = start_ + (direction * theta);
+
+        const float x = range * std::cos(angle);
+        const float y = range * std::sin(angle);
+
+        points.emplace_back(x, y);
+
+        theta += spacing_ / std::sqrt(range * range + k * k);
+    }
+
+    return points;
 }
