@@ -78,9 +78,39 @@ class Shape final
 {
 public:
     /**
-     * @brief 생성자.
+     * @enum Type
+     *
+     * @brief 도형의 유형을 정의합니다.
      */
-    explicit Shape() noexcept;
+    enum class Type
+    {
+        /**
+         * @brief 선.
+         */
+        Line,
+
+        /**
+         * @brief 삼각형.
+         */
+        Triangle,
+
+        /**
+         * @brief 사각형.
+         */
+        Rectangle,
+
+        /**
+         * @brief 원.
+         */
+        Circle,
+    };
+
+    /**
+     * @brief 생성자.
+     *
+     * @param type_ 도형의 유형.
+     */
+    explicit Shape(Shape::Type type_) noexcept;
 
     /**
      * @brief 소멸자.
@@ -88,12 +118,72 @@ public:
     ~Shape() noexcept;
 
     /**
-     * @brief 도형을 그립니다.
+     * @brief 도형의 유형을 반환합니다.
+     *
+     * @return Shape::Type 도형의 유형.
+     */
+    [[nodiscard]]
+    constexpr Shape::Type GetType() const noexcept
+    {
+        return type;
+    }
+
+    /**
+     * @brief 도형을 업데이트합니다.
      *
      * @param deltaTime_ 시간 변화량.
      */
-    void Draw(float deltaTime_) noexcept;
+    void Update(const float deltaTime_) noexcept;
+
+    /**
+     * @brief 도형을 그립니다.
+     *
+     * @param shader_ 사용할 셰이더.
+     */
+    void Draw(const Shader& shader_) noexcept;
+
+    /**
+     * @brief 도형을 선으로 변경합니다.
+     */
+    void ToLine() noexcept;
+
+    /**
+     * @brief 도형을 삼각형으로 변경합니다.
+     */
+    void ToTriangle() noexcept;
+
+    /**
+     * @brief 도형을 사각형으로 변경합니다.
+     */
+    void ToRectangle() noexcept;
+
+    /**
+     * @brief 도형을 원으로 변경합니다.
+     */
+    void ToCircle() noexcept;
 private:
+    /**
+     * @brief 도형의 모든 유형에 대한 정점 데이터.
+     */
+    static inline const std::unordered_map<Shape::Type, std::vector<float>> vertices
+    {
+        {Shape::Type::Line,      {-0.5f, 0.0f,  0.5f,  0.0f}},
+        {Shape::Type::Triangle,  { 0.0f, 0.5f, -0.5f, -0.5f, 0.5f, -0.5f}},
+        {Shape::Type::Rectangle, {-0.5f, 0.5f,  0.5f,  0.5f, 0.5f, -0.5f, -0.5f, -0.5f}},
+        {Shape::Type::Circle,    { 0.0f}},
+    };
+
+    /**
+     * @brief 도형의 모든 유형에 대한 요소 데이터.
+     */
+    static inline const std::unordered_map<Shape::Type, std::vector<unsigned int>> indices
+    {
+        {Shape::Type::Line,      {0, 1}},
+        {Shape::Type::Triangle,  {0, 1, 2}},
+        {Shape::Type::Rectangle, {0, 1, 2, 2, 3, 0}},
+        {Shape::Type::Circle,    {0}},
+    };
+
     /**
      * @brief 정점 배열 객체.
      */
@@ -108,6 +198,16 @@ private:
      * @brief 요소 배열 객체.
      */
     unsigned int ebo = 0;
+
+    /**
+     * @brief 해당 도형의 유형.
+     */
+    Shape::Type type;
+
+    /**
+     * @brief 애니메이션 여부.
+     */
+    bool isAnimating = false;
 };
 
 /**
@@ -127,7 +227,7 @@ static void GLAPIENTRY OnDebugMessage(const GLenum        source_,
                                       const GLenum        severity_,
                                       const GLsizei       length_,
                                       const GLchar* const message_,
-                                      const void* const   userParam_);
+                                      const void* const   userParam_) noexcept;
 
 /**
  * @brief 키와 상호작용할 때 호출됩니다.
@@ -261,6 +361,9 @@ int main()
 
         glfwSetWindowPos(window, 100, 100);
         glfwMakeContextCurrent(window);
+
+        glfwSetKeyCallback(window, OnKeyInteracted);
+        glfwSetMouseButtonCallback(window, OnButtonInteracted);
     }
     SPDLOG_INFO("Initialized GLFW successfully!");
 
@@ -287,23 +390,24 @@ int main()
 
     while (!glfwWindowShouldClose(window))
     {
-        const float currentTime = static_cast<float>(glfwGetTime());
-        static float lastTime = currentTime;
-        const float deltaTime   = (currentTime - lastTime) * timeScale;
-
-        lastTime = currentTime;
-
         glClearColor(backgroundColor.r, backgroundColor.g, backgroundColor.b, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
+        const float currentTime = static_cast<float>(glfwGetTime());
+        static float lastTime = currentTime;
+        const float deltaTime = (currentTime - lastTime) * timeScale;
+        lastTime = currentTime;
+
         shader.Use();
+        for (const auto& shape : shapes)
+        {
+            shape->Update(deltaTime);
+            shape->Draw(shader);
+        }
 
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
-
-    glfwSetKeyCallback(window, OnKeyInteracted);
-    glfwSetMouseButtonCallback(window, OnButtonInteracted);
 }
 
 Shader::Shader(const char* const vertexSource_,
@@ -370,13 +474,38 @@ Shader::~Shader() noexcept
     }
 }
 
+Shape::Shape(Shape::Type type_) noexcept
+    : type(type_)
+{
+    glGenVertexArrays(1, &vao);
+    glBindVertexArray(vao);
+
+    glGenBuffers(1, &vbo);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+
+    glGenBuffers(1, &ebo);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+
+    glBindVertexArray(0);
+}
+
+Shape::~Shape() noexcept
+{
+    glDeleteVertexArrays(1, &vao);
+    glDeleteBuffers(1, &vbo);
+    glDeleteBuffers(1, &ebo);
+}
+
 void OnDebugMessage(const GLenum        source_,
                     const GLenum        type_,
                     const GLuint        id_,
                     const GLenum        severity_,
                     const GLsizei       length_,
                     const GLchar* const message_,
-                    const void* const   userParam_)
+                    const void* const   userParam_) noexcept
 {
     if (type_ == GL_DEBUG_TYPE_ERROR)
     {
@@ -398,7 +527,35 @@ void OnKeyInteracted(GLFWwindow* const window_,
                      const int         action_,
                      const int         mods_) noexcept
 {
+    if (action_ != GLFW_PRESS)
+    {
+        return;
+    }
 
+    switch (key_)
+    {
+        case GLFW_KEY_1:
+        {
+            for (std::unique_ptr<Shape>& shape : shapes)
+            {
+                if (shape->GetType() == Shape::Type::Line)
+                {
+                    shape->ToLine();
+                }
+            }
+
+            break;
+        }
+        case GLFW_KEY_Q:
+        {
+            glfwSetWindowShouldClose(window_, true);
+            break;
+        }
+        default:
+        {
+            break;
+        }
+    }
 }
 
 void OnButtonInteracted(GLFWwindow* const window_,
