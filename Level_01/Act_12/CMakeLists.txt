@@ -1,5 +1,3 @@
-add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/utf-8>")
-
 add_executable(Level_01_Act_12
         Program.cpp
 )
