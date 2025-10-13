@@ -424,7 +424,7 @@ static constinit GLFWwindow* window = nullptr;
 /**
  * @brief 배경 색상.
  */
-static constinit glm::vec3 backgroundColor = {0.1f, 0.1f, 0.1f};
+static constexpr glm::vec3 backgroundColor = {0.1f, 0.1f, 0.1f};
 
 /**
  * @brief 난수 생성기.

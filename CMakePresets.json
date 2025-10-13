@@ -8,6 +8,7 @@
   "configurePresets": [
     {
       "name": "base",
+      "hidden": true,
       "generator": "Ninja"
     },
     {
