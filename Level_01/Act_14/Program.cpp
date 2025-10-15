@@ -85,7 +85,7 @@ public:
      *
      * @param deltaTime_ 시간 변화량.
      */
-    void Update(const float deltaTime_) noexcept;
+    void Update(float deltaTime_) noexcept;
 
     /**
      * @brief 해당 삼각형을 렌더링합니다.
@@ -151,7 +151,7 @@ private:
     /**
      * @brief 정점 데이터.
      */
-    std::array<float, 6> vertices;
+    std::array<float, 6> vertices{};
 };
 
 /**
@@ -469,14 +469,8 @@ Triangle::Triangle(const glm::vec2& position_,
                    const glm::vec3& rotation_) noexcept
     : position{position_}
     , rotation{rotation_}
+    , vertices{0.0f, 1.0f, -1.0f, -1.0f, 1.0f, -1.0f}
 {
-    constexpr std::array<GLfloat, 6> vertices
-    {
-         0.0f,  1.0f,
-        -1.0f, -1.0f,
-         1.0f, -1.0f
-    };
-
     constexpr std::array<GLuint, 3> indices
     {
         0, 1, 2
@@ -487,11 +481,11 @@ Triangle::Triangle(const glm::vec2& position_,
 
     glGenBuffers(1, &vbo);
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(GLfloat), vertices.data(), GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, static_cast<GLsizeiptr>(vertices.size() * sizeof(GLfloat)), vertices.data(), GL_STATIC_DRAW);
 
     glGenBuffers(1, &ebo);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(GLuint), indices.data(), GL_STATIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, static_cast<GLsizeiptr>(indices.size() * sizeof(GLuint)), indices.data(), GL_STATIC_DRAW);
 
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), nullptr);
     glEnableVertexAttribArray(0);
@@ -559,9 +553,9 @@ void Triangle::UpdateVertices(const float deltaTime_) noexcept
     {
         targetVertices =
         {
-            0.0f, -2.5f,  // Top point (pointing downward)
-           -1.0f, -1.0f,  // Bottom-left point
-            1.0f, -1.0f   // Bottom-right point
+            0.0f, -2.5f,
+           -1.0f, -1.0f,
+            1.0f, -1.0f
         };
     }
     else
