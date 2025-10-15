@@ -96,7 +96,7 @@ void OnDebugMessage(GLenum       source_,
  *
  * @param path_
  */
-std::string GetFile(const std::filesystem::path& path_);
+std::string ReadFile(const std::filesystem::path& path_);
 
 /**
  * @brief 애플리케이션 너비.
@@ -121,7 +121,7 @@ constexpr int CONTEXT_MINOR_VERSION = 5;
 /**
  * @brief 윈도우 타이틀
  */
-constexpr const char* WINDOW_TITLE = "OpenGL Application";
+constexpr const char* WINDOW_TITLE = "Level 01 - Act 13";
 
 /**
  * @brief 최대 시간 배율.

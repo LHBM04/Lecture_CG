@@ -533,7 +533,7 @@ static void OnCursorMoved(GLFWwindow* window_,
 /**
  * @brief 셰이더 소스 코드.
  */
-static std::string GetFile(const std::filesystem::path& path_);
+static std::string ReadFile(const std::filesystem::path& path_);
 
 /**
  * @brief GLFW 윈도우.
@@ -628,10 +628,10 @@ int main()
     glfwSetMouseButtonCallback(window, OnButtonInteracted);
     glfwSetCursorPosCallback(window, OnCursorMoved);
 
-    const std::string vertexShaderFile   = GetFile("Vertex.glsl");
+    const std::string vertexShaderFile   = ReadFile("Vertex.glsl");
     const char* const vertexShaderSource = vertexShaderFile.c_str();
 
-    const std::string fragmentShaderFile   = GetFile("Fragment.glsl");
+    const std::string fragmentShaderFile   = ReadFile("Fragment.glsl");
     const char* const fragmentShaderSource = fragmentShaderFile.c_str();
 
     Shader globalShader(vertexShaderSource,
@@ -664,7 +664,7 @@ int main()
     return 0;
 }
 
-std::string GetFile(const std::filesystem::path& path_)
+std::string ReadFile(const std::filesystem::path& path_)
 {
     std::ifstream file(path_, std::ios::in | std::ios::binary);
 

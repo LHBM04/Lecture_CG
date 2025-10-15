@@ -1,9 +1,11 @@
 ﻿#include "Shape.h"
+#include "Shape.h"
 
 #include "glm/common.hpp"
 #include "glm/ext/matrix_transform.hpp"
 
 #include "Application.h"
+#include "glm/gtc/type_ptr.hpp"
 
 Shape::Shape(const Shape::Type type_,
              const glm::vec2   position_) noexcept
@@ -15,13 +17,13 @@ Shape::Shape(const Shape::Type type_,
     glGenVertexArrays(1, &vao);
     glBindVertexArray(vao);
 
-    const auto vertices = SHAPES_VERTICES.at(type_);
+    const std::array<float, 10>& vertices = SHAPES_VERTICES.at(type_);
 
     glGenBuffers(1, &vbo);
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
     glBufferData(GL_ARRAY_BUFFER, static_cast<GLsizeiptr>(vertices.size() * sizeof(float)), vertices.data(), GL_DYNAMIC_DRAW);
 
-    const auto indices = SHAPE_INDICES.at(type_);
+    const std::vector<unsigned int>& indices = SHAPE_INDICES.at(type_);
 
     glGenBuffers(1, &ebo);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
@@ -42,7 +44,6 @@ Shape::~Shape() noexcept
 
 void Shape::Update(const float deltaTime_) noexcept
 {
-    // 방향 벡터가 (0,0)인 경우에만 업데이트를 건너뛰기
     if (direction.x == 0.0f && direction.y == 0.0f)
     {
         return;
@@ -54,13 +55,13 @@ void Shape::Update(const float deltaTime_) noexcept
     const float halfWidth  = 0.5f * scale;
     const float halfHeight = 0.5f * scale;
 
-    constexpr float halfWorldWidth  = WINDOW_WIDTH  / 2.0f;
-    constexpr float halfWorldHeight = WINDOW_HEIGHT / 2.0f;
+    constexpr float halfWorldWidth  = WINDOW_WIDTH  * 0.5f;
+    constexpr float halfWorldHeight = WINDOW_HEIGHT * 0.5f;
 
     if (position.x - halfWidth < -halfWorldWidth ||
         position.x + halfWidth >  halfWorldWidth)
     {
-        direction.x *= -1.0f;
+        direction.x = -direction.x;
 
         const float max =  halfWorldWidth - halfWidth;
         const float min = -halfWorldWidth + halfWidth;
@@ -70,7 +71,7 @@ void Shape::Update(const float deltaTime_) noexcept
     if (position.y - halfHeight < -halfWorldHeight ||
         position.y + halfHeight >  halfWorldHeight)
     {
-        direction.y *= -1.0f;
+        direction.y = -direction.y;
 
         const float max =  halfWorldHeight - halfHeight;
         const float min = -halfWorldHeight + halfHeight;
@@ -85,9 +86,28 @@ void Shape::Render(const Shader& shader_) const noexcept
     const auto indices= SHAPE_INDICES.at(type);
     const auto color                 = SHAPE_COLORS.at(type);
 
+    float angle = 0.0f;
+    if (direction.x != 0.0f || direction.y != 0.0f)
+    {
+        angle = std::atan2(direction.y, direction.x) + glm::radians(270.0f);
+    }
+
     glm::mat4 model = {1.0f};
-    model = glm::translate(glm::mat4(1.0f), glm::vec3(position, 0.0f));
+    model = glm::translate(model, glm::vec3(position, 0.0f));
+    model = glm::rotate(model, angle, glm::vec3(0.0f, 0.0f, 1.0f));
     model = glm::scale(model, glm::vec3(scale, scale, 1.0f));
+
+    glm::mat4 projection = glm::ortho(
+       -static_cast<float>(WINDOW_WIDTH)  / 2.0f, // 왼쪽
+        static_cast<float>(WINDOW_WIDTH)  / 2.0f, // 오른쪽
+       -static_cast<float>(WINDOW_HEIGHT) / 2.0f, // 아래
+        static_cast<float>(WINDOW_HEIGHT) / 2.0f, // 위
+       -1.0f,                                     // near
+        1.0f                                      // far
+   );
+
+    const GLint projLoc = glGetUniformLocation(shader_.GetProgramID(), "u_Projection");
+    glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(projection));
 
     const GLint modelLoc = glGetUniformLocation(shader_.GetProgramID(), "u_Model");
     glUniformMatrix4fv(modelLoc, 1, GL_FALSE, &model[0][0]);
@@ -99,22 +119,11 @@ void Shape::Render(const Shader& shader_) const noexcept
 
     if (type == Shape::Type::Dot)
     {
-        // 포인트 크기 설정 (원복을 위해 이전값 저장)
-        GLfloat prevPointSize = 1.0f;
-        glGetFloatv(GL_POINT_SIZE, &prevPointSize);
-        glPointSize(5.0f); // 필요 시 GL_PROGRAM_POINT_SIZE 고려
-
-        const GLsizei vertexCount = static_cast<GLsizei>(vertices.size());
-        glDrawArrays(GL_POINTS, 0, vertexCount);
-
-        glPointSize(prevPointSize);
+        glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(vertices.size()));
+        glPointSize(1);
     }
     else if (type == Shape::Type::Line)
     {
-        GLfloat prevLineWidth = 1.0f;
-        glGetFloatv(GL_LINE_WIDTH, &prevLineWidth);
-        glLineWidth(5.0f);
-
         const GLsizei indexCount = static_cast<GLsizei>(indices.size());
         if (indexCount > 0)
         {
@@ -122,11 +131,10 @@ void Shape::Render(const Shader& shader_) const noexcept
         }
         else
         {
-            const GLsizei vertexCount = static_cast<GLsizei>(vertices.size());
-            glDrawArrays(GL_LINES, 0, vertexCount);
+            glDrawArrays(GL_LINES, 0, static_cast<GLsizei>(vertices.size()));
         }
 
-        glLineWidth(prevLineWidth);
+        glLineWidth(1);
     }
     else
     {

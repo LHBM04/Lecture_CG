@@ -130,15 +130,15 @@ private:
     glm::vec3 color;
 };
 
-class Quadrant final
+class Rectangle final
 {
 public:
-    explicit Quadrant(const float x_,
+    explicit Rectangle(const float x_,
                       const float y_,
                       const float width_,
                       const float height_) noexcept;
 
-    ~Quadrant() noexcept;
+    ~Rectangle() noexcept;
 
     /**
      * @brief 해당 사분면을 초기화합니다.
@@ -292,7 +292,7 @@ static void OnCursorMoved(GLFWwindow* const window_,
 /**
  * @brief 셰이더 소스 코드.
  */
-static std::string GetFile(const std::filesystem::path& path_);
+static std::string ReadFile(const std::filesystem::path& path_);
 
 /**
  * @brief GLFW 윈도우.
@@ -347,7 +347,7 @@ static bool shouldDrawWithLines = false;
 /**
  * @brief 사분면들.
  */
-static std::array<std::unique_ptr<Quadrant>, 4> quadrants;
+static std::array<std::unique_ptr<Rectangle>, 4> quadrants;
 
 int main()
 {
@@ -391,10 +391,10 @@ int main()
     glfwSetMouseButtonCallback(window, OnButtonInteracted);
     glfwSetCursorPosCallback(window, OnCursorMoved);
 
-    const std::string vertexShaderFile   = GetFile("Vertex.glsl");
+    const std::string vertexShaderFile   = ReadFile("Vertex.glsl");
     const char* const vertexShaderSource = vertexShaderFile.c_str();
 
-    const std::string fragmentShaderFile   = GetFile("Fragment.glsl");
+    const std::string fragmentShaderFile   = ReadFile("Fragment.glsl");
     const char* const fragmentShaderSource = fragmentShaderFile.c_str();
 
     const Shader shader(vertexShaderSource, fragmentShaderSource);
@@ -403,10 +403,10 @@ int main()
     constexpr float halfWidth  = WINDOW_WIDTH / 2.0f;
     constexpr float halfHeight = WINDOW_HEIGHT / 2.0f;
 
-    quadrants[0] = std::make_unique<Quadrant>(halfWidth, halfHeight, halfWidth, halfHeight);
-    quadrants[1] = std::make_unique<Quadrant>(0.0f,      halfHeight, halfWidth, halfHeight);
-    quadrants[2] = std::make_unique<Quadrant>(0.0f,      0.0f,       halfWidth, halfHeight);
-    quadrants[3] = std::make_unique<Quadrant>(halfWidth, 0.0f,       halfWidth, halfHeight);
+    quadrants[0] = std::make_unique<Rectangle>(halfWidth, halfHeight, halfWidth, halfHeight);
+    quadrants[1] = std::make_unique<Rectangle>(0.0f,      halfHeight, halfWidth, halfHeight);
+    quadrants[2] = std::make_unique<Rectangle>(0.0f,      0.0f,       halfWidth, halfHeight);
+    quadrants[3] = std::make_unique<Rectangle>(halfWidth, 0.0f,       halfWidth, halfHeight);
 
     while (!glfwWindowShouldClose(window))
     {
@@ -415,7 +415,7 @@ int main()
 
         glPolygonMode(GL_FRONT_AND_BACK, shouldDrawWithLines ? GL_LINE : GL_FILL);
 
-        for (const std::unique_ptr<Quadrant>& quadrant : quadrants)
+        for (const std::unique_ptr<Rectangle>& quadrant : quadrants)
         {
             quadrant->Draw(shader);
         }
@@ -518,7 +518,7 @@ void Triangle::Draw(const Shader& shader_) const noexcept
     glBindVertexArray(0);
 }
 
-Quadrant::Quadrant(const float x_,
+Rectangle::Rectangle(const float x_,
                    const float y_,
                    const float width_,
                    const float height_) noexcept
@@ -563,7 +563,7 @@ Quadrant::Quadrant(const float x_,
     Reset(true);
 }
 
-Quadrant::~Quadrant() noexcept
+Rectangle::~Rectangle() noexcept
 {
     glDeleteVertexArrays(1, &vao);
     glDeleteBuffers(1, &vbo);
@@ -571,7 +571,7 @@ Quadrant::~Quadrant() noexcept
     triangles.clear();
 }
 
-void Quadrant::Reset(const bool shouldAddOne_) noexcept
+void Rectangle::Reset(const bool shouldAddOne_) noexcept
 {
     triangles.clear();
 
@@ -591,7 +591,7 @@ void Quadrant::Reset(const bool shouldAddOne_) noexcept
     }
 }
 
-void Quadrant::Add(const glm::vec2& position_,
+void Rectangle::Add(const glm::vec2& position_,
                    const float      size_,
                    const glm::vec3& color_) noexcept
 {
@@ -603,7 +603,7 @@ void Quadrant::Add(const glm::vec2& position_,
     triangles.emplace_back(std::make_unique<Triangle>(position_, size_, color_));
 }
 
-void Quadrant::Draw(const Shader& shader_) const noexcept
+void Rectangle::Draw(const Shader& shader_) const noexcept
 {
     for (const std::unique_ptr<Triangle>& triangle : triangles)
     {
@@ -668,7 +668,7 @@ void OnKeyInteracted(GLFWwindow* const window_,
         }
         case GLFW_KEY_C:
         {
-            for (std::unique_ptr<Quadrant>& quadrant : quadrants)
+            for (std::unique_ptr<Rectangle>& quadrant : quadrants)
             {
                 quadrant->Reset(true);
             }
@@ -753,7 +753,7 @@ void OnCursorMoved(GLFWwindow* const window_,
     cursorPosition.y = static_cast<float>(y_);
 }
 
-std::string GetFile(const std::filesystem::path& path_)
+std::string ReadFile(const std::filesystem::path& path_)
 {
     std::ifstream file(path_, std::ios::in | std::ios::binary);
     if (!file.is_open())

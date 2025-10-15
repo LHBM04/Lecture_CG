@@ -389,7 +389,7 @@ static void OnButtonInteracted(GLFWwindow* const window_,
  *
  * @return std::string 파일 내용.
  */
-static std::string GetFile(const std::filesystem::path& path_);
+static std::string ReadFile(const std::filesystem::path& path_);
 
 /**
  * @brief 애플리케이션 너비.
@@ -500,10 +500,10 @@ int main()
     }
     SPDLOG_INFO("Initialized GLAD successfully!");
 
-    const std::string vertexShaderFile   = GetFile("Vertex.glsl");
+    const std::string vertexShaderFile   = ReadFile("Vertex.glsl");
     const char* const vertexShaderSource = vertexShaderFile.c_str();
 
-    const std::string fragmentShaderFile   = GetFile("Fragment.glsl");
+    const std::string fragmentShaderFile   = ReadFile("Fragment.glsl");
     const char* const fragmentShaderSource = fragmentShaderFile.c_str();
 
     const Shader shader(vertexShaderSource, fragmentShaderSource);
@@ -615,9 +615,9 @@ Shader::~Shader() noexcept
 
 Shape::Shape(const glm::vec2&   position_,
              const Shape::Type& type_) noexcept
-    : position(position_)
-    , type(type_)
+    : type(type_)
     , goal(type_)
+    , position(position_)
     , color(SHAPE_COLORS.at(type_))
     , vertices(SHAPES_VERTICES.at(type_))
     , indices(SHAPE_INDICES.at(type_))
@@ -627,11 +627,11 @@ Shape::Shape(const glm::vec2&   position_,
 
     glGenBuffers(1, &vbo);
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), vertices.data(), GL_DYNAMIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, static_cast<GLsizeiptr>(vertices.size() * sizeof(float)), vertices.data(), GL_DYNAMIC_DRAW);
 
     glGenBuffers(1, &ebo);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), indices.data(), GL_DYNAMIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, static_cast<GLsizeiptr>(indices.size() * sizeof(float)), indices.data(), GL_DYNAMIC_DRAW);
 
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), nullptr);
     glEnableVertexAttribArray(0);
@@ -665,7 +665,7 @@ void Shape::Update(const float deltaTime_) noexcept
     color = currentColor * (1.0f - progress) + goalColor * progress;
 
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), vertices.data(), GL_DYNAMIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, static_cast<GLsizeiptr>(vertices.size() * sizeof(float)), vertices.data(), GL_DYNAMIC_DRAW);
 
     if ((progress += deltaTime_ * 2.0f) >= 1.0f)
     {
@@ -958,7 +958,7 @@ void OnButtonInteracted(GLFWwindow* const window_,
 
 }
 
-std::string GetFile(const std::filesystem::path& path_)
+std::string ReadFile(const std::filesystem::path& path_)
 {
     std::ifstream file(path_, std::ios::in | std::ios::binary);
     if (!file.is_open())

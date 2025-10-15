@@ -186,7 +186,7 @@ static void OnButtonInteracted(GLFWwindow* const window_,
 /**
  * @brief 셰이더 소스 코드.
  */
-static std::string GetFile(const std::filesystem::path& path_);
+static std::string ReadFile(const std::filesystem::path& path_);
 
 /**
  * @brief 스파이럴 점들을 생성합니다.
@@ -316,10 +316,10 @@ int main()
     glEnable(GL_DEBUG_OUTPUT);
     glDebugMessageCallback(OnDebugMessage, nullptr);
 
-    const std::string vertexShaderFile   = GetFile("Vertex.glsl");
+    const std::string vertexShaderFile   = ReadFile("Vertex.glsl");
     const char* const vertexShaderSource = vertexShaderFile.c_str();
 
-    const std::string fragmentShaderFile   = GetFile("Fragment.glsl");
+    const std::string fragmentShaderFile   = ReadFile("Fragment.glsl");
     const char* const fragmentShaderSource = fragmentShaderFile.c_str();
 
     static Shader shader(vertexShaderSource, fragmentShaderSource);
@@ -681,7 +681,7 @@ void OnButtonInteracted(GLFWwindow* const window_,
     }
 }
 
-std::string GetFile(const std::filesystem::path& path_)
+std::string ReadFile(const std::filesystem::path& path_)
 {
     std::ifstream file(path_, std::ios::in | std::ios::binary);
     if (!file.is_open())

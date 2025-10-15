@@ -1,13 +1,15 @@
 ﻿#include "Application.h"
 
 #include <fstream>
+#include <ios>
 #include <memory>
 #include <random>
 #include <vector>
 
-#include <glm/glm.hpp>
+#include <glm/vec2.hpp>
+#include <glm/vec3.hpp>
 #include <glm/ext/matrix_clip_space.hpp>
-#include "glm/gtc/type_ptr.hpp"
+#include <glm/gtc/type_ptr.hpp>
 
 #include <spdlog/spdlog.h>
 
@@ -118,23 +120,14 @@ void Initialize() noexcept
     }
     SPDLOG_INFO("GLAD initialized successfully");
 
-    const std::string vertexShaderFile   = GetFile("Vertex.glsl");
+    const std::string vertexShaderFile   = ReadFile("Vertex.glsl");
     const char* const vertexShaderSource = vertexShaderFile.c_str();
 
-    const std::string fragmentShaderFile   = GetFile("Fragment.glsl");
+    const std::string fragmentShaderFile   = ReadFile("Fragment.glsl");
     const char* const fragmentShaderSource = fragmentShaderFile.c_str();
 
     shader = std::make_unique<Shader>(vertexShaderSource, fragmentShaderSource);
     shader->Use();
-
-    glm::mat4 projection = glm::ortho(0.0f,
-                                      static_cast<float>(WINDOW_WIDTH),
-                                      0.0f,
-                                      static_cast<float>(WINDOW_HEIGHT),
-                                      -1.0f, 1.0f);
-
-    const GLint projLoc = glGetUniformLocation(shader->GetProgramID(), "u_Projection");
-    glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(projection));
 }
 
 void Run() noexcept
@@ -193,12 +186,12 @@ void Reset() noexcept
         shapes.clear();
     }
 
+    std::uniform_int_distribution<int> distType(static_cast<int>(Shape::Type::Dot), static_cast<int>(Shape::Type::Pentagon));
+    std::uniform_real_distribution<float> distPosition(-100.0f, 100.0f);
+
     for (std::size_t i = 0; i < INITIAL_SHAPE_COUNTS; ++i)
     {
-        std::uniform_int_distribution<int> distType(static_cast<int>(Shape::Type::Dot), static_cast<int>(Shape::Type::Pentagon));
         const Shape::Type type = static_cast<Shape::Type>(distType(gen));
-
-        std::uniform_real_distribution<float> distPosition(300.0f, 500.0f);
         const glm::vec2 position{distPosition(gen), distPosition(gen)};
 
         shapes.push_back(std::make_unique<Shape>(type, position));
@@ -311,6 +304,10 @@ void OnButtonInteracted(GLFWwindow* window_,
                     if (shape->IsInteracted(*(selectedShape)))
                     {
                         shape->NextTo(*(selectedShape));
+
+                        std::uniform_real_distribution<float> distDirection(1.0f, 1.0f);
+
+                        shape->SetDirection({distDirection(gen), distDirection(gen)});
                         selectedShape->Destroy();
 
                         break;
@@ -333,18 +330,15 @@ void OnCursorMoved(GLFWwindow* window_,
             double      x_,
             double      y_) noexcept
 {
-    double x, y;
-    glfwGetCursorPos(window_, &x, &y);
-
-    mousePosition.x = static_cast<float>(x);
-    mousePosition.y = static_cast<float>(WINDOW_HEIGHT - y_);
+    mousePosition.x = static_cast<float>(x_) - static_cast<float>(WINDOW_WIDTH) / 2.0f;
+    mousePosition.y = static_cast<float>(WINDOW_HEIGHT) / 2.0f - static_cast<float>(y_);
 
     if (selectedShape != nullptr)
     {
         selectedShape->SetPosition(mousePosition);
+        selectedShape->SetDirection({0.0f, 0.0f});
         SPDLOG_INFO("Shape moved to ({:.1f}, {:.1f})", mousePosition.x, mousePosition.y);
     }
-
 }
 
 void OnDebugMessage(GLenum      source_,
@@ -373,7 +367,7 @@ void OnDebugMessage(GLenum      source_,
     }
 }
 
-std::string GetFile(const std::filesystem::path& path_)
+std::string ReadFile(const std::filesystem::path& path_)
 {
     std::ifstream file(path_, std::ios::in | std::ios::binary);
     if (!file.is_open())
