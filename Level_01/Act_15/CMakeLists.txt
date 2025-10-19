@@ -1,11 +1,5 @@
 ﻿add_executable(Level_01_Act_15
-        Framework/Graphics/Mesh.cpp
-        Framework/Graphics/Model.cpp
-        Framework/Graphics/Shader.cpp
-
-        Framework/Misc/File.cpp
-
-        Main.cpp
+        Program.cpp
 )
 
 target_link_libraries(Level_01_Act_15 PRIVATE
