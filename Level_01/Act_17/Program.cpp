@@ -86,100 +86,23 @@ public:
     virtual ~Object() noexcept;
 
     /**
+     * @brief 해당 오브젝트를 초기화합니다.
+     */
+    virtual void Reset() noexcept = 0;
+
+    /**
+     * @brief 해당 오브젝트를 업데이트합니다.
+     *
+     * @param deltaTime_ 이전 프레임과 현재 프레임 사이의 간격.
+     */
+    virtual void Update(float deltaTime_) noexcept = 0;
+
+    /**
      * @brief 해당 오브젝트를 렌더링합니다.
      *
      * @param shader_ 사용할 셰이더.
      */
-    virtual void Render(const Shader& shader_) const noexcept;
-
-    /**
-     * @brief 위치를 반환합니다.
-     *
-     * @return glm::vec3 위치.
-     */
-    [[nodiscard]]
-    constexpr glm::vec3 GetPosition() const noexcept
-    {
-        return position;
-    }
-
-    /**
-     * @brief 회전을 반환합니다.
-     *
-     * @return glm::vec3 회전.
-     */
-    [[nodiscard]]
-    constexpr glm::vec3 GetRotation() const noexcept
-    {
-        return rotation;
-    }
-
-    /**
-     * @brief 크기를 반환합니다.
-     *
-     * @return glm::vec3 크기.
-     */
-    [[nodiscard]]
-    constexpr glm::vec3 GetScale() const noexcept
-    {
-        return scale;
-    }
-
-    /**
-     * @brief 위치를 설정합니다.
-     *
-     * @param position_ 설정할 위치.
-     */
-    inline void SetPosition(const glm::vec3& position_) noexcept
-    {
-        position = position_;
-    }
-
-    /**
-     * @brief 회전을 설정합니다.
-     *
-     * @param rotation_ 설정할 회전.
-     */
-    inline void SetRotation(const glm::vec3& rotation_) noexcept
-    {
-        rotation = rotation_;
-    }
-
-    /**
-     * @brief 크기를 설정합니다.
-     *
-     * @param scale_ 설정할 크기.
-     */
-    inline void SetScale(const glm::vec3& scale_) noexcept
-    {
-        scale = scale_;
-    }
-
-    /**
-     * @brief 정점 개수를 반환합니다.
-     *
-     * @return GLsizei 정점 개수.
-     */
-    [[nodiscard]]
-    constexpr GLsizei GetVertexCount() const noexcept
-    {
-        return vertexCount;
-    }
-protected:
-    /**
-     * @brief 정점 배열 객체.
-     */
-    GLuint vao = 0;
-
-    /**
-     * @brief 정점 버퍼 객체.
-     */
-    GLuint vbo = 0;
-
-    /**
-     * @brief 요소 배열 객체.
-     */
-    GLuint ebo = 0;
+    virtual void Render(const Shader& shader_) const noexcept = 0;
 
     /**
      * @brief 정점 개수.
@@ -205,6 +128,26 @@ protected:
      * @brief 크기.
      */
     glm::vec3 scale = {1.0f, 1.0f, 1.0f};
+
+    /**
+     * @brief Y축 회전 트리거.
+     */
+    bool triggerYAnimation = false;
+protected:
+    /**
+     * @brief 정점 배열 객체.
+     */
+    GLuint vao = 0;
+
+    /**
+     * @brief 정점 버퍼 객체.
+     */
+    GLuint vbo = 0;
+
+    /**
+     * @brief 요소 배열 객체.
+     */
+    GLuint ebo = 0;
 };
 
 /**
@@ -220,8 +163,82 @@ public:
      * @brief 생성자.
      */
     Cube() noexcept;
+
+    /**
+     * @brief 해당 큐브를 초기화합니다.
+     */
+    virtual void Reset() noexcept override;
+
+    /**
+     * @brief 해당 큐브를 업데이트합니다.
+     *
+     * @param deltaTime_ 이전 프레임과 현재 프레임 사이의 간격.
+     */
+    virtual void Update(float deltaTime_) noexcept override;
+
+    /**
+     * @brief 해당 큐브를 렌더링합니다.
+     *
+     * @param shader_ 사용할 셰이더.
+     */
+    virtual void Render(const Shader& shader_) const noexcept override;
+
+    /**
+     * @brief T 애니메이션 트리거.
+     */
+    bool triggerTAnimation = false;
+
+    /**
+     * @brief F 애니메이션 트리거.
+     */
+    bool triggerFAnimation = false;
+
+    /**
+     * @brief S 애니메이션 트리거.
+     */
+    bool triggerSAnimation = false;
+
+    /**
+     * @brief B 애니메이션 트리거.
+     */
+    bool triggerBAnimation = false;
+private:
+    /**
+     * @brief 윗면의 회전 각도.
+     */
+    float topAngleRad = 0.0f;
+
+    /**
+     * @brief 앞면 애니메이션 진행도.
+     */
+    float frontPhase = 0.0f;
+
+    /**
+     * @brief 앞면의 회전 각도.
+     */
+    float frontAngleRad = 0.0f;
+
+    /**
+     * @brief 옆면의 회전 각도.
+     */
+    float sideAngleRad = 0.0f;
+
+    /**
+     * @brief 뒷면 애니메이션 진행도.
+     */
+    float backPhase = 0.0f;
+
+    /**
+     * @brief 뒷면의 크기 조절 비율.
+     */
+    float backScale = 1.0f;
 };
 
+/**
+ * @class Pyramid
+ *
+ * @brief 피라미드를 정의합니다.
+ */
 class Pyramid final
     : public Object
 {
@@ -230,6 +247,56 @@ public:
      * @brief 생성자.
      */
     Pyramid() noexcept;
+
+    /**
+     * @brief 해당 피라미드를 초기화합니다.
+     */
+    virtual void Reset() noexcept override;
+
+    /**
+     * @brief 해당 피라미드를 업데이트합니다.
+     *
+     * @param deltaTime_ 이전 프레임과 현재 프레임 사이의 간격.
+     */
+    virtual void Update(float deltaTime_) noexcept override;
+
+    /**
+     * @brief 해당 피라미드를 렌더링합니다.
+     *
+     * @param shader_ 사용할 셰이더.
+     */
+    virtual void Render(const Shader& shader_) const noexcept override;
+
+    /**
+     * @brief O 애니메이션 트리거.
+     */
+    bool triggerOAnimation = false;
+
+    /**
+     * @brief R 애니메이션 트리거.
+     */
+    bool triggerRAnimation = false;
+private:
+    /**
+     * @brief 각 면의 상태.
+     */
+    struct FaceState
+    {
+        /**
+         * @brief 회전 각도.
+         */
+        float angle;
+
+        /**
+         * @brief 크기 조절 비율.
+         */
+        float phase;
+    };
+
+    /**
+     * @brief 네 면의 상태.
+     */
+    FaceState faces[4];
 };
 
 /**
@@ -247,7 +314,19 @@ public:
     Axes() noexcept;
 
     /**
-     * @brief 해당 오브젝트를 렌더링합니다.
+     * @brief 해당 좌표축을 초기화합니다.
+     */
+    virtual void Reset() noexcept;
+
+    /**
+     * @brief 해당 좌표축을 업데이트합니다.
+     *
+     * @param deltaTime_ 이전 프레임과 현재 프레임 사이의 간격.
+     */
+    virtual void Update(float deltaTime_) noexcept override;
+
+    /**
+     * @brief 해당 좌표축을 렌더링합니다.
      *
      * @param shader_ 사용할 셰이더.
      */
@@ -255,27 +334,18 @@ public:
 };
 
 /**
- * @brief 렌더링 모드를 정의합니다.
- */
-enum class RenderMode
-{
-    /**
-     * @brief 면 렌더링.
-     */
-    Solid,
-
-    /**
-     * @brief 선 렌더링.
-     */
-    Wire
-};
-
-/**
  * @brief 부분 렌더링의 대상을 정의합니다.
  */
 enum class TargetObject
 {
+    /**
+     * @brief 큐브.
+     */
     Cube,
+
+    /**
+     * @brief 피라미드.
+     */
     Pyramid
 };
 
@@ -385,7 +455,7 @@ static constexpr unsigned int WINDOW_HEIGHT = 600;
 /**
  * @brief 윈도우 타이틀
  */
-static constexpr const char* WINDOW_TITLE = "Level 01 - Act 16";
+static constexpr const char* WINDOW_TITLE = "Level 01 - Act 17";
 
 /**
  * @brief OpenGL 컨텍스트 주 버전
@@ -406,11 +476,6 @@ static Axes* axes;
  * @brief 오브젝트들.
  */
 static std::array<Object*, 2> objects = {nullptr};
-
-/**
- * @brief 현재 렌더링 모드.
- */
-static RenderMode currentRenderMode = RenderMode::Solid;
 
 /**
  * @brief 부분 렌더링의 대상 오브젝트.
@@ -475,32 +540,17 @@ int main()
     const Shader shader(vertexShaderSource, fragmentShaderSource);
     shader.Use();
 
-    constexpr float aspectRatio = static_cast<float>(WINDOW_WIDTH) / static_cast<float>(WINDOW_HEIGHT);
-    constexpr float orthoSize   = 2.0f;
-
-    glm::mat4 projection = glm::ortho(
-        -orthoSize * aspectRatio, // left
-         orthoSize * aspectRatio, // right
-        -orthoSize,               // bottom
-         orthoSize,               // top
-        -100.0f,                  // near
-         100.0f                   // far
-    );
-
-    const GLint projLoc = glGetUniformLocation(shader.GetProgramID(), "u_Projection");
-    glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(projection));
-
     axes = new Axes();
-    axes->SetRotation({30.0f, -30.0f, 0.0f});
+    axes->rotation = {30.0f, -30.0f, 0.0f};
 
     objects.at(0) = new Cube();
     objects.at(1) = new Pyramid();
 
     for (Object* const object : objects)
     {
-        object->SetPosition({0.0f, 0.0f, 0.0f});
-        object->SetRotation({30.0f, -30.0f, 0.0f});
-        object->SetScale({1.0f, 1.0f, 1.0f});
+        object->position = {0.0f, 0.0f, 0.0f};
+        object->rotation = {30.0f, -30.0f, 0.0f};
+        object->scale    = {1.0f, 1.0f, 1.0f};
     }
 
     glEnable(GL_DEPTH_TEST);
@@ -510,10 +560,10 @@ int main()
 
     while (!glfwWindowShouldClose(window))
     {
-        Object* const cube        = objects.at(0);
-        Object* const tetrahedron = objects.at(1);
+        Object* const cube    = objects.at(0);
+        Object* const pyramid = objects.at(1);
 
-        Object* const targetObject = (currentTarget == TargetObject::Cube) ? cube : tetrahedron;
+        Object* const targetObject = (currentTarget == TargetObject::Cube) ? cube : pyramid;
 
         // 업데이트.
         {
@@ -528,6 +578,9 @@ int main()
             RotateObject(deltaTime);
             ScaleObject(deltaTime);
 
+            axes->Update(deltaTime);
+            targetObject->Update(deltaTime);
+
             lastTime = currentTime;
         }
         // 렌더링
@@ -535,17 +588,22 @@ int main()
             glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+            constexpr float aspectRatio = static_cast<float>(WINDOW_WIDTH) / static_cast<float>(WINDOW_HEIGHT);
+            constexpr float orthoSize   = 2.0f;
+
+            glm::mat4 projection = glm::ortho(
+                -orthoSize * aspectRatio, // left
+                 orthoSize * aspectRatio, // right
+                -orthoSize,               // bottom
+                 orthoSize,               // top
+                -100.0f,                  // near
+                 100.0f                   // far
+            );
+
+            const GLint projLoc = glGetUniformLocation(shader.GetProgramID(), "u_Projection");
+            glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(projection));
+
             axes->Render(shader);
-
-            if (currentRenderMode == RenderMode::Solid)
-            {
-                glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-            }
-            else
-            {
-                glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-            }
-
             targetObject->Render(shader);
 
             glfwSwapBuffers(window);
@@ -678,23 +736,6 @@ Object::~Object() noexcept
     }
 }
 
-void Object::Render(const Shader& shader_) const noexcept
-{
-    glm::mat4 model = {1.0f};
-    model = glm::translate(model, position);
-    model = glm::rotate(model,  glm::radians(rotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
-    model = glm::rotate(model,  glm::radians(rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
-    model = glm::rotate(model,  glm::radians(rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
-    model = glm::scale(model, scale);
-
-    const GLint modelLoc = glGetUniformLocation(shader_.GetProgramID(), "u_Model");
-    glUniformMatrix4fv(modelLoc, 1, GL_FALSE, &model[0][0]);
-
-    glBindVertexArray(vao);
-    glDrawArrays(GL_TRIANGLES, 0, vertexCount);
-    glBindVertexArray(0);
-}
-
 Cube::Cube() noexcept
     : Object(
         {
@@ -742,6 +783,118 @@ Cube::Cube() noexcept
         }
     )
 {
+    Reset();
+}
+
+void Cube::Reset() noexcept
+{
+    topAngleRad   = 0.0f;
+    frontPhase    = 0.0f;
+    frontAngleRad = 0.0f;
+    sideAngleRad  = 0.0f;
+    backPhase     = 0.0f;
+    backScale     = 1.0f;
+}
+
+void Cube::Update(const float deltaTime_) noexcept
+{
+    if (triggerYAnimation)
+    {
+        rotation.y += 90.0f * deltaTime_;
+    }
+
+    // 윗면 회전 애니메이션
+    if (triggerTAnimation)
+    {
+        constexpr float goalDegree = 90.0f;
+        topAngleRad += glm::radians(goalDegree) * deltaTime_;
+    }
+
+    // 앞면 여닫기 애니메이션.
+    if (triggerFAnimation)
+    {
+        constexpr float frontMaxDeg = 90.0f;
+        constexpr float frontSpeed  = 1.5f;
+        frontPhase += frontSpeed * deltaTime_;
+
+        const float normalized = (std::sin(frontPhase) + 1.0f) * 0.5f;
+        frontAngleRad = glm::radians(frontMaxDeg * normalized);
+    }
+
+    // 두 옆면 회전 애니메이션.
+    if (triggerSAnimation)
+    {
+        constexpr float sideSpeedDegPerSec = 120.0f;
+        sideAngleRad += glm::radians(sideSpeedDegPerSec) * deltaTime_;
+    }
+
+    // 뒷면 펄스 애니메이션.
+    if (triggerBAnimation)
+    {
+        constexpr float backSpeed = 2.0f;
+        backPhase += backSpeed * deltaTime_;
+
+        const float normalized = (std::sin(backPhase) + 1.0f) * 0.5f;
+
+        constexpr float backMinScale = 0.0f;
+        constexpr float backMaxScale = 1.0f;
+
+        backScale = backMinScale + (backMaxScale - backMinScale) * normalized;
+    }
+}
+
+void Cube::Render(const Shader& shader_) const noexcept
+{
+    glm::mat4 objectModel = {1.0f};
+    objectModel = glm::rotate(objectModel, glm::radians(rotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
+    objectModel = glm::rotate(objectModel, glm::radians(rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
+    objectModel = glm::rotate(objectModel, glm::radians(rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
+    objectModel = glm::scale(objectModel, scale);
+
+    const GLint modelLoc = glGetUniformLocation(shader_.GetProgramID(), "u_Model");
+
+    glBindVertexArray(vao);
+
+    for (int face = 0; face < 6; ++face)
+    {
+        glm::mat4 faceLocal = {1.0f};
+
+        if (face == 4)
+        {
+            constexpr glm::vec3 pivot = glm::vec3(0.0f, 0.5f, 0.0f);
+            faceLocal = glm::translate(faceLocal, pivot);
+            faceLocal = glm::rotate(faceLocal, topAngleRad, glm::vec3(0.0f, 0.0f, 1.0f));
+            faceLocal = glm::translate(faceLocal, -pivot);
+        }
+        else if (face == 0)
+        {
+            constexpr glm::vec3 pivot = glm::vec3(0.0f, 0.5f, 0.5f);
+            faceLocal = glm::translate(faceLocal, pivot);
+            faceLocal = glm::rotate(faceLocal, -frontAngleRad, glm::vec3(1.0f, 0.0f, 0.0f));
+            faceLocal = glm::translate(faceLocal, -pivot);
+        }
+        else if (face == 2 || face == 3)
+        {
+            constexpr glm::vec3 pivot = glm::vec3(-0.5f, 0.0f, 0.0f);
+            faceLocal = glm::translate(faceLocal, pivot);
+            faceLocal = glm::rotate(faceLocal, sideAngleRad, glm::vec3(1.0f, 0.0f, 0.0f));
+            faceLocal = glm::translate(faceLocal, -pivot);
+        }
+        else if (face == 1)
+        {
+            constexpr glm::vec3 pivot = glm::vec3(0.0f, 0.0f, -0.5f);
+            faceLocal = glm::translate(faceLocal, pivot);
+            faceLocal = glm::scale(faceLocal, glm::vec3(backScale, backScale, 1.0f));
+            faceLocal = glm::translate(faceLocal, -pivot);
+        }
+
+        const glm::mat4 faceModel = glm::translate(glm::mat4{1.0f}, position) * objectModel * faceLocal;
+
+        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(faceModel));
+        glDrawArrays(GL_TRIANGLES, face * 6, 6);
+    }
+
+    glBindVertexArray(0);
 }
 
 Pyramid::Pyramid() noexcept
@@ -773,6 +926,138 @@ Pyramid::Pyramid() noexcept
         }
     )
 {
+    Reset();
+}
+
+void Pyramid::Reset() noexcept
+{
+    for (int i = 0; i < 4; ++i)
+    {
+        faces[i].angle = 0.0f;
+        faces[i].phase = static_cast<float>(i) * 0.6f;
+    }
+}
+
+void Pyramid::Update(const float deltaTime_) noexcept
+{
+    if (triggerYAnimation)
+    {
+        rotation.y += 90.0f * deltaTime_;
+    }
+
+    if (triggerOAnimation)
+    {
+        constexpr float foldSpeed  = 1.2f;
+        constexpr float maxFoldDeg = 233.0f;
+
+        static float commonPhase = 0.0f;
+        commonPhase -= foldSpeed * deltaTime_;
+
+        const float normalized = (std::sin(commonPhase) + 1.0f) * 0.5f;
+        const float angleRad   = glm::radians(maxFoldDeg * normalized);
+
+        for (auto& [angle, phase] : faces)
+        {
+            phase = commonPhase;
+            angle = angleRad;
+        }
+    }
+
+    if (triggerRAnimation)
+    {
+        constexpr float faceSpeed = 2.0f;
+        static int activeFace = 0;
+        static float phase = 0.0f;
+        static bool peaked = false;
+
+        phase += faceSpeed * deltaTime_;
+
+        const float normalized = (std::sin(phase) + 1.0f) * 0.5f;
+        const float angleRad   = glm::radians(120.0f * normalized);
+
+        for (int i = 0; i < 4; ++i)
+        {
+            faces[i].angle = (i == activeFace) ? angleRad : 0.0f;
+        }
+
+        if (!peaked && normalized > 0.95f)
+        {
+            peaked = true;
+        }
+
+        if (peaked && normalized < 0.05f)
+        {
+            activeFace = (activeFace + 1) % 4;
+            peaked = false;
+        }
+    }
+}
+
+void Pyramid::Render(const Shader& shader_) const noexcept
+{
+    glm::mat4 model = {1.0f};
+    model = glm::translate(model, position);
+    model = glm::rotate(model,  glm::radians(rotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
+    model = glm::rotate(model,  glm::radians(rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
+    model = glm::rotate(model,  glm::radians(rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
+    model = glm::scale(model, scale);
+
+    const GLint modelLoc = glGetUniformLocation(shader_.GetProgramID(), "u_Model");
+
+    glBindVertexArray(vao);
+
+    for (int face = 0; face < 5; ++face)
+    {
+        glm::mat4 faceLocal = {1.0f};
+
+        if (face >= 0 && face <= 3)
+        {
+            glm::vec3 pivot;
+            glm::vec3 axis;
+
+            float angle = faces[face].angle;
+
+            switch (face)
+            {
+                case 0:
+                    pivot = glm::vec3(0.0f, -0.5f, -0.5f);
+                    axis  = glm::vec3(1.0f, 0.0f, 0.0f);
+                    angle = -angle; // fold outward
+                    break;
+                case 1:
+                    pivot = glm::vec3(0.5f, -0.5f, 0.0f);
+                    axis  = glm::vec3(0.0f, 0.0f, 1.0f);
+                    angle = -angle; // fold outward
+                    break;
+                case 2:
+                    pivot = glm::vec3(0.0f, -0.5f, 0.5f);
+                    axis  = glm::vec3(1.0f, 0.0f, 0.0f);
+                    // keep angle positive so it mirrors outward
+                    break;
+                case 3:
+                    pivot = glm::vec3(-0.5f, -0.5f, 0.0f);
+                    axis  = glm::vec3(0.0f, 0.0f, 1.0f);
+                    // keep angle positive so it mirrors outward
+                    break;
+                default:
+                    pivot = glm::vec3(0.0f);
+                    axis  = glm::vec3(0.0f, 1.0f, 0.0f);
+                    break;
+            }
+
+            faceLocal = glm::translate(faceLocal, pivot);
+            faceLocal = glm::rotate(faceLocal, angle, axis);
+            faceLocal = glm::translate(faceLocal, -pivot);
+        }
+
+        // Use the already-translated/rotated/scaled model; do not reapply position translation.
+        const glm::mat4 faceModel = model * faceLocal;
+
+        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, &faceModel[0][0]);
+        glDrawArrays(GL_TRIANGLES, face * 3, (face == 4) ? 6 : 3);
+    }
+
+    glBindVertexArray(0);
 }
 
 Axes::Axes() noexcept
@@ -789,6 +1074,30 @@ Axes::Axes() noexcept
         }
     )
 {
+}
+
+void Axes::Reset() noexcept
+{
+    const Object* const cube    = objects.at(0);
+    const Object* const pyramid = objects.at(1);
+
+    const Object* const targetObject = (currentTarget == TargetObject::Cube) ? cube : pyramid;
+
+    position = targetObject->position;
+    rotation = targetObject->rotation;
+    scale    = targetObject->scale;
+}
+
+void Axes::Update(const float deltaTime_) noexcept
+{
+    const Object* const cube    = objects.at(0);
+    const Object* const pyramid = objects.at(1);
+
+    const Object* const targetObject = (currentTarget == TargetObject::Cube) ? cube : pyramid;
+
+    position = targetObject->position;
+    rotation = targetObject->rotation;
+    scale    = targetObject->scale;
 }
 
 void Axes::Render(const Shader& shader_) const noexcept
@@ -818,18 +1127,6 @@ void OnKeyInteracted(GLFWwindow* window_,
     {
         switch (key_)
         {
-            case GLFW_KEY_C:
-            {
-                currentTarget = TargetObject::Cube;
-                currentRenderMode = RenderMode::Solid;
-                break;
-            }
-            case GLFW_KEY_P:
-            {
-                currentTarget = TargetObject::Pyramid;
-                currentRenderMode = RenderMode::Solid;
-                break;
-            }
             case GLFW_KEY_H:
             {
                 if (shouldCull)
@@ -846,25 +1143,103 @@ void OnKeyInteracted(GLFWwindow* window_,
 
                 break;
             }
-            case GLFW_KEY_W:
+            case GLFW_KEY_P:
             {
-                currentRenderMode = (mods_ & GLFW_MOD_SHIFT) ? RenderMode::Solid : RenderMode::Wire;
-                break;
-            }
-            case GLFW_KEY_S:
-            {
-                for (Object* const object : objects)
+                if (currentTarget == TargetObject::Cube)
                 {
-                    object->SetPosition({0.0f, 0.0f, 0.0f});
-                    object->SetRotation({30.0f, -30.0f, 0.0f});
-                    object->SetScale({1.0f, 1.0f, 1.0f});
+                    currentTarget = TargetObject::Pyramid;
+                }
+                else if (currentTarget == TargetObject::Pyramid)
+                {
+                    currentTarget = TargetObject::Cube;
                 }
 
+                break;
+            }
+            case GLFW_KEY_Y:
+            {
+                break;
+            }
+            case GLFW_KEY_C:
+            {
+                currentTarget = TargetObject::Cube;
+                axes->Reset();
+                objects.at(0)->Reset();
+                break;
+            }
+            case GLFW_KEY_Q:
+            {
+                glfwSetWindowShouldClose(window_, false);
                 break;
             }
             default:
             {
                 break;
+            }
+        }
+
+        if (currentTarget == TargetObject::Cube)
+        {
+            Cube* const cube = static_cast<Cube*>(objects.at(0));
+
+            switch (key_)
+            {
+                case GLFW_KEY_Y:
+                {
+                    cube->triggerYAnimation = !cube->triggerYAnimation;
+                    break;
+                }
+                case GLFW_KEY_T:
+                {
+                    cube->triggerTAnimation = !cube->triggerTAnimation;
+                    break;
+                }
+                case GLFW_KEY_F:
+                {
+                    cube->triggerFAnimation = !cube->triggerFAnimation;
+                    break;
+                }
+                case GLFW_KEY_S:
+                {
+                    cube->triggerSAnimation = !cube->triggerSAnimation;
+                    break;
+                }
+                case GLFW_KEY_B:
+                {
+                    cube->triggerBAnimation = !cube->triggerBAnimation;
+                    break;
+                }
+                default:
+                {
+                    break;
+                }
+            }
+        }
+        else if (currentTarget == TargetObject::Pyramid)
+        {
+            Pyramid* const pyramid = static_cast<Pyramid*>(objects.at(1));
+
+            switch (key_)
+            {
+                case GLFW_KEY_Y:
+                {
+                    pyramid->triggerYAnimation = !pyramid->triggerYAnimation;
+                    break;
+                }
+                case GLFW_KEY_O:
+                {
+                    pyramid->triggerOAnimation = !pyramid->triggerOAnimation;
+                    break;
+                }
+                case GLFW_KEY_R:
+                {
+                    pyramid->triggerRAnimation = !pyramid->triggerRAnimation;
+                    break;
+                }
+                default:
+                {
+                    break;
+                }
             }
         }
     }
@@ -923,25 +1298,25 @@ void TranslateObject(float deltaTime_) noexcept
 {
     Object* const target = (currentTarget == TargetObject::Cube) ? objects.at(0) : objects.at(1);
 
-    const glm::vec3 currentPosition = target->GetPosition();
+    const glm::vec3 currentPosition = target->position;
 
     constexpr float translationSpeed = 1.0f;
 
     if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
     {
-        target->SetPosition(currentPosition + glm::vec3{0.0f, translationSpeed * deltaTime_, 0.0f});
+        target->position = currentPosition + glm::vec3{0.0f, translationSpeed * deltaTime_, 0.0f};
     }
     if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
     {
-        target->SetPosition(currentPosition + glm::vec3{0.0f, -translationSpeed * deltaTime_, 0.0f});
+        target->position = currentPosition + glm::vec3{0.0f, -translationSpeed * deltaTime_, 0.0f};
     }
     if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
     {
-        target->SetPosition(currentPosition + glm::vec3{-translationSpeed * deltaTime_, 0.0f, 0.0f});
+        target->position = currentPosition + glm::vec3{-translationSpeed * deltaTime_, 0.0f, 0.0f};
     }
     if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
     {
-        target->SetPosition(currentPosition + glm::vec3{translationSpeed * deltaTime_, 0.0f, 0.0f});
+        target->position = currentPosition + glm::vec3{translationSpeed * deltaTime_, 0.0f, 0.0f};
     }
 }
 
@@ -949,25 +1324,25 @@ void RotateObject(float deltaTime_) noexcept
 {
     Object* const target = (currentTarget == TargetObject::Cube) ? objects.at(0) : objects.at(1);
 
-    const glm::vec3 currentRotation = target->GetRotation();
+    const glm::vec3 currentRotation = target->rotation;
 
     constexpr float rotationSpeed = 90.0f;
 
     if (glfwGetKey(window, GLFW_KEY_I) == GLFW_PRESS)
     {
-        target->SetRotation(currentRotation + glm::vec3{-rotationSpeed * deltaTime_, 0.0f, 0.0f});
+        target->rotation = currentRotation + glm::vec3{-rotationSpeed * deltaTime_, 0.0f, 0.0f};
     }
     if (glfwGetKey(window, GLFW_KEY_K) == GLFW_PRESS)
     {
-        target->SetRotation(currentRotation + glm::vec3{rotationSpeed * deltaTime_, 0.0f, 0.0f});
+        target->rotation = currentRotation + glm::vec3{rotationSpeed * deltaTime_, 0.0f, 0.0f};
     }
     if (glfwGetKey(window, GLFW_KEY_J) == GLFW_PRESS)
     {
-        target->SetRotation(currentRotation + glm::vec3{0.0f, -rotationSpeed * deltaTime_, 0.0f});
+        target->rotation = currentRotation + glm::vec3{0.0f, -rotationSpeed * deltaTime_, 0.0f};
     }
     if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS)
     {
-        target->SetRotation(currentRotation + glm::vec3{0.0f, rotationSpeed * deltaTime_, 0.0f});
+        target->rotation = currentRotation + glm::vec3{0.0f, rotationSpeed * deltaTime_, 0.0f};
     }
 }
 
@@ -975,16 +1350,20 @@ void ScaleObject(float deltaTime_) noexcept
 {
     Object* const target = (currentTarget == TargetObject::Cube) ? objects.at(0) : objects.at(1);
 
-    const glm::vec3 currentScale = target->GetScale();
+    const glm::vec3 currentScale = target->scale;
 
     constexpr float scaleFactor = 2.0f;
 
     if (glfwGetKey(window, GLFW_KEY_KP_ADD) == GLFW_PRESS)
     {
-        target->SetScale(currentScale + glm::vec3{scaleFactor * deltaTime_, scaleFactor * deltaTime_, scaleFactor * deltaTime_});
+        target->scale = currentScale + glm::vec3{scaleFactor * deltaTime_,
+                                                 scaleFactor * deltaTime_,
+                                                 scaleFactor * deltaTime_};
     }
     if (glfwGetKey(window, GLFW_KEY_KP_SUBTRACT) == GLFW_PRESS)
     {
-        target->SetScale(currentScale + glm::vec3{-scaleFactor * deltaTime_, -scaleFactor * deltaTime_, -scaleFactor * deltaTime_});
+        target->scale = currentScale + glm::vec3{-scaleFactor * deltaTime_,
+                                                 -scaleFactor * deltaTime_,
+                                                 -scaleFactor * deltaTime_};
     }
 }
