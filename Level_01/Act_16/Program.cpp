@@ -507,8 +507,8 @@ int main()
 
     glEnable(GL_DEPTH_TEST);
 
-    glEnable(GL_CULL_FACE);
-    glCullFace(GL_BACK);
+    //glEnable(GL_CULL_FACE);
+    // glCullFace(GL_BACK);
 
     while (!glfwWindowShouldClose(window))
     {
@@ -834,6 +834,26 @@ void OnKeyInteracted(GLFWwindow* window_,
             }
             case GLFW_KEY_H:
             {
+                if (shouldCull)
+                {
+                    shouldCull = false;
+                    //glDisable(GL_CULL_FACE);
+                    glDisable(GL_DEPTH_TEST);
+                }
+                else
+                {
+                    shouldCull = true;
+                    // glEnable(GL_CULL_FACE);
+                    // glCullFace(GL_BACK);
+                    glEnable(GL_DEPTH_TEST);
+                }
+
+                break;
+            }
+            case GLFW_KEY_U:
+            {
+                static bool shouldCull = true;
+
                 if (shouldCull)
                 {
                     shouldCull = false;

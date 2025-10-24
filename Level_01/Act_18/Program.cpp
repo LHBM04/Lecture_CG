@@ -1,4 +1,4 @@
-#include <filesystem>
+﻿#include <filesystem>
 #include <fstream>
 #include <ios>
 #include <random>
@@ -455,7 +455,7 @@ static constexpr unsigned int WINDOW_HEIGHT = 600;
 /**
  * @brief 윈도우 타이틀
  */
-static constexpr const char* WINDOW_TITLE = "Level 01 - Act 17";
+static constexpr const char* WINDOW_TITLE = "Level 01 - Act 18";
 
 /**
  * @brief OpenGL 컨텍스트 주 버전
@@ -1129,26 +1129,6 @@ void OnKeyInteracted(GLFWwindow* window_,
         {
             case GLFW_KEY_H:
             {
-                if (shouldCull)
-                {
-                    shouldCull = false;
-                    //glDisable(GL_CULL_FACE);
-                    glDisable(GL_DEPTH_TEST);
-                }
-                else
-                {
-                    shouldCull = true;
-                    // glEnable(GL_CULL_FACE);
-                    // glCullFace(GL_BACK);
-                    glEnable(GL_DEPTH_TEST);
-                }
-
-                break;
-            }
-            case GLFW_KEY_U:
-            {
-                static bool shouldCull = true;
-
                 if (shouldCull)
                 {
                     shouldCull = false;

@@ -456,8 +456,9 @@ int main()
     shader.Use();
 
     glEnable(GL_DEPTH_TEST);
-    glEnable(GL_CULL_FACE);
-    glCullFace(GL_BACK);
+
+    // glEnable(GL_CULL_FACE);
+    // glCullFace(GL_BACK);
 
     constexpr float aspectRatio = static_cast<float>(WINDOW_WIDTH) / static_cast<float>(WINDOW_HEIGHT);
     constexpr float orthoSize   = 2.0f;
@@ -492,10 +493,10 @@ int main()
 
         axes->Render(shader, 0, axes->GetVertexCount());
 
-        Object* const cube        = objects.at(0);
-        Object* const tetrahedron = objects.at(1);
+        Object* const cube    = objects.at(0);
+        Object* const pyramid = objects.at(1);
 
-        const Object* const targetObject = (currentTarget == TargetObject::Cube) ? cube : tetrahedron;
+        const Object* const targetObject = (currentTarget == TargetObject::Cube) ? cube : pyramid;
 
         if (currentRenderMode == RenderMode::Solid)
         {
@@ -717,21 +718,29 @@ Cube::Cube() noexcept
 Pyramid::Pyramid() noexcept
     : Object(
         {
-             0.5f,  0.5f,  0.5f,   1.0f, 0.0f, 0.0f,
-            -0.5f,  0.5f, -0.5f,   1.0f, 0.0f, 0.0f,
-             0.5f, -0.5f, -0.5f,   1.0f, 0.0f, 0.0f,
+            0.0f, 0.5f, 0.0f,    1.0f, 0.0f, 0.0f,
+-0.5f, -0.5f, -0.5f, 1.0f, 0.0f, 0.0f,
+0.5f, -0.5f, -0.5f,  1.0f, 0.0f, 0.0f,
 
-             0.5f,  0.5f,  0.5f,   0.0f, 1.0f, 0.0f,
-            -0.5f, -0.5f,  0.5f,   0.0f, 1.0f, 0.0f,
-            -0.5f,  0.5f, -0.5f,   0.0f, 1.0f, 0.0f,
+0.0f, 0.5f, 0.0f,    0.0f, 1.0f, 0.0f,
+0.5f, -0.5f, -0.5f,  0.0f, 1.0f, 0.0f,
+0.5f, -0.5f, 0.5f,   0.0f, 1.0f, 0.0f,
 
-             0.5f,  0.5f,  0.5f,   0.0f, 0.0f, 1.0f,
-             0.5f, -0.5f, -0.5f,   0.0f, 0.0f, 1.0f,
-            -0.5f, -0.5f,  0.5f,   0.0f, 0.0f, 1.0f,
+0.0f, 0.5f, 0.0f,    0.0f, 0.0f, 1.0f,
+0.5f, -0.5f, 0.5f,   0.0f, 0.0f, 1.0f,
+-0.5f, -0.5f, 0.5f,  0.0f, 0.0f, 1.0f,
 
-             0.5f, -0.5f, -0.5f,   1.0f, 1.0f, 0.0f,
-            -0.5f,  0.5f, -0.5f,   1.0f, 1.0f, 0.0f,
-            -0.5f, -0.5f,  0.5f,   1.0f, 1.0f, 0.0f
+0.0f, 0.5f, 0.0f,    1.0f, 1.0f, 0.0f,
+-0.5f, -0.5f, 0.5f,  1.0f, 1.0f, 0.0f,
+-0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 0.0f,
+
+-0.5f, -0.5f, -0.5f, 0.0f, 1.0f, 1.0f,
+0.5f, -0.5f, -0.5f,  0.0f, 1.0f, 1.0f,
+0.5f, -0.5f, 0.5f,   0.0f, 1.0f, 1.0f,
+
+0.5f, -0.5f, 0.5f,   1.0f, 0.0f, 1.0f,
+-0.5f, -0.5f, 0.5f,  1.0f, 0.0f, 1.0f,
+-0.5f, -0.5f, -0.5f, 1.0f, 0.0f, 1.0f
         }
     )
 {
