@@ -1,4 +1,5 @@
-﻿#include <filesystem>
+﻿#include <array>
+#include <filesystem>
 #include <fstream>
 #include <ios>
 #include <random>

@@ -1,45 +1,10 @@
-set(EXTERNAL_INCLUDES_DIR  "${CMAKE_SOURCE_DIR}/External/Includes")
-set(EXTERNAL_LIBRARIES_DIR "${CMAKE_SOURCE_DIR}/External/Libraries/${CMAKE_BUILD_TYPE}")
-
-# GLEW
-add_library(GLAD STATIC IMPORTED)
-set_target_properties(GLAD PROPERTIES
-        INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_SOURCE_DIR}/External/Includes"
-        IMPORTED_LOCATION_DEBUG       "${EXTERNAL_LIBRARIES_DIR}/glad.lib"
-        IMPORTED_LOCATION_RELEASE     "${EXTERNAL_LIBRARIES_DIR}/glad.lib"
-)
-
-# GLFW
-add_library(GLFW STATIC IMPORTED)
-set_target_properties(GLFW PROPERTIES
-        INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_SOURCE_DIR}/External/Includes"
-        IMPORTED_LOCATION_DEBUG       "${EXTERNAL_LIBRARIES_DIR}/glfw3dll.lib"
-        IMPORTED_LOCATION_RELEASE     "${EXTERNAL_LIBRARIES_DIR}/glfw3dll.lib"
-)
-
-# GLM
-add_library(GLM STATIC IMPORTED)
-set_target_properties(GLM PROPERTIES
-        INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_SOURCE_DIR}/External/Includes"
-        IMPORTED_LOCATION_DEBUG       "${EXTERNAL_LIBRARIES_DIR}/glm.lib"
-        IMPORTED_LOCATION_RELEASE     "${EXTERNAL_LIBRARIES_DIR}/glm.lib"
-)
-
-# fmt
-add_library(Fmt STATIC IMPORTED)
-set_target_properties(Fmt PROPERTIES
-        INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_SOURCE_DIR}/External/Includes"
-        IMPORTED_LOCATION_DEBUG       "${EXTERNAL_LIBRARIES_DIR}/fmtd.lib"
-        IMPORTED_LOCATION_RELEASE     "${EXTERNAL_LIBRARIES_DIR}/fmt.lib"
-)
-
-# spdlog
-add_library(Spdlog STATIC IMPORTED)
-set_target_properties(Spdlog PROPERTIES
-        INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_SOURCE_DIR}/External/Includes"
-        IMPORTED_LOCATION_DEBUG       "${EXTERNAL_LIBRARIES_DIR}/spdlogd.lib"
-        IMPORTED_LOCATION_RELEASE     "${EXTERNAL_LIBRARIES_DIR}/spdlog.lib"
-)
+﻿find_package(OpenGL          REQUIRED)
+find_package(GLEW     CONFIG REQUIRED)
+find_package(glad     CONFIG REQUIRED)
+find_package(glfw3    CONFIG REQUIRED)
+find_package(glm      CONFIG REQUIRED)
+find_package(freeglut CONFIG REQUIRED)
+find_package(spdlog   CONFIG REQUIRED)
 
 add_subdirectory("Act_01")
 add_subdirectory("Act_02")
