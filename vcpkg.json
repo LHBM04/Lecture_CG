@@ -1,5 +1,7 @@
 ﻿{
-  "builtin-baseline": "74e6536215718009aae747d86d84b78376bf9e09",
+  "name": "lecture-cg",
+  "version-string": "0.1.0",
+  "builtin-baseline": "83375d1ded4878305df9f5272f360f4f80ee0d83",
   "dependencies": [
     "glad",
     "glew",
