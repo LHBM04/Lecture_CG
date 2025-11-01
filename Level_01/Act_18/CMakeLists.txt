@@ -1,5 +1,19 @@
 ﻿add_executable(Level_01_Act_18
-        Program.cpp
+        Sources/Graphics/Mesh.cpp
+        Sources/Graphics/Mesh.h
+        Sources/Graphics/Shader.cpp
+        Sources/Graphics/Shader.h
+
+        Sources/Objects/Axes.cpp
+        Sources/Objects/Axes.h
+        Sources/Objects/Cone.cpp
+        Sources/Objects/Cone.h
+        Sources/Objects/Cube.cpp
+        Sources/Objects/Cube.h
+        Sources/Objects/Object.cpp
+        Sources/Objects/Object.h
+
+        Sources/Program.cpp
 )
 
 target_link_libraries(Level_01_Act_18 PRIVATE
@@ -17,29 +31,8 @@ set_target_properties(Level_01_Act_18 PROPERTIES
 )
 
 add_custom_command(TARGET Level_01_Act_18 PRE_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        "${CMAKE_SOURCE_DIR}/Level_01/Act_18/Resources/Shaders/Vertex.glsl"
-        "$<TARGET_FILE_DIR:Level_01_Act_18>/Resources/Shaders/Vertex.glsl"
-        VERBATIM
-)
-
-add_custom_command(TARGET Level_01_Act_18 PRE_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        "${CMAKE_SOURCE_DIR}/Level_01/Act_18/Resources/Shaders/Fragment.glsl"
-        "$<TARGET_FILE_DIR:Level_01_Act_18>/Resources/Shaders/Fragment.glsl"
-        VERBATIM
-)
-
-add_custom_command(TARGET Level_01_Act_18 PRE_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        "${CMAKE_SOURCE_DIR}/Level_01/Act_18/Resources/Objects/Cube.obj"
-        "$<TARGET_FILE_DIR:Level_01_Act_18>/Resources/Objects/Cube.obj"
-        VERBATIM
-)
-
-add_custom_command(TARGET Level_01_Act_18 PRE_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        "${CMAKE_SOURCE_DIR}/Level_01/Act_18/Resources/Objects/Diamond.obj"
-        "$<TARGET_FILE_DIR:Level_01_Act_18>/Resources/Objects/Diamond.obj"
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+        "${CMAKE_SOURCE_DIR}/Level_01/Act_18/Resources"
+        "$<TARGET_FILE_DIR:Level_01_Act_18>/Resources"
         VERBATIM
 )
