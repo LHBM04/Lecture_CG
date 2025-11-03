@@ -1,14 +1,10 @@
 #ifndef GUARD_OBJECTS_H
 #define GUARD_OBJECTS_H
 
-#include <vector>
-
-#include <gl/glew.h>
-
-#include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
 
-#include "../Graphics/Shader.h"
+#include "../Rendering/Shader.h"
+#include "../Rendering/Model.h"
 
 /**
  * @class Object
@@ -21,9 +17,13 @@ public:
     /**
      * @brief 생성자.
      *
-     * @param vertices_ 정점 배열.
+     * @param position_ 생성할 오브젝트의 위치
+     * @param rotation_ 생성할 오브젝트의 회전
+     * @param scale_    생성할 오브젝트의 크기
      */
-    explicit Object(const std::vector<GLfloat>& vertices_) noexcept;
+    explicit Object(const glm::vec3& position_ = glm::vec3{0.0f, 0.0f, 0.0f},
+                    const glm::vec3& rotation_ = glm::vec3{0.0f, 0.0f, 0.0f},
+                    const glm::vec3& scale_    = glm::vec3{1.0f, 1.0f, 1.0f}) noexcept;
 
     /**
      * @brief 소멸자.
@@ -35,55 +35,123 @@ public:
      *
      * @param deltaTime_ 이전 프레임과 현재 프레임 사이의 간격.
      */
-    virtual void Update(float deltaTime_) noexcept = 0;
+    virtual void Update(float deltaTime_) noexcept;
 
     /**
      * @brief 해당 오브젝트를 렌더링합니다.
      *
      * @param shader_ 사용할 셰이더.
      */
-    virtual void Render(const Shader& shader_) const noexcept = 0;
+    virtual void Render(const Shader& shader_) const noexcept;
 
     /**
-     * @brief 정점 개수.
+     * @brief 해당 오브젝트의 모델을 반환합니다.
+     *
+     * @return Mesh* 해당 오브젝트의 모델.
      */
-    GLsizei vertexCount = 0;
+    [[nodiscard]]
+    inline Model* GetModel() const noexcept;
 
     /**
-     * @brief 요소 개수.
+     * @brief 해당 오브젝트의 위치를 반환합니다.
+     *
+     * @return glm::vec3 해당 오브젝트의 위치.
      */
-    GLsizei elementCount = 0;
+    [[nodiscard]]
+    inline constexpr glm::vec3 GetPosition() const noexcept;
 
     /**
-     * @brief 위치.
+     * @brief 해당 오브젝트의 위치를 설정합니다.
+     *
+     * @param position_ 설정할 위치.
      */
-    glm::vec3 position = {0.0f, 0.0f, 0.0f};
+    inline void SetPosition(const glm::vec3& position_) noexcept;
 
     /**
-     * @brief 회전.
+     * @brief 해당 오브젝트의 회전을 반환합니다.
+     *
+     * @return glm::vec3 해당 오브젝트의 회전.
      */
-    glm::vec3 rotation = {0.0f, 0.0f, 0.0f};
+    [[nodiscard]]
+    inline constexpr glm::vec3 GetRotation() const noexcept;
 
     /**
-     * @brief 크기.
+     * @brief 해당 오브젝트의 회전을 설정합니다.
+     *
+     * @param rotation_ 설정할 회전.
      */
-    glm::vec3 scale = {1.0f, 1.0f, 1.0f};
-
-protected:
-    /**
-     * @brief 정점 배열 객체.
-     */
-    GLuint vao = 0;
+    inline void SetRotation(const glm::vec3& rotation_) noexcept;
 
     /**
-     * @brief 정점 버퍼 객체.
+     * @brief 해당 오브젝트의 크기를 반환합니다.
+     *
+     * @return glm::vec3 해당 오브젝트의 크기.
      */
-    GLuint vbo = 0;
+    [[nodiscard]]
+    inline constexpr glm::vec3 GetScale() const noexcept;
 
     /**
-     * @brief 요소 배열 객체.
+     * @brief 해당 오브젝트의 크기를 설정합니다.
+     *
+     * @param scale_ 설정할 크기.
      */
-    GLuint ebo = 0;
+    inline void SetScale(const glm::vec3& scale_) noexcept;
+
+private:
+    /**
+     * @brief 해당 오브젝트의 모델.
+     */
+    Model* model;
+
+    /**
+     * @brief 해당 오브젝트의 위치.
+     */
+    glm::vec3 position;
+
+    /**
+     * @brief 해당 오브젝트의 회전.
+     */
+    glm::vec3 rotation;
+
+    /**
+     * @brief 해당 오브젝트의 크기.
+     */
+    glm::vec3 scale;
 };
+
+inline Model* Object::GetModel() const noexcept
+{
+    return model;
+}
+
+inline constexpr glm::vec3 Object::GetPosition() const noexcept
+{
+    return position;
+}
+
+inline void Object::SetPosition(const glm::vec3& position_) noexcept
+{
+    position = position_;
+}
+
+inline constexpr glm::vec3 Object::GetRotation() const noexcept
+{
+    return rotation;
+}
+
+inline void Object::SetRotation(const glm::vec3& rotation_) noexcept
+{
+    rotation = rotation_;
+}
+
+inline constexpr glm::vec3 Object::GetScale() const noexcept
+{
+    return scale;
+}
+
+inline void Object::SetScale(const glm::vec3& scale_) noexcept
+{
+    scale = scale_;
+}
 
 #endif // !GUARD_OBJECTS_H

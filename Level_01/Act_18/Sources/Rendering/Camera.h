@@ -1,8 +1,6 @@
 #ifndef GUARD_CAMERA_H
 #define GUARD_CAMERA_H
 
-#include <memory>
-
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -93,10 +91,29 @@ private:
      */
     glm::vec3 up;
 
+    /**
+     * @brief 시야각.
+     */
     float fov = 45.0f;
+
+    /**
+     * @brief 종횡비.
+     */
     float aspectRatio = 0.0f;
+
+    /**
+     * @brief
+     */
     float nearPlane = 0.1f;
+
+    /**
+     * @brief
+     */
     float farPlane = 100.0f;
+
+    /**
+     * @brief
+     */
     float orthoSize = 10.0f;
 };
 

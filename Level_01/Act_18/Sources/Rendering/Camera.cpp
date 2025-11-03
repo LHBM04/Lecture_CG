@@ -3,10 +3,10 @@
 Camera::Camera(const glm::vec3& position_,
                const glm::vec3& front_,
                const glm::vec3& up_) noexcept
-    : position{position_}
+    : projectionType{Camera::ProjectionType::Perspective}
+    , position{position_}
     , front{front_}
     , up{up_}
-    , projectionType{Camera::ProjectionType::Perspective}
 {
 
 }

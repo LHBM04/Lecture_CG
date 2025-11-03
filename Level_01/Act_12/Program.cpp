@@ -404,7 +404,7 @@ static constexpr unsigned int WINDOW_HEIGHT = 600;
 /**
  * @brief 애플리케이션 타이틀.
  */
-static constexpr const char* const WINDOW_TITLE = "Level 01 - Act 12";
+static constexpr const char* const APPLICATION_TITLE = "Level 01 - Act 12";
 
 /**
  * @brief GL 메이저 버전.
@@ -469,7 +469,7 @@ int main()
 
         window = glfwCreateWindow(WINDOW_WIDTH,
                                   WINDOW_HEIGHT,
-                                  WINDOW_TITLE,
+                                  APPLICATION_TITLE,
                                   nullptr,
                                   nullptr);
         if (!window)

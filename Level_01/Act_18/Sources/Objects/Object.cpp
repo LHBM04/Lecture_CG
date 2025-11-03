@@ -1,58 +1,43 @@
 #include "Object.h"
 
-Object::Object(const std::vector<GLfloat>& vertices_) noexcept
+Object::Object(const glm::vec3& position_,
+               const glm::vec3& rotation_,
+               const glm::vec3& scale_) noexcept
+    : model(nullptr)
+    , position(position_)
+    , rotation(rotation_)
+    , scale(scale_)
 {
-    constexpr size_t floatsPerVertex = 6;
-    vertexCount  = static_cast<GLsizei>(vertices_.size() / floatsPerVertex);
 
-    glGenVertexArrays(1, &vao);
-    glBindVertexArray(vao);
-
-    glGenBuffers(1, &vbo);
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferData(GL_ARRAY_BUFFER,
-                 static_cast<GLsizeiptr>(vertices_.size() * sizeof(GLfloat)),
-                 vertices_.data(),
-                 GL_STATIC_DRAW);
-
-    glGenBuffers(1, &ebo);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER,
-                 0,
-                 nullptr,
-                 GL_STATIC_DRAW);
-
-    glVertexAttribPointer(0,
-                          3,
-                          GL_FLOAT,
-                          GL_FALSE,
-                          floatsPerVertex * sizeof(float),
-                          nullptr);
-    glEnableVertexAttribArray(0);
-
-    glVertexAttribPointer(1,
-                          3,
-                          GL_FLOAT,
-                          GL_FALSE,
-                          floatsPerVertex * sizeof(float),
-                          reinterpret_cast<void*>(3 * sizeof(float)));
-    glEnableVertexAttribArray(1);
-
-    glBindVertexArray(0);
 }
 
 Object::~Object() noexcept
 {
-    if (vao != 0)
+    if (model != nullptr)
     {
-        glDeleteVertexArrays(1, &vao);
+        delete model;
+        model = nullptr;
     }
-    if (vbo != 0)
+}
+
+void Object::Update(const float deltaTime_) noexcept
+{
+}
+
+void Object::Render(const Shader& shader_) const noexcept
+{
+    if (model == nullptr)
     {
-        glDeleteBuffers(1, &vbo);
+        return;
     }
-    if (ebo != 0)
-    {
-        glDeleteBuffers(1, &ebo);
-    }
+
+    glm::mat4 modelMatrix = {1.0f};
+    modelMatrix = glm::translate(modelMatrix, position);
+    modelMatrix = glm::rotate(modelMatrix, glm::radians(rotation.x), glm::vec3{1.0f, 0.0f, 0.0f});
+    modelMatrix = glm::rotate(modelMatrix, glm::radians(rotation.y), glm::vec3{0.0f, 1.0f, 0.0f});
+    modelMatrix = glm::rotate(modelMatrix, glm::radians(rotation.z), glm::vec3{0.0f, 0.0f, 1.0f});
+    modelMatrix = glm::scale(modelMatrix, scale);
+    shader_.SetUniformMatrix4x4("uModel", modelMatrix);
+
+    model->Render();
 }

@@ -1,19 +1,29 @@
 ﻿add_executable(Level_01_Act_18
-        Sources/Graphics/Mesh.cpp
-        Sources/Graphics/Mesh.h
-        Sources/Graphics/Shader.cpp
-        Sources/Graphics/Shader.h
+        Sources/Core/Application.cpp
+        Sources/Core/Application.h
+        Sources/Core/File.cpp
+        Sources/Core/File.h
+        Sources/Core/Input.cpp
+        Sources/Core/Input.h
+        Sources/Core/Time.cpp
+        Sources/Core/Time.h
 
-        Sources/Objects/Axes.cpp
-        Sources/Objects/Axes.h
-        Sources/Objects/Cone.cpp
-        Sources/Objects/Cone.h
-        Sources/Objects/Cube.cpp
-        Sources/Objects/Cube.h
         Sources/Objects/Object.cpp
         Sources/Objects/Object.h
 
-        Sources/Program.cpp
+        Sources/Rendering/Camera.cpp
+        Sources/Rendering/Camera.h
+        Sources/Rendering/Model.cpp
+        Sources/Rendering/Model.h
+        Sources/Rendering/Shader.cpp
+        Sources/Rendering/Shader.h
+        Sources/Rendering/Sphere.cpp
+        Sources/Rendering/Sphere.h
+
+        Sources/World/World.cpp
+        Sources/World/World.h
+
+        Sources/Main.cpp
 )
 
 target_link_libraries(Level_01_Act_18 PRIVATE
