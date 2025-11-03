@@ -1,11 +1,39 @@
 ﻿#include <spdlog/spdlog.h>
 
+#include "Rendering/Camera.h"
+#include "Rendering/Mesh.h"
+#include "Rendering/Shader.h"
+
 #include "Core/Application.h"
 #include "Core/File.h"
 #include "Core/Input.h"
 #include "Core/Time.h"
 
-#include "World/World.h"
+#include "Objects/Axes.h"
+#include "Objects/Planet.h"
+
+enum class SelectedObject
+{
+    /**
+     * @brief 아무 것도 선택되지 않음.
+     */
+    None,
+
+    /**
+     * @brief 첫 번째 오브젝트 선택.
+     */
+    Lhs,
+
+    /**
+     * @brief 두 번째 오브젝트 선택.
+     */
+    Rhs,
+
+    /**
+     * @brief 모든 오브젝트 선택.
+     */
+    All
+};
 
 /**
  * @brief 애플리케이션이 시작될 때 호출됩니다.
@@ -13,19 +41,9 @@
 static void OnStart() noexcept;
 
 /**
- * @brief 고정된 시간 간격으로 호출됩니다.
- */
-static void OnFixedUpdate() noexcept;
-
-/**
  * @brief 매 프레임마다 호출됩니다.
  */
 static void OnUpdate() noexcept;
-
-/**
- * @brief 프레임 렌더링이 끝난 후 호출됩니다.
- */
-static void OnLateUpdate() noexcept;
 
 /**
  * @brief 윈도우가 그려질 때 호출됩니다.
@@ -63,14 +81,34 @@ static constexpr int APPLICATION_HEIGHT = 720;
 static constexpr int FPS = 60;
 
 /**
- * @brief 해당 애플리케이션에서 시뮬레이션할 월드.
- */
-static std::unique_ptr<World> world = nullptr;
-
-/**
  * @brief 해당 애플리케이션에서 사용할 셰이더.
  */
 static std::unique_ptr<Shader> shader = nullptr;
+
+/**
+ * @brief 해당 애플리케이션에서 사용할 카메라.
+ */
+static std::unique_ptr<Camera> camera = nullptr;
+
+/**
+ * @brief 해당 애플리케이션의 좌표축.
+ */
+static std::unique_ptr<Object> axes = nullptr;
+
+/**
+ * @brief 해당 애플리케이션에서 시뮬레이션할 첫 번째 오브젝트.
+ */
+static std::unique_ptr<Planet> lhs = nullptr;
+
+/**
+ * @brief 해당 애플리케이션에서 시뮬레이션할 두 번째 오브젝트.
+ */
+static std::unique_ptr<Planet> rhs = nullptr;
+
+/**
+ * @brief 현재 선택된 오브젝트.
+ */
+static SelectedObject selectedObject = SelectedObject::None;
 
 int main()
 {
@@ -82,9 +120,7 @@ int main()
     specification.height                     = APPLICATION_HEIGHT;
     specification.fps                        = FPS;
     specification.onStart                    = OnStart;
-    specification.onFixedUpdate              = OnFixedUpdate;
     specification.onUpdate                   = OnUpdate;
-    specification.onLateUpdate               = OnLateUpdate;
     specification.onDisplay                  = OnDisplay;
 
     return Application::Run(specification);
@@ -101,34 +137,108 @@ static void OnStart() noexcept
     shader = std::make_unique<Shader>(vertexShaderSource, fragmentShaderSource);
     shader->Use();
 
-    world = std::make_unique<World>();
-    world->AddObject(std::make_unique<Object>(new Model(Model::RenderType::Sphere)));
-}
+    constexpr glm::vec3 position    = {-5.0f, 3.0f, -5.0f};
+    constexpr glm::vec3 front       = {5.0f, -3.0f, 5.0f};
+    constexpr glm::vec3 up          = {0.0f, 1.0f, 0.0f};
+    const     float     aspectRatio = static_cast<float>(Application::GetSpecification().width) /
+                                      static_cast<float>(Application::GetSpecification().height);
 
-static void OnFixedUpdate() noexcept
-{
-    const float fixedDeltaTime = Time::GetFixedDeltaTime();
-    world->FixedUpdate(fixedDeltaTime);
+    camera = std::make_unique<Camera>(position, front, up);
+    camera->SetProjection(Camera::ProjectionType::Perspective);
+    camera->SetAspectRatio(aspectRatio);
+
+    axes = std::make_unique<Object>();
+    axes->SetScale({10.0f, 10.0f, 10.0f});
+    axes->SetMesh(Mesh::LoadFrom("Resources/Models/Axes.obj"));
+
+    lhs = std::make_unique<Planet>();
+    lhs->SetPosition({2.0f, 0.0f, 0.0f});
+    lhs->SetRotation({30.0f, 30.0f, 0.0f});
+    lhs->SetMesh(Mesh::LoadFrom("Resources/Models/Cube.obj"));
+
+    rhs = std::make_unique<Planet>();
+    rhs->SetPosition({-2.0f, 0.0f, 0.0f});
+    rhs->SetRotation({30.0f, 30.0f, 0.0f});
+    rhs->SetMesh(Mesh::LoadFrom("Resources/Models/Cone.obj"));
 }
 
 static void OnUpdate() noexcept
 {
+    if (Input::IsKeyPressed('1'))
+    {
+        lhs->SetSelected(true);
+        rhs->SetSelected(false);
+    }
+    else if (Input::IsKeyPressed('2'))
+    {
+        lhs->SetSelected(false);
+        rhs->SetSelected(true);
+    }
+    else if (Input::IsKeyPressed('3'))
+    {
+        lhs->SetSelected(true);
+        rhs->SetSelected(true);
+    }
+    else if (Input::IsKeyPressed('0'))
+    {
+        lhs->SetSelected(false);
+        rhs->SetSelected(false);
+    }
+
+    if (Input::IsKeyPressed('c'))
+    {
+        lhs->SetMesh(Mesh::LoadFrom("Resources/Models/Cylinder.obj"));
+        rhs->SetMesh(Mesh::LoadFrom("Resources/Models/Sphere.obj"));
+    }
+
+    if (Input::IsKeyPressed('s'))
+    {
+        axes.reset();
+        axes = std::make_unique<Object>();
+        axes->SetScale({10.0f, 10.0f, 10.0f});
+        axes->SetMesh(Mesh::LoadFrom("Resources/Models/Axes.obj"));
+
+        lhs.reset();
+        lhs = std::make_unique<Planet>();
+        lhs->SetPosition({2.0f, 0.0f, 0.0f});
+        lhs->SetRotation({30.0f, 30.0f, 0.0f});
+        lhs->SetMesh(Mesh::LoadFrom("Resources/Models/Sphere.obj"));
+
+        rhs.reset();
+        rhs = std::make_unique<Planet>();
+        rhs->SetPosition({-2.0f, 0.0f, 0.0f});
+        rhs->SetRotation({30.0f, 30.0f, 0.0f});
+        rhs->SetMesh(Mesh::LoadFrom("Resources/Models/Cone.obj"));
+    }
+
     if (Input::IsKeyPressed('q'))
     {
         Application::Quit();
     }
 
-    const float deltaTime = Time::GetDeltaTime();
-    world->Update(deltaTime);
-}
-
-static void OnLateUpdate() noexcept
-{
-    const float deltaTime = Time::GetDeltaTime();
-    world->LateUpdate(deltaTime);
+    rhs->Update();
+    lhs->Update();
 }
 
 static void OnDisplay() noexcept
 {
-    world->Render(*shader);
+    if (camera != nullptr)
+    {
+        camera->PreRender(*shader);
+    }
+
+    if (axes != nullptr)
+    {
+        axes->Render(*shader);
+    }
+
+    if (lhs != nullptr)
+    {
+        lhs->Render(*shader);
+    }
+
+    if (rhs != nullptr)
+    {
+        rhs->Render(*shader);
+    }
 }

@@ -41,10 +41,10 @@ int Application::Run(const Application::Specification& specification_) noexcept
             return -1;
         }
 
-        glEnable(GL_CULL_FACE);
-        glCullFace(GL_BACK);
+        // glEnable(GL_CULL_FACE);
+        // glCullFace(GL_BACK);
 
-        glEnable(GL_DEPTH_TEST);
+        // glEnable(GL_DEPTH_TEST);
     }
 
     glutIdleFunc(OnUpdate);
@@ -88,6 +88,7 @@ void Application::Quit() noexcept
 
 void Application::OnUpdate() noexcept
 {
+    Input::Update();
     Time::Update();
 
     fixedUpdateTime += Time::GetDeltaTime();
@@ -109,8 +110,6 @@ void Application::OnUpdate() noexcept
     {
         specification.onUpdate();
     }
-
-    Input::Update();
 
     glutPostRedisplay();
 }

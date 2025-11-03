@@ -18,6 +18,8 @@ World::~World() noexcept
     {
         object.reset();
     }
+
+    camera.reset();
 }
 
 void World::AddObject(std::unique_ptr<Object>&& object_) noexcept
@@ -25,27 +27,27 @@ void World::AddObject(std::unique_ptr<Object>&& object_) noexcept
     objects.push_back(std::move(object_));
 }
 
-void World::FixedUpdate(const float fixedDeltaTime_) const noexcept
+void World::FixedUpdate() const noexcept
 {
     for (const auto& object : objects)
     {
-        object->Update(fixedDeltaTime_);
+        object->Update();
     }
 }
 
-void World::Update(const float deltaTime_) const noexcept
+void World::Update() const noexcept
 {
     for (const auto& object : objects)
     {
-        object->Update(deltaTime_);
+        object->Update();
     }
 }
 
-void World::LateUpdate(const float deltaTime_) const noexcept
+void World::LateUpdate() const noexcept
 {
     for (const auto& object : objects)
     {
-        object->Update(deltaTime_);
+        object->Update();
     }
 }
 

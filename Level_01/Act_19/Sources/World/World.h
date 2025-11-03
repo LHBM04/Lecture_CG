@@ -30,24 +30,18 @@ public:
 
     /**
      * @brief 고정된 시간 간격으로 호출됩니다.
-     *
-     * @param fixedDeltaTime_ 이전 고정 업데이트와 현재 고정 업데이트 사이의 간격.
      */
-    void FixedUpdate(float fixedDeltaTime_) const noexcept;
+    void FixedUpdate() const noexcept;
 
     /**
      * @brief 매 프레임마다 호출됩니다.
-     *
-     * @param deltaTime_ 이전 프레임과 현재 프레임 사이의 간격.
      */
-    void Update(float deltaTime_) const noexcept;
+    void Update() const noexcept;
 
     /**
      * @brief 렌더링 후에 호출됩니다.
-     *
-     * @param deltaTime_ 이전 프레임과 현재 프레임 사이의 간격.
      */
-    void LateUpdate(float deltaTime_) const noexcept;
+    void LateUpdate() const noexcept;
 
     /**
      * @brief 해당 월드를 렌더링합니다.

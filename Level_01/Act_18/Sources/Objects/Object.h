@@ -1,10 +1,12 @@
 #ifndef GUARD_OBJECTS_H
 #define GUARD_OBJECTS_H
 
+#include <memory>
+
 #include <glm/vec3.hpp>
 
 #include "../Rendering/Shader.h"
-#include "../Rendering/Model.h"
+#include "../Rendering/Mesh.h"
 
 /**
  * @class Object
@@ -32,10 +34,8 @@ public:
 
     /**
      * @brief 해당 오브젝트를 업데이트합니다.
-     *
-     * @param deltaTime_ 이전 프레임과 현재 프레임 사이의 간격.
      */
-    virtual void Update(float deltaTime_) noexcept;
+    virtual void Update() noexcept;
 
     /**
      * @brief 해당 오브젝트를 렌더링합니다.
@@ -45,12 +45,19 @@ public:
     virtual void Render(const Shader& shader_) const noexcept;
 
     /**
-     * @brief 해당 오브젝트의 모델을 반환합니다.
+     * @brief 해당 오브젝트의 매쉬를 반환합니다.
      *
-     * @return Mesh* 해당 오브젝트의 모델.
+     * @return Mesh* 해당 오브젝트의 매쉬.
      */
     [[nodiscard]]
-    inline Model* GetModel() const noexcept;
+    inline Mesh* GetMesh() const noexcept;
+
+    /**
+     * @brief 해당 오브젝트의 매쉬를 설정합니다.
+     *
+     * @param mesh_ 설정할 매쉬.
+     */
+    inline void SetMesh(Mesh* mesh_) noexcept;
 
     /**
      * @brief 해당 오브젝트의 위치를 반환합니다.
@@ -99,9 +106,9 @@ public:
 
 private:
     /**
-     * @brief 해당 오브젝트의 모델.
+     * @brief 해당 오브젝트의 매쉬.
      */
-    Model* model;
+    std::unique_ptr<Mesh> mesh;
 
     /**
      * @brief 해당 오브젝트의 위치.
@@ -119,9 +126,14 @@ private:
     glm::vec3 scale;
 };
 
-inline Model* Object::GetModel() const noexcept
+inline Mesh* Object::GetMesh() const noexcept
 {
-    return model;
+    return mesh.get();
+}
+
+inline void Object::SetMesh(Mesh* const mesh_) noexcept
+{
+    mesh.reset(mesh_);
 }
 
 inline constexpr glm::vec3 Object::GetPosition() const noexcept

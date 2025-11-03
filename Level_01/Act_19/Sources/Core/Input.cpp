@@ -11,17 +11,20 @@ void Input::Update()
 
 bool Input::IsKeyPressed(const int key_) noexcept
 {
-    return currentKeyStates[key_] && !previousKeyStates[key_];
+    return currentKeyStates.contains(key_) ? currentKeyStates.at(key_) : false;
 }
 
 bool Input::IsKeyHeld(const int key_) noexcept
 {
-    return currentKeyStates[key_] && previousKeyStates[key_];
+    return currentKeyStates.contains(key_) ? currentKeyStates.at(key_) : false;
 }
 
 bool Input::IsKeyReleased(const int key_) noexcept
 {
-    return !currentKeyStates[key_] && previousKeyStates[key_];
+    const bool isCurrentlyPressed   = currentKeyStates.contains(key_) ? currentKeyStates.at(key_) : false;
+    const bool wasPreviouslyPressed = previousKeyStates.contains(key_) ? previousKeyStates.at(key_) : false;
+
+    return !isCurrentlyPressed && wasPreviouslyPressed;
 }
 
 bool Input::IsMouseButtonPressed(const int button_) noexcept
@@ -31,7 +34,7 @@ bool Input::IsMouseButtonPressed(const int button_) noexcept
 
 bool Input::IsMouseButtonHeld(const int button_) noexcept
 {
-    return currentMouseButtonStates[button_] && previousMouseButtonStates[button_];
+    return currentMouseButtonStates[button_];
 }
 
 bool Input::IsMouseButtonReleased(const int button_) noexcept

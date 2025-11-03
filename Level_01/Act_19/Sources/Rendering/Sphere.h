@@ -3,6 +3,11 @@
 
 #include "Model.h"
 
+/**
+ * @class Sphere
+ *
+ * @brief 구 모델을 정의합니다.
+ */
 class Sphere final
     : public Model
 {

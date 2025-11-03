@@ -22,9 +22,9 @@ public:
     virtual void Render() const noexcept = 0;
 
     /**
-     * @brief
+     * @brief 해당 모델의 네이티브 모델을 반환합니다.
      *
-     * @return GLUquadricObj*
+     * @return GLUquadricObj* 해당 모델의 네이티브 모델.
      */
     [[nodiscard]]
     inline GLUquadricObj* GetNativeModel() const noexcept;

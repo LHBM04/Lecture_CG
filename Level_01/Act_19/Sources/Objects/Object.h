@@ -1,69 +1,167 @@
-#ifndef GUARD_OBJECT_H
-#define GUARD_OBJECT_H
-
-#include "../Graphics/Shader.h"
-
-#include <gl/freeglut_std.h>
+#ifndef GUARD_OBJECTS_H
+#define GUARD_OBJECTS_H
 
 #include <glm/vec3.hpp>
 
+#include "../Rendering/Shader.h"
+#include "../Rendering/Model.h"
+
+/**
+ * @class Object
+ *
+ * @brief 오브젝트를 정의합니다.
+ */
 class Object
 {
 public:
     /**
      * @brief 생성자.
+     *
+     * @param position_ 생성할 오브젝트의 위치
+     * @param rotation_ 생성할 오브젝트의 회전
+     * @param scale_    생성할 오브젝트의 크기
      */
-    explicit Object() noexcept;
+    explicit Object(const glm::vec3& position_ = glm::vec3{0.0f, 0.0f, 0.0f},
+                    const glm::vec3& rotation_ = glm::vec3{0.0f, 0.0f, 0.0f},
+                    const glm::vec3& scale_    = glm::vec3{1.0f, 1.0f, 1.0f}) noexcept;
 
     /**
      * @brief 소멸자.
      */
-    ~Object() noexcept;
+    virtual ~Object() noexcept;
 
     /**
-     * @brief 해당 객체를 업데이트합니다.
-     *
-     * @param deltaTime_ 이전 프레임과 현재 프레임 사이의 간격.
+     * @brief 해당 오브젝트를 업데이트합니다.
      */
-    void Update(const float deltaTime_) noexcept;
+    virtual void Update() noexcept;
 
     /**
-     * @brief 해당 객체를 렌더링합니다.
+     * @brief 해당 오브젝트를 렌더링합니다.
      *
      * @param shader_ 사용할 셰이더.
      */
-    void Render(const Shader& shader_) const noexcept;
+    virtual void Render(const Shader& shader_) const noexcept;
+
+    /**
+     * @brief 해당 오브젝트의 모델을 반환합니다.
+     *
+     * @return Mesh* 해당 오브젝트의 모델.
+     */
+    [[nodiscard]]
+    inline Model* GetModel() const noexcept;
+
+    /**
+     * @brief 해당 오브젝트의 모델을 설정합니다.
+     *
+     * @param model_ 설정할 모델.
+     */
+    inline void SetModel(Model* model_) noexcept;
+
+    /**
+     * @brief 해당 오브젝트의 위치를 반환합니다.
+     *
+     * @return glm::vec3 해당 오브젝트의 위치.
+     */
+    [[nodiscard]]
+    inline constexpr glm::vec3 GetPosition() const noexcept;
+
+    /**
+     * @brief 해당 오브젝트의 위치를 설정합니다.
+     *
+     * @param position_ 설정할 위치.
+     */
+    inline void SetPosition(const glm::vec3& position_) noexcept;
+
+    /**
+     * @brief 해당 오브젝트의 회전을 반환합니다.
+     *
+     * @return glm::vec3 해당 오브젝트의 회전.
+     */
+    [[nodiscard]]
+    inline constexpr glm::vec3 GetRotation() const noexcept;
+
+    /**
+     * @brief 해당 오브젝트의 회전을 설정합니다.
+     *
+     * @param rotation_ 설정할 회전.
+     */
+    inline void SetRotation(const glm::vec3& rotation_) noexcept;
+
+    /**
+     * @brief 해당 오브젝트의 크기를 반환합니다.
+     *
+     * @return glm::vec3 해당 오브젝트의 크기.
+     */
+    [[nodiscard]]
+    inline constexpr glm::vec3 GetScale() const noexcept;
+
+    /**
+     * @brief 해당 오브젝트의 크기를 설정합니다.
+     *
+     * @param scale_ 설정할 크기.
+     */
+    inline void SetScale(const glm::vec3& scale_) noexcept;
 
 private:
     /**
-     * @brief 해당 객체의 쿼드릭 객체.
+     * @brief 해당 오브젝트의 모델.
      */
-    GLUquadricObj* model;
+    Model* model;
 
     /**
-     * @brief 해당 객체의 위치.
+     * @brief 해당 오브젝트의 위치.
      */
-    glm::vec3 position = {0.0f, 0.0f, 0.0f};
+    glm::vec3 position;
 
     /**
-     * @brief 해당 객체의 회전.
+     * @brief 해당 오브젝트의 회전.
      */
-    glm::vec3 rotation = {0.0f, 0.0f, 0.0f};
+    glm::vec3 rotation;
 
     /**
-     * @brief 해당 객체의 크기.
+     * @brief 해당 오브젝트의 크기.
      */
-    glm::vec3 scale = {1.0f, 1.0f, 1.0f};
-
-    /**
-     * @brief 해당 객체의 부모 객체.
-     */
-    Object* parent = nullptr;
-
-    /**
-     * @brief 해당 객체의 자식 객체들.
-     */
-    Object* children = nullptr;
+    glm::vec3 scale;
 };
 
-#endif // !GUARD_OBJECT_H
+inline Model* Object::GetModel() const noexcept
+{
+    return model;
+}
+
+inline void Object::SetModel(Model* const model_) noexcept
+{
+    model = model_;
+}
+
+inline constexpr glm::vec3 Object::GetPosition() const noexcept
+{
+    return position;
+}
+
+inline void Object::SetPosition(const glm::vec3& position_) noexcept
+{
+    position = position_;
+}
+
+inline constexpr glm::vec3 Object::GetRotation() const noexcept
+{
+    return rotation;
+}
+
+inline void Object::SetRotation(const glm::vec3& rotation_) noexcept
+{
+    rotation = rotation_;
+}
+
+inline constexpr glm::vec3 Object::GetScale() const noexcept
+{
+    return scale;
+}
+
+inline void Object::SetScale(const glm::vec3& scale_) noexcept
+{
+    scale = scale_;
+}
+
+#endif // !GUARD_OBJECTS_H
