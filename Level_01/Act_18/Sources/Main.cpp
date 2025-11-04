@@ -1,4 +1,5 @@
 ﻿#include <spdlog/spdlog.h>
+#include <algorithm> // std::swap을 위해 추가
 
 #include "Rendering/Camera.h"
 #include "Rendering/Mesh.h"
@@ -12,27 +13,16 @@
 #include "Objects/Axes.h"
 #include "Objects/Planet.h"
 
-enum class SelectedObject
+
+/**
+ * @brief 현재 재생 중인 애니메이션 상태.
+ */
+enum class AnimationState
 {
-    /**
-     * @brief 아무 것도 선택되지 않음.
-     */
     None,
-
-    /**
-     * @brief 첫 번째 오브젝트 선택.
-     */
-    Lhs,
-
-    /**
-     * @brief 두 번째 오브젝트 선택.
-     */
-    Rhs,
-
-    /**
-     * @brief 모든 오브젝트 선택.
-     */
-    All
+    T_Swap,
+    U_Swap,
+    V_Swap
 };
 
 /**
@@ -83,7 +73,7 @@ static constexpr int FPS = 60;
 /**
  * @brief 해당 애플리케이션에서 사용할 셰이더.
  */
-static std::unique_ptr<Shader> shader = nullptr;
+static Shader* shader = nullptr;
 
 /**
  * @brief 해당 애플리케이션에서 사용할 카메라.
@@ -93,7 +83,7 @@ static std::unique_ptr<Camera> camera = nullptr;
 /**
  * @brief 해당 애플리케이션의 좌표축.
  */
-static std::unique_ptr<Object> axes = nullptr;
+static std::unique_ptr<Axes> axes = nullptr;
 
 /**
  * @brief 해당 애플리케이션에서 시뮬레이션할 첫 번째 오브젝트.
@@ -106,9 +96,24 @@ static std::unique_ptr<Planet> lhs = nullptr;
 static std::unique_ptr<Planet> rhs = nullptr;
 
 /**
- * @brief 현재 선택된 오브젝트.
+ * @brief 현재 재생 중인 애니메이션 상태.
  */
-static SelectedObject selectedObject = SelectedObject::None;
+static AnimationState currentAnimation = AnimationState::None;
+
+/**
+ * @brief 애니메이션 경과 시간.
+ */
+static float animationTimer = 0.0f;
+
+/**
+ * @brief 애니메이션 총 재생 시간 (초).
+ */
+static constexpr float ANIMATION_DURATION = 1.5f;
+
+static glm::vec3 lhsStartPosition;
+static glm::vec3 rhsStartPosition;
+static glm::vec3 lhsStartScale;
+static glm::vec3 rhsStartScale;
 
 int main()
 {
@@ -128,13 +133,7 @@ int main()
 
 static void OnStart() noexcept
 {
-    const std::string vertexShaderFile   = File::ReadFile("Resources/Shaders/Vertex.glsl");
-    const char* const vertexShaderSource = vertexShaderFile.c_str();
-
-    const std::string fragmentShaderFile   = File::ReadFile("Resources/Shaders/Fragment.glsl");
-    const char* const fragmentShaderSource = fragmentShaderFile.c_str();
-
-    shader = std::make_unique<Shader>(vertexShaderSource, fragmentShaderSource);
+    shader = Shader::LoadFrom("");
     shader->Use();
 
     constexpr glm::vec3 position    = {-5.0f, 3.0f, -5.0f};
@@ -147,7 +146,7 @@ static void OnStart() noexcept
     camera->SetProjection(Camera::ProjectionType::Perspective);
     camera->SetAspectRatio(aspectRatio);
 
-    axes = std::make_unique<Object>();
+    axes = std::make_unique<Axes>();
     axes->SetScale({10.0f, 10.0f, 10.0f});
     axes->SetMesh(Mesh::LoadFrom("Resources/Models/Axes.obj"));
 
@@ -160,10 +159,134 @@ static void OnStart() noexcept
     rhs->SetPosition({-2.0f, 0.0f, 0.0f});
     rhs->SetRotation({30.0f, 30.0f, 0.0f});
     rhs->SetMesh(Mesh::LoadFrom("Resources/Models/Cone.obj"));
+
+    lhsStartPosition = lhs->GetPosition();
+    rhsStartPosition = rhs->GetPosition();
 }
 
 static void OnUpdate() noexcept
 {
+    static glm::vec3 lhsTargetPosition = rhs->GetPosition();
+    static glm::vec3 rhsTargetPosition = lhs->GetPosition();
+
+    if (Input::IsKeyHeld('t'))
+    {
+        {
+            glm::vec3 currentPosition = lhs->GetPosition();
+
+            if (lhsTargetPosition == currentPosition)
+            {
+                lhsTargetPosition = {};
+                return;
+            }
+
+            const glm::vec3 direction = glm::normalize(lhsTargetPosition - currentPosition);
+            lhs->SetPosition(currentPosition + direction * 5.0f * Time::GetDeltaTime());
+        }
+        {
+            glm::vec3 currentPosition = rhs->GetPosition();
+
+            if (rhsTargetPosition == currentPosition)
+            {
+                rhsTargetPosition = {};
+                return;
+            }
+
+            const glm::vec3 direction = glm::normalize(rhsTargetPosition - currentPosition);
+            rhs->SetPosition(currentPosition + direction * 5.0f * Time::GetDeltaTime());
+        }
+    }
+    if (Input::IsKeyHeld('u'))
+    {
+        lhsTargetPosition = rhs->GetPosition();
+        rhsTargetPosition = lhs->GetPosition();
+
+        {
+            const glm::vec3 currentPos   = lhs->GetPosition();
+            const float     radius       = glm::length(glm::vec2(currentPos.x, currentPos.y));
+            const float     currentAngle = atan2(currentPos.y, currentPos.x);
+
+            const float angleDelta = glm::radians(50.0f) * Time::GetDeltaTime();
+            const float newAngle   = currentAngle + angleDelta;
+
+            glm::vec3 nextPosition = currentPos;
+            nextPosition.x = radius * cos(newAngle);
+            nextPosition.y = radius * sin(newAngle);
+
+            lhs->SetPosition(nextPosition);
+        }
+        {
+            const glm::vec3 currentPos   = rhs->GetPosition();
+            const float     radius       = glm::length(glm::vec2(currentPos.x, currentPos.y));
+            const float     currentAngle = atan2(currentPos.y, currentPos.x);
+
+            const float angleDelta = glm::radians(50.0f) * Time::GetDeltaTime();
+            const float newAngle   = currentAngle + angleDelta;
+
+            glm::vec3 nextPosition = currentPos;
+            nextPosition.x = radius * cos(newAngle);
+            nextPosition.y = radius * sin(newAngle);
+
+            rhs->SetPosition(nextPosition);
+        }
+
+        return;
+    }
+    if (Input::IsKeyHeld('v'))
+    {
+        lhsTargetPosition = rhs->GetPosition();
+        rhsTargetPosition = lhs->GetPosition();
+
+        // lhs
+        {
+            glm::vec3 scale = lhs->GetScale();
+            scale += glm::vec3{1.0f, 1.0f, 1.0f} * 0.05f * Time::GetDeltaTime();
+            lhs->SetScale(scale);
+
+            const glm::vec3 currentPos   = lhs->GetPosition();
+            const float     radius       = glm::length(glm::vec2(currentPos.x, currentPos.y));
+            const float     currentAngle = atan2(currentPos.y, currentPos.x);
+
+            const float angleDelta = glm::radians(50.0f) * Time::GetDeltaTime();
+            const float newAngle   = currentAngle + angleDelta;
+
+            glm::vec3 nextPosition = currentPos;
+            nextPosition.x = radius * cos(newAngle);
+            nextPosition.y = radius * sin(newAngle);
+
+            lhs->SetPosition(nextPosition);
+
+            const glm::vec3 original = lhs->GetRotation();
+            const glm::vec3 rotate   = original + ((glm::vec3{0.0f, 1.0f, 0.0f} * 5.0f) * Time::GetDeltaTime());
+
+            lhs->SetRotation(rotate);
+        }
+        // rhs
+        {
+            glm::vec3 scale = rhs->GetScale();
+            scale += glm::vec3{-1.0f, -1.0f, -1.0f} * 0.05f * Time::GetDeltaTime();
+            rhs->SetScale(scale);
+
+            const glm::vec3 currentPos   = rhs->GetPosition();
+            const float     radius       = glm::length(glm::vec2(currentPos.x, currentPos.y));
+            const float     currentAngle = atan2(currentPos.y, currentPos.x);
+
+            const float angleDelta = glm::radians(50.0f) * Time::GetDeltaTime();
+            const float newAngle   = currentAngle + angleDelta;
+
+            glm::vec3 nextPosition = currentPos;
+            nextPosition.x = radius * cos(newAngle);
+            nextPosition.y = radius * sin(newAngle);
+
+            rhs->SetPosition(nextPosition);
+
+            const glm::vec3 original = rhs->GetRotation();
+            const glm::vec3 rotate   = original + ((glm::vec3{0.0f, 1.0f, 0.0f} * 5.0f) * Time::GetDeltaTime());
+
+            rhs->SetRotation(rotate);
+        }
+    }
+
     if (Input::IsKeyPressed('1'))
     {
         lhs->SetSelected(true);
@@ -193,16 +316,11 @@ static void OnUpdate() noexcept
 
     if (Input::IsKeyPressed('s'))
     {
-        axes.reset();
-        axes = std::make_unique<Object>();
-        axes->SetScale({10.0f, 10.0f, 10.0f});
-        axes->SetMesh(Mesh::LoadFrom("Resources/Models/Axes.obj"));
-
         lhs.reset();
         lhs = std::make_unique<Planet>();
         lhs->SetPosition({2.0f, 0.0f, 0.0f});
         lhs->SetRotation({30.0f, 30.0f, 0.0f});
-        lhs->SetMesh(Mesh::LoadFrom("Resources/Models/Sphere.obj"));
+        lhs->SetMesh(Mesh::LoadFrom("Resources/Models/Cube.obj"));
 
         rhs.reset();
         rhs = std::make_unique<Planet>();

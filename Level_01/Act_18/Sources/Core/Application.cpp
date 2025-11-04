@@ -41,8 +41,8 @@ int Application::Run(const Application::Specification& specification_) noexcept
             return -1;
         }
 
-        glEnable(GL_CULL_FACE);
-        glCullFace(GL_BACK);
+        // glEnable(GL_CULL_FACE);
+        // glCullFace(GL_BACK);
 
         glEnable(GL_DEPTH_TEST);
     }

@@ -3,7 +3,7 @@
 Object::Object(const glm::vec3& position_,
                const glm::vec3& rotation_,
                const glm::vec3& scale_) noexcept
-    : model(nullptr)
+    : mesh(nullptr)
     , position(position_)
     , rotation(rotation_)
     , scale(scale_)
@@ -13,20 +13,20 @@ Object::Object(const glm::vec3& position_,
 
 Object::~Object() noexcept
 {
-    if (model != nullptr)
+    if (mesh)
     {
-        delete model;
-        model = nullptr;
+        mesh.reset();
     }
 }
 
 void Object::Update() noexcept
 {
+
 }
 
 void Object::Render(const Shader& shader_) const noexcept
 {
-    if (model == nullptr)
+    if (mesh == nullptr)
     {
         return;
     }
@@ -39,5 +39,5 @@ void Object::Render(const Shader& shader_) const noexcept
     modelMatrix = glm::scale(modelMatrix, scale);
     shader_.SetUniformMatrix4x4("uModel", modelMatrix);
 
-    model->Render();
+    mesh->Render();
 }

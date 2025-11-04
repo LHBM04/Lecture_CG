@@ -1,6 +1,8 @@
 #ifndef GUARD_SHADER_H
 #define GUARD_SHADER_H
 
+#include <filesystem>
+
 #include <gl/glew.h>
 
 #include <glm/vec2.hpp>
@@ -91,6 +93,16 @@ public:
      * @param value_ 설정할 값.
      */
     inline void SetUniformMatrix4x4(const char* const name_, const glm::mat4& value_) const noexcept;
+
+    /**
+     * @brief 파일에서 셰이더를 로드합니다.
+     *
+     * @param filePath_ 로드할 파일 경로.
+     *
+     * @return Shader* 로드된 셰이더 객체.
+     */
+    [[nodiscard]]
+    static Shader* LoadFrom(const std::filesystem::path& filePath_) noexcept;
 
 private:
     /**

@@ -6,7 +6,7 @@
 Planet::Planet() noexcept
     : isSelected{false}
     , translateFactor{50.0f}
-    , rotateFactor{15.0f}
+    , rotateFactor{50.0f}
     , scaleFactor{10.0f}
 {
 

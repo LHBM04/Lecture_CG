@@ -49,6 +49,13 @@ private:
     void Scale() noexcept;
 
     /**
+     * @brief 해당 오브젝트의 목표 위치를 설정합니다.
+     *
+     * @param target_ 설정할 목표 위치.
+     */
+    void SetTarget(const glm::vec3& target_) const noexcept;
+
+    /**
      * @brief 해당 오브젝트의 선택 상태.
      */
     bool isSelected;

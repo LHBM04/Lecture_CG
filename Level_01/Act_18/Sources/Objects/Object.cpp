@@ -37,6 +37,7 @@ void Object::Render(const Shader& shader_) const noexcept
     modelMatrix = glm::rotate(modelMatrix, glm::radians(rotation.y), glm::vec3{0.0f, 1.0f, 0.0f});
     modelMatrix = glm::rotate(modelMatrix, glm::radians(rotation.z), glm::vec3{0.0f, 0.0f, 1.0f});
     modelMatrix = glm::scale(modelMatrix, scale);
+    modelMatrix = glm::translate(modelMatrix, {-0.5f, -0.5f, -0.5f});
     shader_.SetUniformMatrix4x4("uModel", modelMatrix);
 
     mesh->Render();

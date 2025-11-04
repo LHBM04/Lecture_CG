@@ -49,6 +49,39 @@ public:
     void PreRender(const Shader& shader_) const noexcept;
 
     /**
+     * @brief 카메라 위치 반환
+     */
+    [[nodiscard]]
+    inline constexpr glm::vec3 GetPosition() const noexcept;
+
+    /**
+     * @brief 카메라 위치 설정
+     */
+    inline void SetPosition(const glm::vec3& position_) noexcept;
+
+    /**
+     * @brief 카메라 전방 벡터 반환
+     */
+    [[nodiscard]]
+    inline constexpr glm::vec3 GetFront() const noexcept;
+
+    /**
+     * @brief 카메라 전방 벡터 설정
+     */
+    inline void SetFront(const glm::vec3& front_) noexcept;
+
+    /**
+     * @brief 카메라 업 벡터 반환
+     */
+    [[nodiscard]]
+    inline constexpr glm::vec3 GetUp() const noexcept;
+
+    /**
+     * @brief 카메라 업 벡터 설정
+     */
+    inline void SetUp(const glm::vec3& up_) noexcept;
+
+    /**
      * @brief View 행렬 반환
      */
     [[nodiscard]]
@@ -116,6 +149,36 @@ private:
      */
     float orthoSize = 10.0f;
 };
+
+constexpr glm::vec3 Camera::GetPosition() const noexcept
+{
+    return position;
+}
+
+inline void Camera::SetPosition(const glm::vec3& position_) noexcept
+{
+    position = position_;
+}
+
+inline constexpr glm::vec3 Camera::GetFront() const noexcept
+{
+    return front;
+}
+
+inline void Camera::SetFront(const glm::vec3& front_) noexcept
+{
+    front = front_;
+}
+
+inline constexpr glm::vec3 Camera::GetUp() const noexcept
+{
+    return up;
+}
+
+inline void Camera::SetUp(const glm::vec3& up_) noexcept
+{
+    up = up_;
+}
 
 inline glm::mat4 Camera::GetViewMatrix() const noexcept
 {

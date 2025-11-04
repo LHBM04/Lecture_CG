@@ -13,11 +13,6 @@ public:
     explicit Axes() noexcept;
 
     /**
-     * @brief 매 프레임마다 호출됩니다.
-     */
-    virtual void Update() noexcept override;
-
-    /**
      * @brief 해당 오브젝트를 렌더링합니다.
      *
      * @param shader_ 사용할 셰이더.
