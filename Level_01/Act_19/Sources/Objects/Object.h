@@ -40,14 +40,15 @@ public:
     /**
      * @brief 해당 오브젝트를 렌더링합니다.
      *
-     * @param shader_ 사용할 셰이더.
+     * @param shader_     사용할 셰이더
+     * @param renderMode_ 렌더링 모드
      */
-    virtual void Render(const Shader& shader_) const noexcept;
+    virtual void Render(const Shader& shader_, const GLenum renderMode_) const noexcept;
 
     /**
      * @brief 해당 오브젝트의 매쉬를 반환합니다.
      *
-     * @return Mesh* 해당 오브젝트의 매쉬.
+     * @return Mesh* 해당 오브젝트의 매쉬
      */
     [[nodiscard]]
     inline Mesh* GetMesh() const noexcept;
@@ -104,6 +105,21 @@ public:
      */
     inline void SetScale(const glm::vec3& scale_) noexcept;
 
+    /**
+     * @brief 해당 오브젝트의 색상을 반환합니다.
+     *
+     * @return glm::vec3 해당 오브젝트의 색상.
+     */
+    [[nodiscard]]
+    inline constexpr glm::vec3 GetColor() const noexcept;
+
+    /**
+     * @brief 해당 오브젝트의 색상을 설정합니다.
+     *
+     * @param color_ 설정할 색상.
+     */
+    inline void SetColor(const glm::vec3& color_) noexcept;
+
 private:
     /**
      * @brief 해당 오브젝트의 매쉬.
@@ -124,6 +140,11 @@ private:
      * @brief 해당 오브젝트의 크기.
      */
     glm::vec3 scale;
+
+    /**
+     * @brief 해당 오브젝트의 색상.
+     */
+    glm::vec3 color;
 };
 
 inline Mesh* Object::GetMesh() const noexcept
@@ -164,6 +185,16 @@ inline constexpr glm::vec3 Object::GetScale() const noexcept
 inline void Object::SetScale(const glm::vec3& scale_) noexcept
 {
     scale = scale_;
+}
+
+inline constexpr glm::vec3 Object::GetColor() const noexcept
+{
+    return color;
+}
+
+inline void Object::SetColor(const glm::vec3& color_) noexcept
+{
+    color = color_;
 }
 
 #endif // !GUARD_OBJECTS_H

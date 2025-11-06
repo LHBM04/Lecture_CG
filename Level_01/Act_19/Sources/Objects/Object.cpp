@@ -24,7 +24,7 @@ void Object::Update() noexcept
 
 }
 
-void Object::Render(const Shader& shader_) const noexcept
+void Object::Render(const Shader& shader_, const GLenum renderMode_) const noexcept
 {
     if (mesh == nullptr)
     {
@@ -39,5 +39,7 @@ void Object::Render(const Shader& shader_) const noexcept
     modelMatrix = glm::scale(modelMatrix, scale);
     shader_.SetUniformMatrix4x4("uModel", modelMatrix);
 
-    mesh->Render();
+    shader_.SetUniformVector3("uColor", color);
+
+    mesh->Render(renderMode_);
 }

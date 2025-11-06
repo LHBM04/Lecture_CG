@@ -7,6 +7,7 @@
 #include "Core/Application.h"
 #include "Core/File.h"
 #include "Core/Input.h"
+#include "Core/Time.h"
 
 #include "Objects/Planet.h"
 
@@ -70,6 +71,13 @@ static std::unique_ptr<Camera> camera = nullptr;
  */
 static std::vector<std::unique_ptr<Planet>> planets;
 
+/**
+ * @brief 모든 행성의 공전 궤도 Z축 기울기 속도.
+ */
+static constexpr float ORBIT_TILT_SPEED = 30.0f; // 초당 30도
+
+static GLenum renderMode = GL_TRIANGLES;
+
 int main()
 {
     Application::Specification specification = {};
@@ -104,26 +112,111 @@ static void OnStart() noexcept
     Object* sun = planets.emplace_back(std::make_unique<Planet>(Planet::Properties{nullptr, 0, 0, 0})).get();
     sun->SetPosition(glm::vec3(0.0f, 0.0f, 0.0f));
     sun->SetScale(glm::vec3(2.5f, 2.5f, 2.5f));
+    sun->SetColor(glm::vec3(0.0f, 0.0f, 1.0f));
 
-    Object* earth1 = planets.emplace_back(std::make_unique<Planet>(Planet::Properties{sun, 2.5f, 45.0f, 5.0f})).get();
-    earth1->SetPosition(glm::vec3(-3.0f, -3.0f, 0.0f));
+    Object* earth1 = planets.emplace_back(std::make_unique<Planet>(Planet::Properties{sun, 2.5f, -45.0f, 25.0f})).get();
+    earth1->SetPosition(glm::vec3(-6.0f, 0.0f, 6.0f));
     earth1->SetScale(glm::vec3(1.0f, 1.0f, 1.0f));
+    earth1->SetColor(glm::vec3(0.0f, 1.0f, 0.0f));
 
-    Object* moon1 = planets.emplace_back(std::make_unique<Planet>(Planet::Properties{earth1, 1.5f, 45.0f, 15.0f})).get();
+    Object* moon1 = planets.emplace_back(std::make_unique<Planet>(Planet::Properties{earth1, 1.0f, -45.0f, 50.0f})).get();
     moon1->SetPosition(glm::vec3(3.0f, -3.0f, 0.0f));
     moon1->SetScale(glm::vec3(0.5f, 0.5f, 0.5f));
-
-    Object* earth2 = planets.emplace_back(std::make_unique<Planet>(Planet::Properties{sun, 2.5f, 45.0f, 5.0f})).get();
-    earth2->SetPosition(glm::vec3(-4.0f, 0.0f, 0.0f));
-    earth2->SetScale(glm::vec3(1.0f, 1.0f, 1.0f));
-
-    Object* moon2 = planets.emplace_back(std::make_unique<Planet>(Planet::Properties{moon1, 2.5f, 45.0f, 5.0f})).get();
-    moon2->SetPosition(glm::vec3(-1.5f, 0.0f, 0.0f));
-    moon2->SetScale(glm::vec3(0.5f, 0.5f, 0.5f));
+    moon1->SetColor(glm::vec3(1.0f, 0.0f, 0.0f));
 }
 
 static void OnUpdate() noexcept
 {
+    if (Input::IsKeyPressed('p'))
+    {
+        camera->SetProjection(Camera::ProjectionType::Orthographic);
+    }
+    else if (Input::IsKeyPressed('P'))
+    {
+        camera->SetProjection(Camera::ProjectionType::Perspective);
+    }
+
+    if (Input::IsKeyPressed('m'))
+    {
+        renderMode = GL_TRIANGLES;
+    }
+    else if (Input::IsKeyPressed('M'))
+    {
+        renderMode = GL_LINES;
+    }
+
+    if (Input::IsKeyHeld('w'))
+    {
+        const glm::vec3 forward = glm::normalize(camera->GetUp());
+        camera->SetPosition(camera->GetPosition() - forward * 4.0f * Time::GetDeltaTime());
+    }
+    if (Input::IsKeyHeld('s'))
+    {
+        const glm::vec3 forward = glm::normalize(camera->GetUp());
+        camera->SetPosition(camera->GetPosition() + forward * 4.0f * Time::GetDeltaTime());
+    }
+    if (Input::IsKeyHeld('a'))
+    {
+        const glm::vec3 right = glm::normalize(glm::cross(camera->GetFront(), camera->GetUp()));
+        camera->SetPosition(camera->GetPosition() + right * 4.0f * Time::GetDeltaTime());
+    }
+    if (Input::IsKeyHeld('d'))
+    {
+        const glm::vec3 right = glm::normalize(glm::cross(camera->GetFront(), camera->GetUp()));
+        camera->SetPosition(camera->GetPosition() - right * 4.0f * Time::GetDeltaTime());
+    }
+
+    if (Input::IsKeyHeld('+'))
+    {
+        const glm::vec3 forward = glm::normalize(camera->GetFront());
+        camera->SetPosition(camera->GetPosition() + forward * 4.0f * Time::GetDeltaTime());
+    }
+    if (Input::IsKeyHeld('-'))
+    {
+        const glm::vec3 forward = glm::normalize(camera->GetFront());
+        camera->SetPosition(camera->GetPosition() - forward * 4.0f * Time::GetDeltaTime());
+    }
+
+    if (Input::IsKeyHeld('y'))
+    {
+        for (const std::unique_ptr<Planet>& planet : planets)
+        {
+            planet->SetInfo(Planet::Properties{
+                planet->GetInfo().parent,
+                planet->GetInfo().distance + 1.0f * Time::GetDeltaTime(),
+                planet->GetInfo().angle,
+                planet->GetInfo().speed
+            });
+        }
+    }
+    else if (Input::IsKeyHeld('Y'))
+    {
+        for (const std::unique_ptr<Planet>& planet : planets)
+        {
+            planet->SetInfo(Planet::Properties{
+                planet->GetInfo().parent,
+                planet->GetInfo().distance - 1.0f * Time::GetDeltaTime(),
+                planet->GetInfo().angle,
+                planet->GetInfo().speed
+            });
+        }
+    }
+
+    if (Input::IsKeyHeld('z'))
+    {
+        Planet::s_OrbitTiltZ += ORBIT_TILT_SPEED * Time::GetDeltaTime();
+    }
+    else if (Input::IsKeyHeld('Z'))
+    {
+        Planet::s_OrbitTiltZ -= ORBIT_TILT_SPEED * Time::GetDeltaTime();
+    }
+
+    if (Input::IsKeyPressed('q') ||
+        Input::IsKeyPressed('Q'))
+    {
+        Application::Quit();
+    }
+
     for (const std::unique_ptr<Planet>& planet : planets)
     {
         planet->Update();
@@ -139,6 +232,6 @@ static void OnDisplay() noexcept
 
     for (const std::unique_ptr<Planet>& planet : planets)
     {
-        planet->Render(*shader);
+        planet->Render(*shader, renderMode);
     }
 }
