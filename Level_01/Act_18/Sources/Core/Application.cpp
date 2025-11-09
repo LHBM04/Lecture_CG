@@ -120,9 +120,9 @@ void Application::OnDisplay() noexcept
     glClearColor(0.7f, 0.7f, 0.7f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    if (specification.onDisplay)
+    if (specification.onRender)
     {
-        specification.onDisplay();
+        specification.onRender();
     }
 
     if (specification.onLateUpdate)

@@ -71,7 +71,7 @@ public:
         /**
          * @brief 렌더링될 때 호출됩니다.
          */
-        std::function<void()> onDisplay;
+        std::function<void()> onRender;
     };
 
     /**

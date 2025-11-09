@@ -89,7 +89,7 @@ int main()
     specification.fps                        = FPS;
     specification.onStart                    = OnStart;
     specification.onUpdate                   = OnUpdate;
-    specification.onDisplay                  = OnDisplay;
+    specification.onRender                  = OnDisplay;
 
     return Application::Run(specification);
 }
