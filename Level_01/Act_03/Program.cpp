@@ -35,7 +35,7 @@ struct Rect
 /**
  * @brief 윈도우가 그려질 때 호출됩니다.
  */
-void OnDisplay();
+void OnRender();
 
 /**
  * @brief 키와 상호작용할 때 호출됩니다.

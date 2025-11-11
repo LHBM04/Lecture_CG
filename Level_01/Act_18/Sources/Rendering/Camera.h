@@ -63,12 +63,12 @@ public:
      * @brief 카메라 전방 벡터 반환
      */
     [[nodiscard]]
-    inline constexpr glm::vec3 GetFront() const noexcept;
+    inline constexpr glm::vec3 GetForward() const noexcept;
 
     /**
      * @brief 카메라 전방 벡터 설정
      */
-    inline void SetFront(const glm::vec3& front_) noexcept;
+    inline void SetForward(const glm::vec3& front_) noexcept;
 
     /**
      * @brief 카메라 업 벡터 반환
@@ -117,7 +117,7 @@ private:
     /**
      * @brief 해당 카메라가 바라보는 방향.
      */
-    glm::vec3 front;
+    glm::vec3 forward;
 
     /**
      * @brief 해당 카메라의 윗방향 벡터.
@@ -160,14 +160,14 @@ inline void Camera::SetPosition(const glm::vec3& position_) noexcept
     position = position_;
 }
 
-inline constexpr glm::vec3 Camera::GetFront() const noexcept
+inline constexpr glm::vec3 Camera::GetForward() const noexcept
 {
-    return front;
+    return forward;
 }
 
-inline void Camera::SetFront(const glm::vec3& front_) noexcept
+inline void Camera::SetForward(const glm::vec3& front_) noexcept
 {
-    front = front_;
+    forward = front_;
 }
 
 inline constexpr glm::vec3 Camera::GetUp() const noexcept
@@ -182,7 +182,7 @@ inline void Camera::SetUp(const glm::vec3& up_) noexcept
 
 inline glm::mat4 Camera::GetViewMatrix() const noexcept
 {
-    return glm::lookAt(position, position + front, up);
+    return glm::lookAt(position, position + forward, up);
 }
 
 inline glm::mat4 Camera::GetProjectionMatrix() const noexcept

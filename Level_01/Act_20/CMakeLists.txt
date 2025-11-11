@@ -1,10 +1,14 @@
 add_executable(Level_01_Act_20
-        Sources/Application.cpp
-        Sources/Application.h
-        Sources/Main.cpp
-        Sources/Shader.cpp
-        Sources/Shader.h
- )
+        "Sources/Main.cpp"
+        "Sources/Mesh.cpp"
+        "Sources/Mesh.h"
+        "Sources/Shader.cpp"
+        "Sources/Shader.h"
+        "Sources/Camera.cpp" 
+        "Sources/Camera.h"
+        "Sources/File.cpp"
+        "Sources/File.h"
+ "Sources/Application.cpp")
 
 target_link_libraries(Level_01_Act_20 PRIVATE
         GLEW::GLEW

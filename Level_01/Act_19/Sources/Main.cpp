@@ -24,7 +24,7 @@ static void OnUpdate() noexcept;
 /**
  * @brief 윈도우가 그려질 때 호출됩니다.
  */
-static void OnDisplay() noexcept;
+static void OnRender() noexcept;
 
 /**
  * @brief 애플리케이션 주버전.
@@ -72,10 +72,18 @@ static std::unique_ptr<Camera> camera = nullptr;
 static std::vector<std::unique_ptr<Planet>> planets;
 
 /**
+ * @brief 행성들의 공전 궤도 경로.
+ */
+static std::vector<std::vector<std::unique_ptr<Object>>> pathes;
+
+/**
  * @brief 모든 행성의 공전 궤도 Z축 기울기 속도.
  */
 static constexpr float ORBIT_TILT_SPEED = 30.0f; // 초당 30도
 
+/**
+ * @brief 렌더 모드.
+ */
 static GLenum renderMode = GL_TRIANGLES;
 
 int main()
@@ -89,40 +97,54 @@ int main()
     specification.fps                        = FPS;
     specification.onStart                    = OnStart;
     specification.onUpdate                   = OnUpdate;
-    specification.onRender                  = OnDisplay;
+    specification.onRender                  = OnRender;
 
     return Application::Run(specification);
 }
 
 static void OnStart() noexcept
 {
-    shader = Shader::LoadFrom("");
+    shader = Shader::Create("");
     shader->Use();
 
-    constexpr glm::vec3 position    = {-5.0f, 3.0f, -5.0f};
-    constexpr glm::vec3 front       = {5.0f, -3.0f, 5.0f};
-    constexpr glm::vec3 up          = {0.0f, 1.0f, 0.0f};
-    const     float     aspectRatio = static_cast<float>(Application::GetSpecification().width) /
-                                      static_cast<float>(Application::GetSpecification().height);
+    constexpr glm::vec3 position    = { 0.0f, 0.0f,  10.0f };
+    constexpr glm::vec3 front       = { 0.0f, 0.0f, -1.0f };
+    constexpr glm::vec3 up          = { 0.0f, 1.0f,  0.0f };
+    const     float     aspectRatio = static_cast<float>(Application::GetSpecification().width) / static_cast<float>(Application::GetSpecification().height);
 
     camera = std::make_unique<Camera>(position, front, up);
     camera->SetProjection(Camera::ProjectionType::Perspective);
     camera->SetAspectRatio(aspectRatio);
 
-    Object* sun = planets.emplace_back(std::make_unique<Planet>(Planet::Properties{nullptr, 0, 0, 0})).get();
-    sun->SetPosition(glm::vec3(0.0f, 0.0f, 0.0f));
+    Planet* sun = planets.emplace_back(std::make_unique<Planet>()).get();
     sun->SetScale(glm::vec3(2.5f, 2.5f, 2.5f));
     sun->SetColor(glm::vec3(0.0f, 0.0f, 1.0f));
 
-    Object* earth1 = planets.emplace_back(std::make_unique<Planet>(Planet::Properties{sun, 2.5f, -45.0f, 25.0f})).get();
-    earth1->SetPosition(glm::vec3(-6.0f, 0.0f, 6.0f));
+    Planet* earth1 = planets.emplace_back(std::make_unique<Planet>(sun, 2.5f, 0.0f, 50.0f, 90.0f)).get();
     earth1->SetScale(glm::vec3(1.0f, 1.0f, 1.0f));
     earth1->SetColor(glm::vec3(0.0f, 1.0f, 0.0f));
+    
+	Planet* moon1 = planets.emplace_back(std::make_unique<Planet>(earth1, 1.0f, -45.0f, 100.0f, 90.0f)).get();
+	moon1->SetScale(glm::vec3(0.5f, 0.5f, 0.5f));
+	moon1->SetColor(glm::vec3(1.0f, 0.0f, 0.0f));
 
-    Object* moon1 = planets.emplace_back(std::make_unique<Planet>(Planet::Properties{earth1, 1.0f, -45.0f, 50.0f})).get();
-    moon1->SetPosition(glm::vec3(3.0f, -3.0f, 0.0f));
-    moon1->SetScale(glm::vec3(0.5f, 0.5f, 0.5f));
-    moon1->SetColor(glm::vec3(1.0f, 0.0f, 0.0f));
+    Planet* earth2 = planets.emplace_back(std::make_unique<Planet>(sun, 2.5f, -90.0f, 60.0f, 90 - 45.0f)).get();
+    earth2->SetScale(glm::vec3(1.0f, 1.0f, 1.0f));
+    earth2->SetColor(glm::vec3(0.0f, 1.0f, 0.0f));
+
+    Planet* moon2 = planets.emplace_back(std::make_unique<Planet>(earth2, 1.0f, -45.0f, 100.0f, 180.0f)).get();
+    moon2->SetScale(glm::vec3(0.5f, 0.5f, 0.5f));
+    moon2->SetColor(glm::vec3(1.0f, 0.0f, 0.0f));
+
+    Planet* earth3 = planets.emplace_back(std::make_unique<Planet>(sun, 2.5f, -180.0f, 70.0f, 90 + 45.0f)).get();
+    earth3->SetScale(glm::vec3(1.0f, 1.0f, 1.0f));
+    earth3->SetColor(glm::vec3(0.0f, 1.0f, 0.0f));
+
+    Planet* moon3 = planets.emplace_back(std::make_unique<Planet>(earth3, 1.0f, -45.0f, 100.0f, 270.0f)).get();
+    moon3->SetScale(glm::vec3(0.5f, 0.5f, 0.5f));
+    moon3->SetColor(glm::vec3(1.0f, 0.0f, 0.0f));
+
+    pathes.resize(planets.size());
 }
 
 static void OnUpdate() noexcept
@@ -148,32 +170,32 @@ static void OnUpdate() noexcept
     if (Input::IsKeyHeld('w'))
     {
         const glm::vec3 forward = glm::normalize(camera->GetUp());
-        camera->SetPosition(camera->GetPosition() - forward * 4.0f * Time::GetDeltaTime());
+        camera->SetPosition(camera->GetPosition() + forward * 4.0f * Time::GetDeltaTime());
     }
     if (Input::IsKeyHeld('s'))
     {
         const glm::vec3 forward = glm::normalize(camera->GetUp());
-        camera->SetPosition(camera->GetPosition() + forward * 4.0f * Time::GetDeltaTime());
+        camera->SetPosition(camera->GetPosition() - forward * 4.0f * Time::GetDeltaTime());
     }
     if (Input::IsKeyHeld('a'))
     {
-        const glm::vec3 right = glm::normalize(glm::cross(camera->GetFront(), camera->GetUp()));
+        const glm::vec3 right = glm::normalize(glm::cross(camera->GetForward(), camera->GetUp()));
         camera->SetPosition(camera->GetPosition() + right * 4.0f * Time::GetDeltaTime());
     }
     if (Input::IsKeyHeld('d'))
     {
-        const glm::vec3 right = glm::normalize(glm::cross(camera->GetFront(), camera->GetUp()));
+        const glm::vec3 right = glm::normalize(glm::cross(camera->GetForward(), camera->GetUp()));
         camera->SetPosition(camera->GetPosition() - right * 4.0f * Time::GetDeltaTime());
     }
 
     if (Input::IsKeyHeld('+'))
     {
-        const glm::vec3 forward = glm::normalize(camera->GetFront());
+        const glm::vec3 forward = glm::normalize(camera->GetForward());
         camera->SetPosition(camera->GetPosition() + forward * 4.0f * Time::GetDeltaTime());
     }
     if (Input::IsKeyHeld('-'))
     {
-        const glm::vec3 forward = glm::normalize(camera->GetFront());
+        const glm::vec3 forward = glm::normalize(camera->GetForward());
         camera->SetPosition(camera->GetPosition() - forward * 4.0f * Time::GetDeltaTime());
     }
 
@@ -181,49 +203,62 @@ static void OnUpdate() noexcept
     {
         for (const std::unique_ptr<Planet>& planet : planets)
         {
-            planet->SetInfo(Planet::Properties{
-                planet->GetInfo().parent,
-                planet->GetInfo().distance + 1.0f * Time::GetDeltaTime(),
-                planet->GetInfo().angle,
-                planet->GetInfo().speed
-            });
+			const float distance = planet->GetDistance();
+            planet->SetDistance(distance + 2.5f * Time::GetDeltaTime());
         }
     }
     else if (Input::IsKeyHeld('Y'))
     {
         for (const std::unique_ptr<Planet>& planet : planets)
         {
-            planet->SetInfo(Planet::Properties{
-                planet->GetInfo().parent,
-                planet->GetInfo().distance - 1.0f * Time::GetDeltaTime(),
-                planet->GetInfo().angle,
-                planet->GetInfo().speed
-            });
+            const float distance = planet->GetDistance();
+            planet->SetDistance(distance - 2.5f * Time::GetDeltaTime());
         }
     }
 
     if (Input::IsKeyHeld('z'))
     {
-        Planet::s_OrbitTiltZ += ORBIT_TILT_SPEED * Time::GetDeltaTime();
+        for (const std::unique_ptr<Planet>& planet : planets)
+        {
+            const float tilt = planet->GetTilt();
+            planet->SetTilt(tilt + 12.5f * Time::GetDeltaTime());
+        }
     }
     else if (Input::IsKeyHeld('Z'))
     {
-        Planet::s_OrbitTiltZ -= ORBIT_TILT_SPEED * Time::GetDeltaTime();
+        for (const std::unique_ptr<Planet>& planet : planets)
+        {
+            const float tilt = planet->GetTilt();
+            planet->SetTilt(tilt - 12.5f * Time::GetDeltaTime());
+        }
     }
 
-    if (Input::IsKeyPressed('q') ||
-        Input::IsKeyPressed('Q'))
+    if (Input::IsKeyPressed('`'))
     {
         Application::Quit();
     }
 
-    for (const std::unique_ptr<Planet>& planet : planets)
+	for (std::size_t index = 0; index < planets.size(); ++index)
     {
-        planet->Update();
+        planets[index]->Update();
+
+        Object* pathObj = pathes[index].emplace_back(std::make_unique<Object>()).get();
+		pathObj->SetPosition(planets[index]->GetPosition());
+        pathObj->SetScale(glm::vec3(0.1f, 0.1f, 0.1f));
+        pathObj->SetColor(glm::vec3(0.0f, 0.0f, 0.0f));
+		pathObj->SetMesh(Mesh::LoadFrom("Resources/Models/Sphere.obj"));
+    }
+
+    for (auto& path : pathes)
+    {
+        if (path.size() > 10)
+        {
+			path.erase(path.begin());
+        }
     }
 }
 
-static void OnDisplay() noexcept
+static void OnRender() noexcept
 {
     if (camera != nullptr)
     {
@@ -234,4 +269,12 @@ static void OnDisplay() noexcept
     {
         planet->Render(*shader, renderMode);
     }
+
+    for (const auto& path : pathes)
+    {
+        for (const auto& point : path)
+        {
+            point->Render(*shader, renderMode);
+        }
+	}
 }

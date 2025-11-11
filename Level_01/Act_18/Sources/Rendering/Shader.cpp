@@ -72,7 +72,7 @@ Shader::~Shader() noexcept
     }
 }
 
-Shader* Shader::LoadFrom(const std::filesystem::path& filePath_) noexcept
+Shader* Shader::Create(const std::filesystem::path& filePath_) noexcept
 {
     const std::string vertexShaderFile   = File::ReadFile("Resources/Shaders/Vertex.glsl");
     const char* const vertexShaderSource = vertexShaderFile.c_str();

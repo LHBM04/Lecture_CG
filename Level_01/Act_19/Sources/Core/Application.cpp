@@ -41,7 +41,8 @@ int Application::Run(const Application::Specification& specification_) noexcept
             return -1;
         }
 
-        // glEnable(GL_CULL_FACE);
+        glEnable(GL_CULL_FACE);
+        //glFrontFace(GL_CW);
         // glCullFace(GL_BACK);
 
         glEnable(GL_DEPTH_TEST);
@@ -49,7 +50,7 @@ int Application::Run(const Application::Specification& specification_) noexcept
 
     glutIdleFunc(OnUpdate);
 
-    glutDisplayFunc(OnDisplay);
+    glutDisplayFunc(OnRender);
     glutReshapeFunc(OnReshape);
 
     glutKeyboardFunc(Input::OnKeyPressed);
@@ -115,7 +116,7 @@ void Application::OnUpdate() noexcept
     glutPostRedisplay();
 }
 
-void Application::OnDisplay() noexcept
+void Application::OnRender() noexcept
 {
     glClearColor(0.7f, 0.7f, 0.7f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);

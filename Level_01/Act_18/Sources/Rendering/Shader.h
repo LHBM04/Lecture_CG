@@ -102,7 +102,7 @@ public:
      * @return Shader* 로드된 셰이더 객체.
      */
     [[nodiscard]]
-    static Shader* LoadFrom(const std::filesystem::path& filePath_) noexcept;
+    static Shader* Create(const std::filesystem::path& filePath_) noexcept;
 
 private:
     /**

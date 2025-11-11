@@ -2,95 +2,100 @@
 
 #include <GL/glew.h>
 
-#include <GL/freeglut_std.h>
-#include <GL/freeglut_ext.h>
+#define GLFW_INCLUDE_NONE
+#define GLFW_EXPOSE_NATIVE_WIN32
+#include <GLFW/glfw3.h>
 
 #include <spdlog/spdlog.h>
 
-int Application::Run(const Config& config_) noexcept
+int Application::Run(const Application::Specification& specification_) noexcept
 {
-	config = config_;
+	specification = specification_;
 
-	glutInit(&config.argc, config.argv);
-
-	glutInitContextVersion(4, 6);
-	glutInitContextProfile(GLUT_COMPATIBILITY_PROFILE);
-	glutInitContextFlags(GLUT_DEBUG);
-
-	int flag = GLUT_DOUBLE | GLUT_DEPTH | GLUT_RGBA;
-
-	if 
-
-	if (!config.decorated)
-		flag |= GLUT_BORDERLESS | GLUT_CAPTIONLESS;
-	glutInitDisplayMode(GLUT_DOUBLE | GLUT_DEPTH | GLUT_RGBA | GLUT_CAPTIONLESS);
-	glutInitWindowSize(1280, 720);
-	glutInitWindowPosition(0, 0);
-
-	if (!glutCreateWindow("Level 01 - Act 20"))
+	if (!InitWindow())
 	{
 		spdlog::critical("Failed to initialize Window!");
-		return -1;
+		return false;
 	}
 
-	if (glewInit() != GLEW_OK)
+	if (!InitGraphics())
 	{
-		spdlog::error("Failed to initialize Graphics!");
-		return -1;
+		spdlog::critical("Failed to initialize Graphics!");
+		return false;
 	}
 
-	glEnable(GL_DEPTH_TEST);
+	specification.onStart();
 
-	glutTimerFunc(1000 / config.fps, OnTimer, 0);
-	glutDisplayFunc(OnDisplay);
-	glutCloseFunc(OnClose);
+	while (!glfwWindowShouldClose(window))
+	{
+		glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	OnLoad();
-	glutMainLoop();
+		static float lastTime = static_cast<float>(glfwGetTime());
+		
+		const float curTime   = static_cast<float>(glfwGetTime());
+		const float deltaTime = curTime - lastTime;
+		
+		lastTime = curTime;
+		
+		specification.onUpdate(deltaTime);
+		specification.onRender();
+		
+		glfwPollEvents();
+		glfwSwapBuffers(window);
+	}
 
-	return 0;
+	specification.onClose();
+	return true;
 }
 
 void Application::Quit() noexcept
 {
-	glutLeaveMainLoop();
+	glfwSetWindowShouldClose(window, GLFW_TRUE);
 }
 
-void Application::OnLoad() noexcept
+bool Application::InitWindow() noexcept
 {
-	if (config.onStart)
+	if (glfwInit() != GLFW_TRUE)
 	{
-		config.onStart();
-	}
-}
-
-void Application::OnTimer(int value_) noexcept
-{
-	if (config.onUpdate)
-	{
-		config.onUpdate();
-	}
-	
-	glutPostRedisplay();
-	glutTimerFunc(1000 / config.fps, OnTimer, 0);
-}
-
-void Application::OnDisplay() noexcept
-{
-	if (config.onRender)
-	{
-		config.onRender();
+		return false;
 	}
 
-	glutSwapBuffers();
-}
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, specification.majorVersion);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, specification.minorVersion);
+	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+	glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
-void Application::OnClose() noexcept
-{
-	if (config.onQuit)
+	window = glfwCreateWindow(
+		specification.width, 
+		specification.height,
+		specification.name.c_str(), 
+		nullptr, 
+		nullptr
+	);
+
+	if (window == nullptr)
 	{
-		config.onQuit();
+		glfwTerminate();
+		return false;
 	}
+
+	glfwMakeContextCurrent(window);
+	return true;
 }
 
-Application::Config Application::config = {};
+bool Application::InitGraphics() noexcept
+{
+	if (glewInit() != GLEW_OK)
+	{
+		glfwDestroyWindow(window);
+		glfwTerminate();
+		return false;
+	}
+
+	return true;
+}
+
+GLFWwindow* Application::window = nullptr;
+
+Application::Specification Application::specification = {};

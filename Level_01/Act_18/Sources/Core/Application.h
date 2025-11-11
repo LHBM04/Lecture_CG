@@ -117,7 +117,7 @@ private:
     /**
      * @brief 애플리케이션이 그려질 때 호출됩니다.
      */
-    static void OnDisplay() noexcept;
+    static void OnRender() noexcept;
 
     /**
      * @brief 애플리케이션의 크기가 재설정되었을 때 호출됩니다.

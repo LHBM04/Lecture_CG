@@ -61,7 +61,7 @@ static void Draw(const Rect& rect_,
 /**
  * @brief 윈도우가 그려질 때 호출됩니다.
  */
-void OnDisplay() noexcept;
+void OnRender() noexcept;
 
 /**
  * @brief 특정 시간이 지날 때마다 호출됩니다.
@@ -239,7 +239,7 @@ int main(int    argc_,
                 lastTime = nowTime;
             }
 
-            OnDisplay();
+            OnRender();
         }
         glfwSwapBuffers(window);
     }
@@ -261,7 +261,7 @@ void Draw(const Rect& rect_,
     glEnd();
 }
 
-void OnDisplay() noexcept
+void OnRender() noexcept
 {
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();

@@ -38,7 +38,7 @@ static void OnUpdate() noexcept;
 /**
  * @brief 윈도우가 그려질 때 호출됩니다.
  */
-static void OnDisplay() noexcept;
+static void OnRender() noexcept;
 
 /**
  * @brief 애플리케이션 주버전.
@@ -126,14 +126,14 @@ int main()
     specification.fps                        = FPS;
     specification.onStart                    = OnStart;
     specification.onUpdate                   = OnUpdate;
-    specification.onRender                  = OnDisplay;
+    specification.onRender                  = OnRender;
 
     return Application::Run(specification);
 }
 
 static void OnStart() noexcept
 {
-    shader = Shader::LoadFrom("");
+    shader = Shader::Create("");
     shader->Use();
 
     constexpr glm::vec3 position    = {-5.0f, 3.0f, -5.0f};
@@ -338,7 +338,7 @@ static void OnUpdate() noexcept
     lhs->Update();
 }
 
-static void OnDisplay() noexcept
+static void OnRender() noexcept
 {
     if (camera != nullptr)
     {

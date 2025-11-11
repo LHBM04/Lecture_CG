@@ -1,15 +1,14 @@
 #ifndef GUARD_CAMERA_H
 #define GUARD_CAMERA_H
 
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
+#include <glm/vec3.hpp>
+#include <glm/ext.hpp>
 
+#include "Application.h"
 #include "Shader.h"
 
 /**
- * @interface Camera
- *
- * @brief ì¹´ë©”ë¼ë¥¼ ì •ì˜í•©ë‹ˆë‹¤.
+ * @brief Scene ³» Ä«¸Ş¶ó¸¦ Á¤ÀÇÇÕ´Ï´Ù.
  */
 class Camera final
 {
@@ -17,125 +16,138 @@ public:
     /**
      * @enum ProjectionType
      *
-     * @brief ì¹´ë©”ë¼ì˜ íˆ¬ì˜ ë°©ì‹ì„ ì •ì˜í•©ë‹ˆë‹¤.
+     * @brief Ä«¸Ş¶óÀÇ Åõ¿µ ¹æ½ÄÀ» Á¤ÀÇÇÕ´Ï´Ù.
      */
     enum class ProjectionType
     {
         /**
-         * @brief ì§êµ íˆ¬ì˜ ë°©ì‹.
+         * @brief Á÷±³ Åõ¿µ ¹æ½Ä.
          */
         Orthographic,
 
         /**
-         * @brief ì›ê·¼ íˆ¬ì˜ ë°©ì‹.
+         * @brief ¿ø±Ù Åõ¿µ ¹æ½Ä.
          */
         Perspective
     };
 
     /**
-     * @brief ìƒì„±ì.
+     * @brief »ı¼ºÀÚ.
      *
-     * @param position_ ìƒì„±í•  ì¹´ë©”ë¼ì˜ ìœ„ì¹˜
-     * @param forward_  ìƒì„±í•  ì¹´ë©”ë¼ê°€ ë°”ë¼ë³´ëŠ” ë°©í–¥
-     * @param up_       ìƒì„±í•  ì¹´ë©”ë¼ì˜ ìœ—ë°©í–¥ ë²¡í„°
+	 * @param projectionType_ »ı¼ºÇÒ Ä«¸Ş¶óÀÇ Åõ¿µ ¹æ½Ä
+     * @param position_       »ı¼ºÇÒ Ä«¸Ş¶óÀÇ À§Ä¡
+     * @param front_          »ı¼ºÇÒ Ä«¸Ş¶ó°¡ ¹Ù¶óº¸´Â ¹æÇâ
+     * @param up_             »ı¼ºÇÒ Ä«¸Ş¶óÀÇ À­¹æÇâ º¤ÅÍ
      */
-    explicit Camera(const glm::vec3& position_,
-                    const glm::vec3& front_,
-                    const glm::vec3& up_) noexcept;
+    explicit Camera(
+        const Camera::ProjectionType projectionType_,
+        const glm::vec3&             position_,
+        const glm::vec3&             front_,
+        const glm::vec3&             up_
+    ) noexcept;
 
     /**
-     * @brief ë Œë”ë§ ì „ì— í˜¸ì¶œë©ë‹ˆë‹¤.
-     */
-    void PreRender(const Shader& shader_) const noexcept;
-
-    /**
-     * @brief ì¹´ë©”ë¼ ìœ„ì¹˜ ë°˜í™˜
+     * @brief ÇØ´ç Ä«¸Ş¶óÀÇ À§Ä¡¸¦ °¡Á®¿É´Ï´Ù.
+     * 
+     * @return glm::vec3 ÇØ´ç Ä«¸Ş¶óÀÇ À§Ä¡
      */
     [[nodiscard]]
     inline constexpr glm::vec3 GetPosition() const noexcept;
 
     /**
-     * @brief ì¹´ë©”ë¼ ìœ„ì¹˜ ì„¤ì •
+     * @brief ÇØ´ç Ä«¸Ş¶óÀÇ À§Ä¡¸¦ ÁöÁ¤ÇÑ À§Ä¡·Î ¼³Á¤ÇÕ´Ï´Ù.
+     * 
+     * @param position_ ÁöÁ¤ÇÒ À§Ä¡
      */
     inline void SetPosition(const glm::vec3& position_) noexcept;
 
     /**
-     * @brief ì¹´ë©”ë¼ ì „ë°© ë²¡í„° ë°˜í™˜
+     * @brief ÇØ´ç Ä«¸Ş¶óÀÇ ¾Õ¹æÇâ º¤ÅÍ¸¦ ¹İÈ¯ÇÕ´Ï´Ù.
+     * 
+	 * @return glm::vec3 ÇØ´ç Ä«¸Ş¶óÀÇ ¾Õ¹æÇâ º¤ÅÍ
      */
     [[nodiscard]]
     inline constexpr glm::vec3 GetForward() const noexcept;
 
     /**
-     * @brief ì¹´ë©”ë¼ ì „ë°© ë²¡í„° ì„¤ì •
+     * @brief ÇØ´ç Ä«¸Ş¶óÀÇ ¾Õ¹æÇâ º¤ÅÍ¸¦ ÁöÁ¤ÇÑ º¤ÅÍ·Î ¼³Á¤ÇÕ´Ï´Ù.
+     * 
+     * @param position_ ÁöÁ¤ÇÒ ¾Õ¹æÇâ º¤ÅÍ
      */
-    inline void SetForward(const glm::vec3& forward_) noexcept;
+    inline void SetForward(const glm::vec3& position_) noexcept;
 
     /**
-     * @brief ì¹´ë©”ë¼ ì—… ë²¡í„° ë°˜í™˜
+     * @brief ÇØ´ç Ä«¸Ş¶óÀÇ À­¹æÇâ º¤ÅÍ¸¦ ¹İÈ¯ÇÕ´Ï´Ù.
+     * 
+     * @return glm::vec3 ÇØ´ç Ä«¸Ş¶óÀÇ À­¹æÇâ º¤ÅÍ
      */
     [[nodiscard]]
-    inline constexpr glm::vec3 GetUp() const noexcept;
+	inline constexpr glm::vec3 GetUp() const noexcept;
+
+	/**
+	 * @brief ÇØ´ç Ä«¸Ş¶óÀÇ À­¹æÇâ º¤ÅÍ¸¦ ÁöÁ¤ÇÑ º¤ÅÍ·Î ¼³Á¤ÇÕ´Ï´Ù.
+     * 
+	 * @param up_ ÁöÁ¤ÇÒ º¤ÅÍ.
+	 */
+	inline void SetUp(const glm::vec3& up_) noexcept;
 
     /**
-     * @brief ì¹´ë©”ë¼ ì—… ë²¡í„° ì„¤ì •
-     */
-    inline void SetUp(const glm::vec3& up_) noexcept;
-
-    /**
-     * @brief View í–‰ë ¬ ë°˜í™˜
+     * @brief View Çà·Ä ¹İÈ¯
      */
     [[nodiscard]]
     inline glm::mat4 GetViewMatrix() const noexcept;
 
     /**
-     * @brief Projection í–‰ë ¬ ë°˜í™˜ (ì „ëµ ê°ì²´ì— ìœ„ì„)
+     * @brief Projection Çà·Ä ¹İÈ¯ (Àü·« °´Ã¼¿¡ À§ÀÓ)
      */
     [[nodiscard]]
     inline glm::mat4 GetProjectionMatrix() const noexcept;
 
     /**
-     * @brief ì¢…íš¡ë¹„ ì—…ë°ì´íŠ¸ (ì „ëµ ê°ì²´ì— ìœ„ì„)
+     * @brief Á¾È¾ºñ ¾÷µ¥ÀÌÆ® (Àü·« °´Ã¼¿¡ À§ÀÓ)
      */
     inline void SetAspectRatio(const float aspectRatio_) noexcept;
 
     /**
-     * @brief íˆ¬ì˜ ë°©ì‹ì„ ëŸ°íƒ€ì„ì— êµì²´í•©ë‹ˆë‹¤.
+     * @brief Åõ¿µ ¹æ½ÄÀ» ·±Å¸ÀÓ¿¡ ±³Ã¼ÇÕ´Ï´Ù.
      */
     inline void SetProjection(Camera::ProjectionType projection_) noexcept;
 
+	/**
+	 * @brief 
+     * 
+	 * @param shader_ 
+	 */
+	void PreRender(const Shader& shader_) const noexcept;
+
 private:
     /**
-     * @brief í•´ë‹¹ ì¹´ë©”ë¼ì˜ íˆ¬ì˜ ë°©ì‹.
+     * @brief ÇØ´ç Ä«¸Ş¶óÀÇ Åõ¿µ ¹æ½Ä.
      */
     Camera::ProjectionType projectionType;
 
-    /**
-     * @brief í•´ë‹¹ ì¹´ë©”ë¼ì˜ ìœ„ì¹˜.
-     */
-    glm::vec3 position;
+	/**
+	 * @brief ÇØ´ç Ä«¸Ş¶óÀÇ À§Ä¡.
+	 */
+	glm::vec3 position;
+
+	/**
+	 * @brief ÇØ´ç Ä«¸Ş¶óÀÇ ¾Õ¹æÇâ º¤ÅÍ.
+	 */
+	glm::vec3 forward;
+
+	/**
+	 * @brief ÇØ´ç Ä«¸Ş¶óÀÇ À­¹æÇâ º¤ÅÍ.
+	 */
+	glm::vec3 up;
 
     /**
-     * @brief í•´ë‹¹ ì¹´ë©”ë¼ê°€ ë°”ë¼ë³´ëŠ” ë°©í–¥.
-     */
-    glm::vec3 forward;
-
-    /**
-     * @brief í•´ë‹¹ ì¹´ë©”ë¼ì˜ ìœ—ë°©í–¥ ë²¡í„°.
-     */
-    glm::vec3 up;
-
-    /**
-     * @brief ì‹œì•¼ê°.
+     * @brief ½Ã¾ß°¢.
      */
     float fov = 45.0f;
 
     /**
-     * @brief ì¢…íš¡ë¹„.
-     */
-    float aspectRatio = 0.0f;
-
-    /**
-     * @brief
+     * @brief 
      */
     float nearPlane = 0.1f;
 
@@ -150,7 +162,7 @@ private:
     float orthoSize = 10.0f;
 };
 
-constexpr glm::vec3 Camera::GetPosition() const noexcept
+inline constexpr glm::vec3 Camera::GetPosition() const noexcept
 {
     return position;
 }
@@ -182,11 +194,15 @@ inline void Camera::SetUp(const glm::vec3& up_) noexcept
 
 inline glm::mat4 Camera::GetViewMatrix() const noexcept
 {
-    return glm::lookAt(position, forward + position, up);
+    return glm::lookAt(position, position + forward, up);
 }
 
 inline glm::mat4 Camera::GetProjectionMatrix() const noexcept
 {
+    const float height      = static_cast<float>(Application::GetSpecification().height);
+    const float width       = static_cast<float>(Application::GetSpecification().width);
+    const float aspectRatio = height / width;
+
     switch (projectionType)
     {
         case ProjectionType::Orthographic:
@@ -202,14 +218,9 @@ inline glm::mat4 Camera::GetProjectionMatrix() const noexcept
         }
         default:
         {
-            return {1.0f};
+            return { 1.0f };
         }
     }
-}
-
-inline void Camera::SetAspectRatio(const float aspectRatio_) noexcept
-{
-    aspectRatio = aspectRatio_;
 }
 
 inline void Camera::SetProjection(Camera::ProjectionType projection_) noexcept

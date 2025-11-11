@@ -71,14 +71,3 @@ Shader::~Shader() noexcept
         glDeleteProgram(programID);
     }
 }
-
-Shader* Shader::LoadFrom(const std::filesystem::path& filePath_) noexcept
-{
-    const std::string vertexShaderFile   = File::ReadFile("Resources/Shaders/Vertex.glsl");
-    const char* const vertexShaderSource = vertexShaderFile.c_str();
-
-    const std::string fragmentShaderFile   = File::ReadFile("Resources/Shaders/Fragment.glsl");
-    const char* const fragmentShaderSource = fragmentShaderFile.c_str();
-
-    return new Shader(vertexShaderSource, fragmentShaderSource);
-}
