@@ -69,11 +69,6 @@ static std::unique_ptr<Camera> camera;
 static std::unique_ptr<Shader> shader;
 
 /**
- * @brief 바닥.
- */
-static std::unique_ptr<Object> plane;
-
-/**
  * @brief 애플리케이션 내에서 사용할 탱크.
  */
 static std::unique_ptr<Tank> tank;
@@ -114,10 +109,6 @@ void OnStart() noexcept
 	camera = std::make_unique<Camera>(projectionType, position, front, up);
 
 	tank = std::make_unique<Tank>();
-
-	plane = std::make_unique<Object>();
-	plane->SetMesh(Mesh::LoadFrom("Resources/Models/Plane.obj"));
-	plane->SetScale(glm::vec3(100.0f, 1.0f, 100.0f));
 }
 
 static bool isAnimA = false;
@@ -232,12 +223,10 @@ void OnRender() noexcept
 {
 	camera->PreRender(*(shader));
 	tank->Render(*(shader));
-	plane->Render(*(shader));
 }
 
 void OnClose() noexcept
 {
 	camera.reset();
 	shader.reset();
-	plane.reset();
 }

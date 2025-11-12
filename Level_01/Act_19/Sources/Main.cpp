@@ -1,4 +1,6 @@
-﻿#include <spdlog/spdlog.h>
+﻿#include <memory>
+
+#include <spdlog/spdlog.h>
 
 #include "Rendering/Camera.h"
 #include "Rendering/Mesh.h"
@@ -59,7 +61,7 @@ static constexpr int FPS = 60;
 /**
  * @brief 해당 애플리케이션에서 사용할 셰이더.
  */
-static Shader* shader = nullptr;
+static std::unique_ptr<Shader> shader = nullptr;
 
 /**
  * @brief 해당 애플리케이션에서 사용할 카메라.
@@ -104,7 +106,13 @@ int main()
 
 static void OnStart() noexcept
 {
-    shader = Shader::Create("");
+    const std::string vertexShaderFile = File::ReadFile("Resources/Shaders/Vertex.glsl");
+    const char* const vertexShaderSource = vertexShaderFile.c_str();
+
+    const std::string fragmentShaderFile = File::ReadFile("Resources/Shaders/Fragment.glsl");
+    const char* const fragmentShaderSource = fragmentShaderFile.c_str();
+
+    shader = std::make_unique<Shader>(vertexShaderSource, fragmentShaderSource);
     shader->Use();
 
     constexpr glm::vec3 position    = { 0.0f, 0.0f,  10.0f };
@@ -242,11 +250,11 @@ static void OnUpdate() noexcept
     {
         planets[index]->Update();
 
-        Object* pathObj = pathes[index].emplace_back(std::make_unique<Object>()).get();
-		pathObj->SetPosition(planets[index]->GetPosition());
-        pathObj->SetScale(glm::vec3(0.1f, 0.1f, 0.1f));
-        pathObj->SetColor(glm::vec3(0.0f, 0.0f, 0.0f));
-		pathObj->SetMesh(Mesh::LoadFrom("Resources/Models/Sphere.obj"));
+        //Object* pathObj = pathes[index].emplace_back(std::make_unique<Object>()).get();
+		//pathObj->SetPosition(planets[index]->GetPosition());
+        //pathObj->SetScale(glm::vec3(0.1f, 0.1f, 0.1f));
+        //pathObj->SetColor(glm::vec3(0.0f, 0.0f, 0.0f));
+		//pathObj->SetMesh(Mesh::LoadFrom("Resources/Models/Sphere.obj"));
     }
 
     for (auto& path : pathes)
