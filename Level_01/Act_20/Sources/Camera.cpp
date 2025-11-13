@@ -6,7 +6,7 @@ Camera::Camera(
     const glm::vec3&             forward_,
     const glm::vec3&             up_
 ) noexcept
-    : projectionType(projectionType_)
+    : projection(projectionType_)
     , position(position_)
     , forward(forward_)
     , up(up_)

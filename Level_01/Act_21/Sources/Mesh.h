@@ -47,10 +47,8 @@ public:
 
     /**
      * @brief 해당 메쉬를 렌더링합니다.
-     *
-     * @param renderMode_ 렌더링 모드. 기본값은 GL_TRIANGLES입니다.
      */
-    void Render(GLenum renderMode_ = GL_TRIANGLES) const noexcept;
+    void Render() const noexcept;
 
     /**
      * @brief 파일에서 메쉬를 로드합니다.

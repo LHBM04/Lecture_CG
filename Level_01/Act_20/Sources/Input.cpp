@@ -16,24 +16,24 @@ void Input::Init(GLFWwindow* window) noexcept
     memset(mouseButtonStates, 0, sizeof(mouseButtonStates));
 
     // GLFW 콜백 설정
-    glfwSetKeyCallback(window, KeyCallback);
-    glfwSetMouseButtonCallback(window, MouseButtonCallback);
-    glfwSetCursorPosCallback(window, CursorPosCallback);
+    glfwSetKeyCallback(window, OnKeyInteract);
+    glfwSetMouseButtonCallback(window, OnMouseButtonInteract);
+    glfwSetCursorPosCallback(window, OnCursorMove);
 }
 
 void Input::Update() noexcept
 {
-    // 'Pressed' 상태를 'Held'로 변경
-    // 'Released' 상태를 'None'으로 변경
+    // 'Press' 상태를 'Held'로 변경
+    // 'Release' 상태를 'None'으로 변경
     // -> 'Down'과 'Up' 이벤트가 정확히 한 프레임 동안만 true가 되도록 보장
 
     for (int i = 0; i < 512; ++i)
     {
-        if (keyStates[i] == KeyState::Pressed)
+        if (keyStates[i] == KeyState::Press)
         {
-            keyStates[i] = KeyState::Held;
+            keyStates[i] = KeyState::Hold;
         }
-        else if (keyStates[i] == KeyState::Released)
+        else if (keyStates[i] == KeyState::Release)
         {
             keyStates[i] = KeyState::None;
         }
@@ -41,11 +41,11 @@ void Input::Update() noexcept
 
     for (int i = 0; i < 16; ++i)
     {
-        if (mouseButtonStates[i] == KeyState::Pressed)
+        if (mouseButtonStates[i] == KeyState::Press)
         {
-            mouseButtonStates[i] = KeyState::Held;
+            mouseButtonStates[i] = KeyState::Hold;
         }
-        else if (mouseButtonStates[i] == KeyState::Released)
+        else if (mouseButtonStates[i] == KeyState::Release)
         {
             mouseButtonStates[i] = KeyState::None;
         }
@@ -54,40 +54,40 @@ void Input::Update() noexcept
 
 //--- Public Getters ---//
 
-bool Input::IsKeyDown(int key) noexcept
+bool Input::IsKeyPressed(int key) noexcept
 {
     if (key < 0 || key >= 512) return false;
-    return keyStates[key] == KeyState::Pressed;
+    return keyStates[key] == KeyState::Press;
 }
 
-bool Input::IsKeyUp(int key) noexcept
+bool Input::IsKeyReleased(int key) noexcept
 {
     if (key < 0 || key >= 512) return false;
-    return keyStates[key] == KeyState::Released;
+    return keyStates[key] == KeyState::Release;
 }
 
-bool Input::IsKey(int key) noexcept
+bool Input::IsKeyHeld(int key) noexcept
 {
     if (key < 0 || key >= 512) return false;
-    return keyStates[key] == KeyState::Pressed || keyStates[key] == KeyState::Held;
+    return keyStates[key] == KeyState::Press || keyStates[key] == KeyState::Hold;
 }
 
 bool Input::IsMouseButtonDown(int button) noexcept
 {
     if (button < 0 || button >= 16) return false;
-    return mouseButtonStates[button] == KeyState::Pressed;
+    return mouseButtonStates[button] == KeyState::Press;
 }
 
 bool Input::IsMouseButtonUp(int button) noexcept
 {
     if (button < 0 || button >= 16) return false;
-    return mouseButtonStates[button] == KeyState::Released;
+    return mouseButtonStates[button] == KeyState::Release;
 }
 
 bool Input::IsMouseButton(int button) noexcept
 {
     if (button < 0 || button >= 16) return false;
-    return mouseButtonStates[button] == KeyState::Pressed || mouseButtonStates[button] == KeyState::Held;
+    return mouseButtonStates[button] == KeyState::Press || mouseButtonStates[button] == KeyState::Hold;
 }
 
 glm::vec2 Input::GetMousePosition() noexcept
@@ -97,7 +97,7 @@ glm::vec2 Input::GetMousePosition() noexcept
 
 //--- GLFW Callbacks ---//
 
-void Input::KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods) noexcept
+void Input::OnKeyInteract(GLFWwindow* window, int key, int scancode, int action, int mods) noexcept
 {
     currentMods = mods;
 
@@ -105,15 +105,15 @@ void Input::KeyCallback(GLFWwindow* window, int key, int scancode, int action, i
 
     if (action == GLFW_PRESS)
     {
-        keyStates[key] = KeyState::Pressed;
+        keyStates[key] = KeyState::Press;
     }
     else if (action == GLFW_RELEASE)
     {
-        keyStates[key] = KeyState::Released;
+        keyStates[key] = KeyState::Release;
     }
 }
 
-void Input::MouseButtonCallback(GLFWwindow* window, int button, int action, int mods) noexcept
+void Input::OnMouseButtonInteract(GLFWwindow* window, int button, int action, int mods) noexcept
 {
     currentMods = mods;
 
@@ -121,15 +121,15 @@ void Input::MouseButtonCallback(GLFWwindow* window, int button, int action, int 
 
     if (action == GLFW_PRESS)
     {
-        mouseButtonStates[button] = KeyState::Pressed;
+        mouseButtonStates[button] = KeyState::Press;
     }
     else if (action == GLFW_RELEASE)
     {
-        mouseButtonStates[button] = KeyState::Released;
+        mouseButtonStates[button] = KeyState::Release;
     }
 }
 
-void Input::CursorPosCallback(GLFWwindow* window, double xpos, double ypos) noexcept
+void Input::OnCursorMove(GLFWwindow* window, double xpos, double ypos) noexcept
 {
     mousePosition.x = static_cast<float>(xpos);
     mousePosition.y = static_cast<float>(ypos);

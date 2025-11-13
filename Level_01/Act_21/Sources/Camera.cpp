@@ -1,12 +1,12 @@
 #include "Camera.h"
 
 Camera::Camera(
-	const Camera::ProjectionType projectionType_,
-    const glm::vec3&             position_,
-    const glm::vec3&             forward_,
-    const glm::vec3&             up_
+	const Camera::Projection projection_,
+    const glm::vec3&         position_,
+    const glm::vec3&         forward_,
+    const glm::vec3&         up_
 ) noexcept
-    : projectionType(projectionType_)
+    : projection(projection_)
     , position(position_)
     , forward(forward_)
     , up(up_)

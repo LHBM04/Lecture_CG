@@ -128,29 +128,29 @@ void OnUpdate(float deltaTime_) noexcept
 {
 	static bool trigger = false;
 
-	if (Input::IsKey(GLFW_KEY_Z))
+	if (Input::IsKeyHeld(GLFW_KEY_Z))
 	{
 		const auto position = camera->GetPosition();
 		const auto forward  = glm::normalize(camera->GetForward());
 	}
 
-	if (Input::IsKeyDown(GLFW_KEY_Q))
+	if (Input::IsKeyPressed(GLFW_KEY_Q))
 	{
 		Application::Quit();
 	}
 
-	if (Input::IsKeyDown(GLFW_KEY_O))
+	if (Input::IsKeyPressed(GLFW_KEY_O))
 	{
 		trigger = !trigger;
 	}
 
-	if (Input::IsKeyDown(GLFW_KEY_C))
+	if (Input::IsKeyPressed(GLFW_KEY_C))
 	{
 		tank.reset();
 		tank = std::make_unique<Tank>();
 	}
 
-	if (Input::IsKeyDown(GLFW_KEY_Z))
+	if (Input::IsKeyPressed(GLFW_KEY_Z))
 	{
 		if (Input::IsModPressed(GLFW_MOD_SHIFT))
 		{
@@ -164,7 +164,7 @@ void OnUpdate(float deltaTime_) noexcept
 		}
 	}
 
-	if (Input::IsKeyDown(GLFW_KEY_X))
+	if (Input::IsKeyPressed(GLFW_KEY_X))
 	{
 		if (Input::IsModPressed(GLFW_MOD_SHIFT))
 		{
@@ -178,7 +178,7 @@ void OnUpdate(float deltaTime_) noexcept
 		}
 	}
 
-	if (Input::IsKeyDown(GLFW_KEY_Y))
+	if (Input::IsKeyPressed(GLFW_KEY_Y))
 	{
 		auto rotationInput = Input::IsModPressed(GLFW_MOD_SHIFT) ? -1 : 1;
 
@@ -193,12 +193,12 @@ void OnUpdate(float deltaTime_) noexcept
 		camera->SetForward(glm::normalize(newForward));
 	}
 
-	if (Input::IsKeyDown(GLFW_KEY_A))
+	if (Input::IsKeyPressed(GLFW_KEY_A))
 	{
 		isAnimA = !isAnimA;
 	}
 
-	if (Input::IsKeyDown(GLFW_KEY_R) || isAnimA)
+	if (Input::IsKeyPressed(GLFW_KEY_R) || isAnimA)
 	{
 		const float orbitSpeed = 45.0f; 
 		const float orbitRadius = 20.0f;

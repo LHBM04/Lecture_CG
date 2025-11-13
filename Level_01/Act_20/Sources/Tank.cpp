@@ -117,20 +117,20 @@ Tank::~Tank() noexcept
 
 void Tank::Update(const float deltaTime_) noexcept
 {
-	const float horizontal = Input::IsKeyDown(GLFW_KEY_LEFT) ?  1.0f :
-							 Input::IsKeyDown(GLFW_KEY_RIGHT) ? -1.0f : 0.0f;
-	const float vertical   = Input::IsKeyDown(GLFW_KEY_UP) ?  1.0f :
-						     Input::IsKeyDown(GLFW_KEY_DOWN) ? -1.0f : 0.0f;
+	const float horizontal = Input::IsKeyPressed(GLFW_KEY_LEFT) ?  1.0f :
+							 Input::IsKeyPressed(GLFW_KEY_RIGHT) ? -1.0f : 0.0f;
+	const float vertical   = Input::IsKeyPressed(GLFW_KEY_UP) ?  1.0f :
+						     Input::IsKeyPressed(GLFW_KEY_DOWN) ? -1.0f : 0.0f;
 
 	const glm::vec3 position = GetPosition();
 	SetPosition(position + glm::vec3(horizontal, 0.0f, vertical) * MOVE_SPEED * deltaTime_);
 
-	if (Input::IsKeyDown(GLFW_KEY_T))
+	if (Input::IsKeyPressed(GLFW_KEY_T))
 	{
 		isAnimT = !isAnimT;
 	}
 
-	if (Input::IsKeyDown(GLFW_KEY_L) && !isAnimL)
+	if (Input::IsKeyPressed(GLFW_KEY_L) && !isAnimL)
 	{
 		isAnimL = true;
 
@@ -138,12 +138,12 @@ void Tank::Update(const float deltaTime_) noexcept
 		rightTargetPos = left->GetPosition();
 	}
 
-	if (Input::IsKeyDown(GLFW_KEY_G))
+	if (Input::IsKeyPressed(GLFW_KEY_G))
 	{
 		isAnimG = true;
 	}
 
-	if (Input::IsKeyDown(GLFW_KEY_P))
+	if (Input::IsKeyPressed(GLFW_KEY_P))
 	{
 		isAnimP = true;
 	}

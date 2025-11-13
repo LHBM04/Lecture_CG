@@ -27,18 +27,6 @@ public:
 
 	/* 박스를 업데이트. */
 	virtual void Update(const float deltaTime_) noexcept override;
-
-	/* 박스를 렌더링. */
-	virtual void Render(
-		const Shader& shader_,
-		const GLenum  renderMode_ = GL_TRIANGLES
-	) const noexcept override;
-
-private:
-	/**
-	 * @brief 상자 내부의 구슬들.
-	 */
-	std::array<std::unique_ptr<Object>, 6> marbles;
 };
 
 #endif // !GUARD_BOX_H

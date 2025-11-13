@@ -62,7 +62,7 @@ Mesh::~Mesh()
     }
 }
 
-void Mesh::Render(const GLenum renderMode_) const noexcept
+void Mesh::Render() const noexcept
 {
     if (!isInitialized)
     {
@@ -70,7 +70,7 @@ void Mesh::Render(const GLenum renderMode_) const noexcept
     }
 
     glBindVertexArray(vao);
-    glDrawElements(renderMode_, static_cast<GLsizei>(indices.size()), GL_UNSIGNED_INT, nullptr);
+    glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(indices.size()), GL_UNSIGNED_INT, nullptr);
 
     glBindVertexArray(0);
 }

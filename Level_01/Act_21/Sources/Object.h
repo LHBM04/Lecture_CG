@@ -67,10 +67,9 @@ public:
     /**
      * @brief 해당 오브젝트를 렌더링합니다.
      *
-     * @param shader_     사용할 셰이더
-     * @param renderMode_ 렌더링 모드
+     * @param shader_ 사용할 셰이더
      */
-    virtual void Render(const Shader& shader_, const GLenum renderMode_) const noexcept;
+    virtual void Render(const Shader& shader_) const noexcept;
 
     /**
      * @brief 해당 오브젝트의 매쉬를 반환합니다.

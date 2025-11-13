@@ -21,7 +21,7 @@ public:
 
     /**
      * @brief 매 프레임 호출되어야 하는 업데이트 함수.
-     * (Pressed -> Held, Released -> None 상태 변경)
+     * (Press -> Hold, Release -> None 상태 변경)
      */
     static void Update() noexcept;
 
@@ -29,19 +29,19 @@ public:
      * @brief 키가 '눌린 순간'인지 확인합니다. (해당 프레임만 true)
      */
     [[nodiscard]]
-    static bool IsKeyDown(int key) noexcept;
+    static bool IsKeyPressed(int key) noexcept;
 
     /**
      * @brief 키가 '떼어진 순간'인지 확인합니다. (해당 프레임만 true)
      */
     [[nodiscard]]
-    static bool IsKeyUp(int key) noexcept;
+    static bool IsKeyReleased(int key) noexcept;
 
     /**
      * @brief 키를 '누르고 있는 중'인지 확인합니다. (눌린 순간 + 누르고 있는 중)
      */
     [[nodiscard]]
-    static bool IsKey(int key) noexcept;
+    static bool IsKeyHeld(int key) noexcept;
 
     /**
      * @brief 마우스 버튼이 '눌린 순간'인지 확인합니다.
@@ -81,15 +81,15 @@ private:
     enum class KeyState : unsigned char
     {
         None,     // 아무것도 안 함
-        Pressed,  // '눌린 순간' (이번 프레임)
-        Held,     // '누르고 있는 중' (이전부터)
-        Released  // '뗀 순간' (이번 프레임)
+        Press,  // '눌린 순간' (이번 프레임)
+        Hold,     // '누르고 있는 중' (이전부터)
+        Release  // '뗀 순간' (이번 프레임)
     };
 
     // GLFW 콜백 함수
-    static void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods) noexcept;
-    static void MouseButtonCallback(GLFWwindow* window, int button, int action, int mods) noexcept;
-    static void CursorPosCallback(GLFWwindow* window, double xpos, double ypos) noexcept;
+    static void OnKeyInteract(GLFWwindow* window, int key, int scancode, int action, int mods) noexcept;
+    static void OnMouseButtonInteract(GLFWwindow* window, int button, int action, int mods) noexcept;
+    static void OnCursorMove(GLFWwindow* window, double xpos, double ypos) noexcept;
 
     // 상태 저장 배열
     static KeyState keyStates[512]; // GLFW_KEY_LAST가 보통 348이지만 여유있게

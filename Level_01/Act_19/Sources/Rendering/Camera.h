@@ -107,7 +107,7 @@ private:
     /**
      * @brief 해당 카메라의 투영 방식.
      */
-    Camera::ProjectionType projectionType;
+    Camera::ProjectionType projection;
 
     /**
      * @brief 해당 카메라의 위치.
@@ -187,7 +187,7 @@ inline glm::mat4 Camera::GetViewMatrix() const noexcept
 
 inline glm::mat4 Camera::GetProjectionMatrix() const noexcept
 {
-    switch (projectionType)
+    switch (projection)
     {
         case ProjectionType::Orthographic:
         {
@@ -214,7 +214,7 @@ inline void Camera::SetAspectRatio(const float aspectRatio_) noexcept
 
 inline void Camera::SetProjection(Camera::ProjectionType projection_) noexcept
 {
-    projectionType = projection_;
+    projection = projection_;
 }
 
 #endif // !GUARD_CAMERA_H
