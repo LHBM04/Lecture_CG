@@ -61,7 +61,9 @@ static constexpr int APPLICATION_HEIGHT = 720;
 /**
  * @brief 애플리케이션 내에서 사용할 카메라.
  */
-static std::unique_ptr<Camera> camera;
+static std::unique_ptr<Camera> mainCamera;
+static std::unique_ptr<Camera> topViewCamera;
+static std::unique_ptr<Camera> sideViewCamera;
 
 /**
  * @brief 애플리케이션 내에서 사용할 셰이더.
@@ -105,13 +107,26 @@ void OnStart() noexcept
 	shader = std::make_unique<Shader>(vertexShaderSource, fragmentShaderSource);
 	shader->Use();
 	
-	constexpr Camera::Projection projectionType = Camera::Projection::Perspective;
-	const glm::vec3 target   = glm::vec3(0.0f, 0.0f, 0.0f);
+	// 1. 메인 카메라 (기존 카메라 설정)
+	constexpr Camera::Projection mainProjection = Camera::Projection::Perspective;
+	const glm::vec3 target = glm::vec3(0.0f, 0.0f, 0.0f);
 	const glm::vec3 position = glm::vec3(0.0f, 10.0f, 20.0f);
-	const glm::vec3 front    = glm::normalize(target - position);
-	const glm::vec3 up       = glm::vec3(0.0f, 1.0f, 0.0f);
+	const glm::vec3 front = glm::normalize(target - position);
+	const glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f);
+	mainCamera = std::make_unique<Camera>(mainProjection, position, front, up);
 
-	camera = std::make_unique<Camera>(projectionType, position, front, up);
+	// 2. Top 뷰 카메라 (직교 투영)
+	constexpr Camera::Projection orthoProjection = Camera::Projection::Orthographic;
+	const glm::vec3 topPos = glm::vec3(0.0f, 50.0f, 0.0f); // 위에서 아래로
+	const glm::vec3 topFront = glm::vec3(0.0f, -1.0f, 0.0f);
+	const glm::vec3 topUp = glm::vec3(0.0f, 0.0f, -1.0f); // 위쪽이 -Z 방향
+	topViewCamera = std::make_unique<Camera>(orthoProjection, topPos, topFront, topUp);
+
+	// 3. Side 뷰 카메라 (직교 투영)
+	const glm::vec3 sidePos = glm::vec3(50.0f, 0.0f, 0.0f); // +X에서 -X 방향으로
+	const glm::vec3 sideFront = glm::vec3(-1.0f, 0.0f, 0.0f);
+	const glm::vec3 sideUp = glm::vec3(0.0f, 1.0f, 0.0f); // 위쪽이 +Y 방향
+	sideViewCamera = std::make_unique<Camera>(orthoProjection, sidePos, sideFront, sideUp);
 
 	tank = std::make_unique<Tank>();
 
@@ -128,15 +143,9 @@ void OnUpdate(float deltaTime_) noexcept
 {
 	static bool trigger = false;
 
-	if (Input::IsKeyHeld(GLFW_KEY_Z))
-	{
-		const auto position = camera->GetPosition();
-		const auto forward  = glm::normalize(camera->GetForward());
-	}
-
 	if (Input::IsKeyPressed(GLFW_KEY_Q))
 	{
-		Application::Quit(); 
+		Application::Quit();
 	}
 
 	if (Input::IsKeyPressed(GLFW_KEY_O))
@@ -154,13 +163,13 @@ void OnUpdate(float deltaTime_) noexcept
 	{
 		if (Input::IsModPressed(GLFW_MOD_SHIFT))
 		{
-			const glm::vec3 forward = glm::normalize(camera->GetForward());
-			camera->SetPosition(camera->GetPosition() + forward * 4.0f * deltaTime_);
+			// const glm::vec3 forward = glm::normalize(camera->GetForward());
+			// camera->SetPosition(camera->GetPosition() + forward * 4.0f * deltaTime_);
 		}
 		else
 		{
-			const glm::vec3 forward = glm::normalize(camera->GetForward());
-			camera->SetPosition(camera->GetPosition() - forward * 4.0f * deltaTime_);
+			// const glm::vec3 forward = glm::normalize(camera->GetForward());
+			// camera->SetPosition(camera->GetPosition() - forward * 4.0f * deltaTime_);
 		}
 	}
 
@@ -168,29 +177,29 @@ void OnUpdate(float deltaTime_) noexcept
 	{
 		if (Input::IsModPressed(GLFW_MOD_SHIFT))
 		{
-			const glm::vec3 right = glm::normalize(glm::cross(camera->GetForward(), camera->GetUp()));
-			camera->SetPosition(camera->GetPosition() + right * 4.0f * deltaTime_);
+			// const glm::vec3 right = glm::normalize(glm::cross(camera->GetForward(), camera->GetUp()));
+			// camera->SetPosition(camera->GetPosition() + right * 4.0f * deltaTime_);
 		}
 		else
 		{
-			const glm::vec3 right = glm::normalize(glm::cross(camera->GetForward(), camera->GetUp()));
-			camera->SetPosition(camera->GetPosition() - right * 4.0f * deltaTime_);
+			// const glm::vec3 right = glm::normalize(glm::cross(camera->GetForward(), camera->GetUp()));
+			// camera->SetPosition(camera->GetPosition() - right * 4.0f * deltaTime_);
 		}
 	}
 
 	if (Input::IsKeyPressed(GLFW_KEY_Y))
 	{
-		auto rotationInput = Input::IsModPressed(GLFW_MOD_SHIFT) ? -1 : 1;
-
-		const float rotationAngle = rotationInput * 10.0f * deltaTime_;
-
-		const glm::vec3 currentForward = camera->GetForward();
-		const glm::vec3 upVector	   = camera->GetUp();
-
-		glm::mat4 rotMatrix  = glm::rotate(glm::mat4(1.0f), glm::radians(rotationAngle), upVector);
-		glm::vec3 newForward = glm::vec3(rotMatrix * glm::vec4(currentForward, 0.0f));
-
-		camera->SetForward(glm::normalize(newForward));
+		// auto rotationInput = Input::IsModPressed(GLFW_MOD_SHIFT) ? -1 : 1;
+		// 
+		// const float rotationAngle = rotationInput * 10.0f * deltaTime_;
+		// 
+		// const glm::vec3 currentForward = camera->GetForward();
+		// const glm::vec3 upVector	   = camera->GetUp();
+		// 
+		// glm::mat4 rotMatrix  = glm::rotate(glm::mat4(1.0f), glm::radians(rotationAngle), upVector);
+		// glm::vec3 newForward = glm::vec3(rotMatrix * glm::vec4(currentForward, 0.0f));
+		// 
+		// camera->SetForward(glm::normalize(newForward));
 	}
 
 	if (Input::IsKeyPressed(GLFW_KEY_A))
@@ -220,8 +229,8 @@ void OnUpdate(float deltaTime_) noexcept
 
 		glm::vec3 newForward = glm::normalize(target - newPosition);
 
-		camera->SetPosition(newPosition);
-		camera->SetForward(newForward);
+		// camera->SetPosition(newPosition);
+		// camera->SetForward(newForward);
 	}
 
 	if (!trigger)
@@ -230,14 +239,61 @@ void OnUpdate(float deltaTime_) noexcept
 
 void OnRender() noexcept
 {
-	camera->PreRender(*(shader));
-	tank->Render(*(shader));
-	plane->Render(*(shader));
+	// Application::Run에서 이미 glClear를 호출하므로
+	// OnRender에서는 뷰포트 설정과 렌더링만 수행합니다.
+
+	const auto& spec = Application::GetSpecification();
+	const int totalWidth = spec.width;
+	const int totalHeight = spec.height;
+
+	// --- 1. 메인 뷰포트 (좌측 1/2) ---
+	{
+		const int v_x = 0;
+		const int v_y = 0;
+		const int v_w = totalWidth / 2;
+		const int v_h = totalHeight;
+		const float aspect = static_cast<float>(v_w) / static_cast<float>(v_h);
+
+		glViewport(v_x, v_y, v_w, v_h); // 뷰포트 설정
+		mainCamera->PreRender(*(shader), aspect); // 수정된 PreRender 호출
+
+		tank->Render(*(shader));
+		plane->Render(*(shader));
+	}
+
+	// --- 2. Top 뷰포트 (우측 상단 1/4) ---
+	{
+		const int v_x = totalWidth / 2;
+		const int v_y = totalHeight / 2;
+		const int v_w = totalWidth / 2;
+		const int v_h = totalHeight / 2;
+		const float aspect = static_cast<float>(v_w) / static_cast<float>(v_h);
+
+		glViewport(v_x, v_y, v_w, v_h);
+		topViewCamera->PreRender(*(shader), aspect);
+
+		tank->Render(*(shader));
+		plane->Render(*(shader));
+	}
+
+	// --- 3. Side 뷰포트 (우측 하단 1/4) ---
+	{
+		const int v_x = totalWidth / 2;
+		const int v_y = 0;
+		const int v_w = totalWidth / 2;
+		const int v_h = totalHeight / 2;
+		const float aspect = static_cast<float>(v_w) / static_cast<float>(v_h);
+
+		glViewport(v_x, v_y, v_w, v_h);
+		sideViewCamera->PreRender(*(shader), aspect);
+
+		tank->Render(*(shader));
+		plane->Render(*(shader));
+	}
 }
 
 void OnClose() noexcept
 {
-	camera.reset();
 	shader.reset();
 	plane.reset();
 }

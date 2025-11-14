@@ -121,7 +121,7 @@ static void OnStart() noexcept
     const     float     aspectRatio = static_cast<float>(Application::GetSpecification().width) / static_cast<float>(Application::GetSpecification().height);
 
     camera = std::make_unique<Camera>(position, front, up);
-    camera->SetProjection(Camera::ProjectionType::Perspective);
+    camera->SetProjection(Camera::Projection::Perspective);
     camera->SetAspectRatio(aspectRatio);
 
     Planet* sun = planets.emplace_back(std::make_unique<Planet>()).get();
@@ -159,11 +159,11 @@ static void OnUpdate() noexcept
 {
     if (Input::IsKeyPressed('p'))
     {
-        camera->SetProjection(Camera::ProjectionType::Orthographic);
+        camera->SetProjection(Camera::Projection::Orthographic);
     }
     else if (Input::IsKeyPressed('P'))
     {
-        camera->SetProjection(Camera::ProjectionType::Perspective);
+        camera->SetProjection(Camera::Projection::Perspective);
     }
 
     if (Input::IsKeyPressed('m'))

@@ -1,7 +1,7 @@
 #include "Camera.h"
 
 Camera::Camera(
-	const Camera::ProjectionType projectionType_,
+	const Camera::Projection projectionType_,
     const glm::vec3&             position_,
     const glm::vec3&             forward_,
     const glm::vec3&             up_

@@ -143,7 +143,7 @@ static void OnStart() noexcept
                                       static_cast<float>(Application::GetSpecification().height);
 
     camera = std::make_unique<Camera>(position, front, up);
-    camera->SetProjection(Camera::ProjectionType::Perspective);
+    camera->SetProjection(Camera::Projection::Perspective);
     camera->SetAspectRatio(aspectRatio);
 
     axes = std::make_unique<Axes>();

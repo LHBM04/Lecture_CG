@@ -15,11 +15,11 @@ class Camera final
 {
 public:
     /**
-     * @enum ProjectionType
+     * @enum Projection
      *
      * @brief 카메라의 투영 방식을 정의합니다.
      */
-    enum class ProjectionType
+    enum class Projection
     {
         /**
          * @brief 직교 투영 방식.
@@ -101,13 +101,13 @@ public:
     /**
      * @brief 투영 방식을 런타임에 교체합니다.
      */
-    inline void SetProjection(Camera::ProjectionType projection_) noexcept;
+    inline void SetProjection(Camera::Projection projection_) noexcept;
 
 private:
     /**
      * @brief 해당 카메라의 투영 방식.
      */
-    Camera::ProjectionType projection;
+    Camera::Projection projection;
 
     /**
      * @brief 해당 카메라의 위치.
@@ -189,14 +189,14 @@ inline glm::mat4 Camera::GetProjectionMatrix() const noexcept
 {
     switch (projection)
     {
-        case ProjectionType::Orthographic:
+        case Projection::Orthographic:
         {
             const float halfHeight = orthoSize * 0.5f;
             const float halfWidth  = halfHeight * aspectRatio;
 
             return glm::ortho(-halfWidth, halfWidth, -halfHeight, halfHeight, nearPlane, farPlane);
         }
-        case ProjectionType::Perspective:
+        case Projection::Perspective:
         {
             return glm::perspective(glm::radians(fov), aspectRatio, nearPlane, farPlane);
         }
@@ -212,7 +212,7 @@ inline void Camera::SetAspectRatio(const float aspectRatio_) noexcept
     aspectRatio = aspectRatio_;
 }
 
-inline void Camera::SetProjection(Camera::ProjectionType projection_) noexcept
+inline void Camera::SetProjection(Camera::Projection projection_) noexcept
 {
     projection = projection_;
 }
