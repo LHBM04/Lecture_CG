@@ -130,7 +130,7 @@ void OnLoad() noexcept
 	mainCamera->SetViewport(Camera::Viewport{ 0, 0, 800, 600 });
 
 	 subCamera = std::make_unique<Camera>();
-	 subCamera->SetProjection(Camera::Projection::Orthographic);
+	 subCamera->SetProjection(Camera::Projection::Perspective);
 	 subCamera->SetPosition(glm::vec3(0.0f, 20.0f, 0.0f));
 	 subCamera->SetForward(glm::vec3(0.0f, -1.0f, 0.0f));
 	 subCamera->SetUp(glm::vec3(0.0f, 0.0f, 1.0f));

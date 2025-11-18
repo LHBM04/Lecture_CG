@@ -38,7 +38,7 @@ void Stage::RotateSelf(const float deltaTime_) noexcept
 {
 	const glm::vec2 mouseDelta = Input::GetMouseDelta();
 	glm::vec3 rotation = GetRotation();
-	rotation.z += mouseDelta.x * 0.2f;
+	rotation.z += mouseDelta.x * 100.0f * deltaTime_;
 	SetRotation(rotation);
 }
 

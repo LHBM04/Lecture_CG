@@ -150,7 +150,7 @@ void OnUpdate(const float deltaTime_) noexcept
 
 	if (Input::IsKeyPressed(GLFW_KEY_B))
 	{
-		objects.emplace_back(std::make_unique<Marble>(marbleMesh.get())).get();
+		objects.emplace_back(std::make_unique<Marble>(marbleMesh.get()));
 	}
 
 	if (Input::IsKeyPressed(GLFW_KEY_Q))

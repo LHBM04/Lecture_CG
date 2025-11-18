@@ -1,9 +1,12 @@
 ﻿#ifndef GUARD_MARBLE_H
 #define GUARD_MARBLE_H
 
+#include "PCH.h"
+
 #include "Object.h"
 
 class Mesh;
+class CollisionBox;
 
 class Marble final
 	: public Object
@@ -41,10 +44,20 @@ private:
 	 */
 	Mesh* mesh;
 
-	glm::vec3  velocity = glm::vec3(3.0f, 2.0f, 0.0f); // 초기 속도
-	float      radius = 0.5f;       // 메쉬 크기에 맞게 조정
-	float      restitution = 0.85f;      // 반발계수
-	float      damping = 0.995f;     // 미세 감쇠
+	/**
+	 * @brief 충돌 박스
+	 */
+	std::unique_ptr<CollisionBox> collisionBox;
+
+	/**
+	 * @brief 이동 방향
+	 */
+	glm::vec3 direction = glm::vec3(0.0f, 0.0f, 0.0f);
+
+	/**
+	 * @brief 이동 속도
+	 */
+	float moveSpeed = 5.0f;
 };
 
 #endif // !GUARD_MARBLE_H

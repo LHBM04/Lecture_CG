@@ -5,7 +5,12 @@ add_executable(Level_01_Act_21
         "Sources/Main.cpp"
         "Sources/Mesh.cpp"
         "Sources/Object.cpp"
-        "Sources/Shader.cpp" "Sources/Stage.cpp" "Sources/Marble.cpp" "Sources/Block.cpp")
+        "Sources/Shader.cpp"
+        "Sources/Stage.cpp" 
+        "Sources/Marble.cpp" 
+        "Sources/Block.cpp" 
+        "Sources/CollisionBox.cpp"
+)
 
  target_precompile_headers(Level_01_Act_21 PRIVATE
         "${CMAKE_CURRENT_SOURCE_DIR}/Sources/PCH.h"

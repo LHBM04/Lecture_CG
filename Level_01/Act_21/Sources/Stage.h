@@ -5,6 +5,7 @@
 
 #include "Object.h"
 
+class CollisionBox;
 class Mesh;
 
 class Stage final
@@ -52,6 +53,21 @@ private:
 	 * @brief 해당 박스의 메쉬.
 	 */
 	Mesh* mesh;
+
+	/**
+	 * @brief 왼쪽 면 충돌 박스.
+	 */
+	std::unique_ptr<CollisionBox> left;
+
+	/**
+	 * @brief 오른쪽 면 충돌 박스.
+	 */
+	std::unique_ptr<CollisionBox> right;
+
+	/**
+	 * @brief 바닥 충돌 박스.
+	 */
+	std::unique_ptr<CollisionBox> floor;
 
 	/**
 	 * @brief 바닥이 열린 상태인지 여부.

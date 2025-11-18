@@ -98,6 +98,7 @@ Mesh* Mesh::LoadFrom(const std::string& filePath_) noexcept
         iss >> tag;
 
         if (tag == "v")
+
         {
             glm::vec3 p; 
             iss >> p.x >> p.y >> p.z;
@@ -160,7 +161,6 @@ Mesh* Mesh::LoadFrom(const std::string& filePath_) noexcept
 
     for (const auto& face : faces)
     {
-        // ... (faces ¿Œµ¶ΩÃ ∑Œ¡˜¿∫ µø¿œ)
         for (size_t i = 1; i + 1 < face.size(); ++i)
         {
             int a_idx = face[0] - 1;
