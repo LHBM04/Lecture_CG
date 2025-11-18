@@ -1,131 +1,117 @@
-#include "Input.h"
-
-#include <cstring>      // memset
-
-// 정적 멤버 변수 초기화
-//Input::KeyState Input::keyStates[512];
-std::array<Input::KeyState, GLFW_KEY_LAST> Input::keyStates{};
-// Input::KeyState Input::mouseButtonStates[16];
-std::array<Input::KeyState, GLFW_MOUSE_BUTTON_LAST> Input::mouseButtonStates{};
-glm::vec2 Input::mousePosition = glm::vec2(0.0f);
-int Input::currentMods = 0;
-
-void Input::Init(GLFWwindow* window) noexcept
-{
-    // 모든 상태를 'None'으로 초기화
-    std::memset(keyStates.data(), 0, sizeof(keyStates));
-    std::memset(mouseButtonStates.data(), 0, sizeof(mouseButtonStates));
-
-    // GLFW 콜백 설정
-    glfwSetKeyCallback(window, OnKeyInteract);
-    glfwSetMouseButtonCallback(window, OnMouseButtonInteract);
-    glfwSetCursorPosCallback(window, OnMouseMove);
-}
+癤�#include "Input.h"
 
 void Input::Update() noexcept
 {
-	for (auto& keyState : keyStates)
-    {
-        if (keyState == KeyState::Press)
-        {
-            keyState = KeyState::Hold;
-        }
-        else if (keyState == KeyState::Release)
-        {
-            keyState = KeyState::None;
-        }
-    }
+	for (KeyState& keyState : keyStates)
+	{
+		switch (keyState)
+		{
+			case KeyState::Press:
+			{
+				keyState = KeyState::Hold;
+				break;
+			}
+			case KeyState::Release:
+			{
+				keyState = KeyState::None;
+				break;
+			}
+			default:
+			{
+				break;
+			}
+		}
+	}
 
-	for (auto& mouseButtonState : mouseButtonStates)
-    {
-        if (mouseButtonState == KeyState::Press)
-        {
-            mouseButtonState = KeyState::Hold;
-        }
-        else if (mouseButtonState == KeyState::Release)
-        {
-            mouseButtonState = KeyState::None;
-        }
-    }
+	for (KeyState& mouseButtonState : mouseButtonStates)
+	{
+		switch (mouseButtonState)
+		{
+			case KeyState::Press:
+			{
+				mouseButtonState = KeyState::Hold;
+				break;
+			}
+			case KeyState::Release:
+			{
+				mouseButtonState = KeyState::None;
+				break;
+			}
+			default:
+			{
+				break;
+			}
+		}
+	}
+
+	lastMousePosition = currentMousePosition;
 }
 
-bool Input::IsKeyPressed(int key) noexcept
+void Input::OnKeyInteract(int key, int scancode, int action, int mods) noexcept
 {
-    if (key < 0 || key >= 512) return false;
-    return keyStates[key] == KeyState::Press;
+	if (key < 0 || key >= static_cast<int>(MAX_KEYS))
+	{
+		return;
+	}
+	switch (action)
+	{
+		case GLFW_PRESS:
+		{
+			keyStates[key] = KeyState::Press;
+			break;
+		}
+		case GLFW_RELEASE:
+		{
+			keyStates[key] = KeyState::Release;
+			break;
+		}
+		default:
+		{
+			break;
+		}
+	}
+
+	currentMods = mods;
 }
 
-bool Input::IsKeyReleased(int key) noexcept
+void Input::OnMouseButtonInteract(int button, int action, int mods) noexcept
 {
-    if (key < 0 || key >= 512) return false;
-    return keyStates[key] == KeyState::Release;
+	if (button < 0 || button >= MAX_MOUSE_BUTTONS)
+	{
+		return;
+	}
+	switch (action)
+	{
+		case GLFW_PRESS:
+		{
+			mouseButtonStates[button] = KeyState::Press;
+			break;
+		}
+		case GLFW_RELEASE:
+		{
+			mouseButtonStates[button] = KeyState::Release;
+			break;
+		}
+		default:
+		{
+			break;
+		}
+	}
+	currentMods = mods;
 }
 
-bool Input::IsKeyHeld(int key) noexcept
+void Input::OnCursorMove(double xpos, double ypos) noexcept
 {
-    if (key < 0 || key >= 512) return false;
-    return keyStates[key] == KeyState::Press || keyStates[key] == KeyState::Hold;
+	lastMousePosition = currentMousePosition;
+	currentMousePosition = glm::vec2(static_cast<float>(xpos), static_cast<float>(ypos));
 }
 
-bool Input::IsMouseButtonDown(int button) noexcept
-{
-    if (button < 0 || button >= 16) return false;
-    return mouseButtonStates[button] == KeyState::Press;
-}
+std::array<Input::KeyState, Input::MAX_KEYS> Input::keyStates = { Input::KeyState::None };
 
-bool Input::IsMouseButtonUp(int button) noexcept
-{
-    if (button < 0 || button >= 16) return false;
-    return mouseButtonStates[button] == KeyState::Release;
-}
+std::array<Input::KeyState, Input::MAX_MOUSE_BUTTONS> Input::mouseButtonStates = { Input::KeyState::None };
 
-bool Input::IsMouseButton(int button) noexcept
-{
-    if (button < 0 || button >= 16) return false;
-    return mouseButtonStates[button] == KeyState::Press || mouseButtonStates[button] == KeyState::Hold;
-}
+glm::vec2 Input::lastMousePosition = glm::vec2(0.0f, 0.0f);
 
-glm::vec2 Input::GetMousePosition() noexcept
-{
-    return mousePosition;
-}
+glm::vec2 Input::currentMousePosition = glm::vec2(0.0f, 0.0f);
 
-//--- GLFW Callbacks ---//
-
-void Input::OnKeyInteract(GLFWwindow* window, int key, int scancode, int action, int mods) noexcept
-{
-    currentMods = mods;
-
-    if (key < 0 || key >= 512) return; // 범위를 벗어난 키 무시
-
-    if (action == GLFW_PRESS)
-    {
-        keyStates[key] = KeyState::Press;
-    }
-    else if (action == GLFW_RELEASE)
-    {
-        keyStates[key] = KeyState::Release;
-    }
-}
-
-void Input::OnMouseButtonInteract(GLFWwindow* window, int button, int action, int mods) noexcept
-{
-    currentMods = mods;
-
-    if (button < 0 || button >= 16) return;
-
-    if (action == GLFW_PRESS)
-    {
-        mouseButtonStates[button] = KeyState::Press;
-    }
-    else if (action == GLFW_RELEASE)
-    {
-        mouseButtonStates[button] = KeyState::Release;
-    }
-}
-
-void Input::OnMouseMove(GLFWwindow* window, double xpos, double ypos) noexcept
-{
-    mousePosition.x = static_cast<float>(xpos);
-    mousePosition.y = static_cast<float>(ypos);
-}
+int Input::currentMods = 0;

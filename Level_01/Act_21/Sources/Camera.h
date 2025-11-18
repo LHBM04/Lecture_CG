@@ -1,231 +1,262 @@
-#ifndef GUARD_CAMERA_H
-#define GUARD_CAMERA_H
+ï»¿#pragma once
 
-#include <glm/vec3.hpp>
-#include <glm/ext.hpp>
+#include "PCH.h"
 
 #include "Application.h"
 #include "Shader.h"
 
 /**
- * @brief Scene ³» Ä«¸Ş¶ó¸¦ Á¤ÀÇÇÕ´Ï´Ù.
+ * @brief 
  */
 class Camera final
 {
 public:
-    /**
-     * @enum Projection
-     *
-     * @brief Ä«¸Ş¶óÀÇ Åõ¿µ ¹æ½ÄÀ» Á¤ÀÇÇÕ´Ï´Ù.
-     */
-    enum class Projection
-    {
-        /**
-         * @brief Á÷±³ Åõ¿µ ¹æ½Ä.
-         */
-        Orthographic,
+	/**
+	 * @brief ì¹´ë©”ë¼ì˜ íˆ¬ì˜ ë°©ì‹ì„ ì •ì˜í•©ë‹ˆë‹¤.
+	 */
+	enum class Projection
+	{
+		/**
+		 * @brief ì›ê·¼ íˆ¬ì˜.
+		 */
+		Perspective,
 
-        /**
-         * @brief ¿ø±Ù Åõ¿µ ¹æ½Ä.
-         */
-        Perspective
-    };
+		/**
+		 * @brief ì§êµ íˆ¬ì˜.
+		 */
+		Orthographic
+	};    
 
-    /**
-     * @brief »ı¼ºÀÚ.
-     *
-	 * @param projection_ »ı¼ºÇÒ Ä«¸Ş¶óÀÇ Åõ¿µ ¹æ½Ä
-     * @param position_   »ı¼ºÇÒ Ä«¸Ş¶óÀÇ À§Ä¡
-     * @param front_      »ı¼ºÇÒ Ä«¸Ş¶ó°¡ ¹Ù¶óº¸´Â ¹æÇâ
-     * @param up_         »ı¼ºÇÒ Ä«¸Ş¶óÀÇ À­¹æÇâ º¤ÅÍ
-     */
-    explicit Camera(
-        const Camera::Projection projection_,
-        const glm::vec3&         position_,
-        const glm::vec3&         front_,
-        const glm::vec3&         up_
-    ) noexcept;
+	/**
+	 * @brief ë·°í¬íŠ¸ë¥¼ ì •ì˜í•©ë‹ˆë‹¤.
+	 */
+	struct Viewport final
+	{
+		int x;
+		int y;
+		int width;
+		int height;
+	};
 
-    /**
-     * @brief ÇØ´ç Ä«¸Ş¶óÀÇ À§Ä¡¸¦ °¡Á®¿É´Ï´Ù.
-     * 
-     * @return glm::vec3 ÇØ´ç Ä«¸Ş¶óÀÇ À§Ä¡
-     */
-    [[nodiscard]]
-    inline constexpr glm::vec3 GetPosition() const noexcept;
+	/**
+	 * @brief ìƒì„±ì.
+	 */
+	explicit Camera() noexcept;
 
-    /**
-     * @brief ÇØ´ç Ä«¸Ş¶óÀÇ À§Ä¡¸¦ ÁöÁ¤ÇÑ À§Ä¡·Î ¼³Á¤ÇÕ´Ï´Ù.
-     * 
-     * @param position_ ÁöÁ¤ÇÒ À§Ä¡
-     */
-    inline void SetPosition(const glm::vec3& position_) noexcept;
+	/**
+	 * @brief í•´ë‹¹ ì¹´ë©”ë¼ì˜ íˆ¬ì˜ ë°©ì‹ì„ ë°˜í™˜í•©ë‹ˆë‹¤.
+	 * 
+	 * @return Camera::Projection í•´ë‹¹ ì¹´ë©”ë¼ì˜ íˆ¬ì˜ ë°©ì‹
+	 */
+	[[nodiscard]]
+	inline constexpr Camera::Projection GetProjection() const noexcept;
 
-    /**
-     * @brief ÇØ´ç Ä«¸Ş¶óÀÇ ¾Õ¹æÇâ º¤ÅÍ¸¦ ¹İÈ¯ÇÕ´Ï´Ù.
-     * 
-	 * @return glm::vec3 ÇØ´ç Ä«¸Ş¶óÀÇ ¾Õ¹æÇâ º¤ÅÍ
-     */
-    [[nodiscard]]
-    inline constexpr glm::vec3 GetForward() const noexcept;
+	/**
+	 * @brief í•´ë‹¹ ì¹´ë©”ë¼ì˜ íˆ¬ì˜ ë°©ì‹ì„ ì§€ì •í•œ ë°©ì‹ìœ¼ë¡œ ì„¤ì •í•©ë‹ˆë‹¤.
+	 * 
+	 * @param projection_ ì§€ì •í•  íˆ¬ì˜ ë°©ì‹
+	 */
+	inline void SetProjection(Camera::Projection projection_) noexcept;
 
-    /**
-     * @brief ÇØ´ç Ä«¸Ş¶óÀÇ ¾Õ¹æÇâ º¤ÅÍ¸¦ ÁöÁ¤ÇÑ º¤ÅÍ·Î ¼³Á¤ÇÕ´Ï´Ù.
-     * 
-     * @param position_ ÁöÁ¤ÇÒ ¾Õ¹æÇâ º¤ÅÍ
-     */
-    inline void SetForward(const glm::vec3& position_) noexcept;
+	/**
+	 * @brief í•´ë‹¹ ì¹´ë©”ë¼ì˜ ìœ„ì¹˜ë¥¼ ë°˜í™˜í•©ë‹ˆë‹¤.
+	 *
+	 * @return glm::vec3 í•´ë‹¹ ì¹´ë©”ë¼ì˜ ìœ„ì¹˜
+	 */
+	[[nodiscard]]
+	inline constexpr glm::vec3 GetPosition() const noexcept;
 
-    /**
-     * @brief ÇØ´ç Ä«¸Ş¶óÀÇ À­¹æÇâ º¤ÅÍ¸¦ ¹İÈ¯ÇÕ´Ï´Ù.
-     * 
-     * @return glm::vec3 ÇØ´ç Ä«¸Ş¶óÀÇ À­¹æÇâ º¤ÅÍ
-     */
-    [[nodiscard]]
+	/**
+	 * @brief í•´ë‹¹ ì¹´ë©”ë¼ì˜ ìœ„ì¹˜ë¥¼ ì§€ì •í•œ ìœ„ì¹˜ë¡œ ì„¤ì •í•©ë‹ˆë‹¤.
+	 *
+	 * @param position_ ì§€ì •í•  ìœ„ì¹˜
+	 */
+	inline void SetPosition(const glm::vec3& position_) noexcept;
+
+	/**
+	 * @brief í•´ë‹¹ ì¹´ë©”ë¼ì˜ ì•ë°©í–¥ ë²¡í„°ë¥¼ ë°˜í™˜í•©ë‹ˆë‹¤.
+	 *
+	 * @return glm::vec3 í•´ë‹¹ ì¹´ë©”ë¼ì˜ ì•ë°©í–¥ ë²¡í„°
+	 */
+	[[nodiscard]]
+	inline constexpr glm::vec3 GetForward() const noexcept;
+
+	/**
+	 * @brief í•´ë‹¹ ì¹´ë©”ë¼ì˜ ì•ë°©í–¥ ë²¡í„°ë¥¼ ì§€ì •í•œ ë²¡í„°ë¡œ ì„¤ì •í•©ë‹ˆë‹¤.
+	 *
+	 * @param position_ ì§€ì •í•  ì•ë°©í–¥ ë²¡í„°
+	 */
+	inline void SetForward(const glm::vec3& position_) noexcept;
+
+	/**
+	 * @brief í•´ë‹¹ ì¹´ë©”ë¼ì˜ ìœ—ë°©í–¥ ë²¡í„°ë¥¼ ë°˜í™˜í•©ë‹ˆë‹¤.
+	 *
+	 * @return glm::vec3 í•´ë‹¹ ì¹´ë©”ë¼ì˜ ìœ—ë°©í–¥ ë²¡í„°
+	 */
+	[[nodiscard]]
 	inline constexpr glm::vec3 GetUp() const noexcept;
 
 	/**
-	 * @brief ÇØ´ç Ä«¸Ş¶óÀÇ À­¹æÇâ º¤ÅÍ¸¦ ÁöÁ¤ÇÑ º¤ÅÍ·Î ¼³Á¤ÇÕ´Ï´Ù.
-     * 
-	 * @param up_ ÁöÁ¤ÇÒ º¤ÅÍ.
+	 * @brief í•´ë‹¹ ì¹´ë©”ë¼ì˜ ìœ—ë°©í–¥ ë²¡í„°ë¥¼ ì§€ì •í•œ ë²¡í„°ë¡œ ì„¤ì •í•©ë‹ˆë‹¤.
+	 *
+	 * @param up_ ì§€ì •í•  ë²¡í„°.
 	 */
 	inline void SetUp(const glm::vec3& up_) noexcept;
 
-    /**
-     * @brief View Çà·Ä ¹İÈ¯
-     */
-    [[nodiscard]]
-    inline glm::mat4 GetViewMatrix() const noexcept;
-
-    /**
-     * @brief Projection Çà·Ä ¹İÈ¯ (Àü·« °´Ã¼¿¡ À§ÀÓ)
-     */
-    [[nodiscard]]
-    inline glm::mat4 GetProjectionMatrix() const noexcept;
-
-    /**
-     * @brief Á¾È¾ºñ ¾÷µ¥ÀÌÆ® (Àü·« °´Ã¼¿¡ À§ÀÓ)
-     */
-    inline void SetAspectRatio(const float aspectRatio_) noexcept;
-
-    /**
-     * @brief Åõ¿µ ¹æ½ÄÀ» ·±Å¸ÀÓ¿¡ ±³Ã¼ÇÕ´Ï´Ù.
-     */
-    inline void SetProjection(Camera::Projection projection_) noexcept;
+	/**
+	 * @brief ë·°í¬íŠ¸ ë°˜í™˜
+	 */
+	[[nodiscard]]
+	inline constexpr Viewport GetViewport() noexcept;
 
 	/**
-	 * @brief 
-     * 
-	 * @param shader_ 
+	 * @brief ë·°í¬íŠ¸ ì„¤ì •
+	 */
+	inline void SetViewport(const Viewport& viewport_) noexcept;
+
+	/**
+	 * @brief View í–‰ë ¬ ë°˜í™˜
+	 */
+	[[nodiscard]]
+	inline glm::mat4 GetViewMatrix() const noexcept;
+
+	/**
+	 * @brief Projection í–‰ë ¬ ë°˜í™˜
+	 */
+	[[nodiscard]]
+	inline glm::mat4 GetProjectionMatrix() const noexcept;
+
+	/**
+	 * @brief ë Œë”ë§ ì „ì— í˜¸ì¶œë˜ì–´ ì…°ì´ë”ì— ë·° ë° í”„ë¡œì ì…˜ í–‰ë ¬ì„ ì„¤ì •í•©ë‹ˆë‹¤.
+	 * 
+	 * @param shader_ ì…°ì´ë” ê°ì²´
 	 */
 	void PreRender(const Shader& shader_) const noexcept;
 
 private:
-    /**
-     * @brief ÇØ´ç Ä«¸Ş¶óÀÇ Åõ¿µ ¹æ½Ä.
-     */
-    Camera::Projection projection;
+	/**
+	* @brief í•´ë‹¹ ì¹´ë©”ë¼ì˜ íˆ¬ì˜ ë°©ì‹.
+	*/
+	Camera::Projection projection = Camera::Projection::Perspective;
 
 	/**
-	 * @brief ÇØ´ç Ä«¸Ş¶óÀÇ À§Ä¡.
+	 * @brief í•´ë‹¹ ì¹´ë©”ë¼ì˜ ìœ„ì¹˜.
 	 */
-	glm::vec3 position;
+	glm::vec3 position = glm::vec3(0.0f);
 
 	/**
-	 * @brief ÇØ´ç Ä«¸Ş¶óÀÇ ¾Õ¹æÇâ º¤ÅÍ.
+	 * @brief í•´ë‹¹ ì¹´ë©”ë¼ì˜ ì•ë°©í–¥ ë²¡í„°.
 	 */
-	glm::vec3 forward;
+	glm::vec3 forward = glm::vec3(0.0f, 0.0f, 10.0f);
 
 	/**
-	 * @brief ÇØ´ç Ä«¸Ş¶óÀÇ À­¹æÇâ º¤ÅÍ.
+	 * @brief í•´ë‹¹ ì¹´ë©”ë¼ì˜ ìœ—ë°©í–¥ ë²¡í„°.
 	 */
-	glm::vec3 up;
+	glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f);
+	
+	/**
+	 * @brief ì‹œì•¼ê°.
+	 */
+	float fov = 45.0f;
 
-    /**
-     * @brief ½Ã¾ß°¢.
-     */
-    float fov = 45.0f;
+	/**
+	 * @brief ê·¼í‰ë©´.
+	 */
+	float nearPlane = 0.1f;
 
-    /**
-     * @brief 
-     */
-    float nearPlane = 0.1f;
+	/**
+	 * @brief ì›í‰ë©´.
+	 */
+	float farPlane = 100.0f;
 
-    /**
-     * @brief
-     */
-    float farPlane = 100.0f;
+	/**
+	 * @brief 
+	 */
+	float orthoSize = 10.0f;
 
-    /**
-     * @brief
-     */
-    float orthoSize = 10.0f;
+	/**
+	 * @brief ë·°í¬íŠ¸.
+	 */
+	Viewport viewport;
 };
 
-inline constexpr glm::vec3 Camera::GetPosition() const noexcept
+inline constexpr Camera::Projection Camera::GetProjection() const noexcept
 {
-    return position;
-}
-
-inline void Camera::SetPosition(const glm::vec3& position_) noexcept
-{
-    position = position_;
-}
-
-inline constexpr glm::vec3 Camera::GetForward() const noexcept
-{
-    return forward;
-}
-
-inline void Camera::SetForward(const glm::vec3& forward_) noexcept
-{
-    forward = forward_;
-}
-
-inline constexpr glm::vec3 Camera::GetUp() const noexcept
-{
-    return up;
-}
-
-inline void Camera::SetUp(const glm::vec3& up_) noexcept
-{
-    up = up_;
-}
-
-inline glm::mat4 Camera::GetViewMatrix() const noexcept
-{
-    return glm::lookAt(position, position + forward, up);
-}
-
-inline glm::mat4 Camera::GetProjectionMatrix() const noexcept
-{
-    const float height      = static_cast<float>(Application::GetSpecification().height);
-    const float width       = static_cast<float>(Application::GetSpecification().width);
-    const float aspectRatio = width / height;
-
-    switch (projection)
-    {
-        case Projection::Orthographic:
-        {
-            const float halfHeight = orthoSize * 0.5f;
-            const float halfWidth  = halfHeight * aspectRatio;
-
-            return glm::ortho(-halfWidth, halfWidth, -halfHeight, halfHeight, nearPlane, farPlane);
-        }
-        case Projection::Perspective:
-        {
-            return glm::perspective(glm::radians(fov), aspectRatio, nearPlane, farPlane);
-        }
-        default:
-        {
-            return { 1.0f };
-        }
-    }
+	return projection;
 }
 
 inline void Camera::SetProjection(Camera::Projection projection_) noexcept
 {
-    projection = projection_;
+	projection = projection_;
 }
 
-#endif // !GUARD_CAMERA_H
+inline constexpr glm::vec3 Camera::GetPosition() const noexcept
+{
+	return position;
+}
+
+inline void Camera::SetPosition(const glm::vec3& position_) noexcept
+{
+	position = position_;
+}
+
+inline constexpr glm::vec3 Camera::GetForward() const noexcept
+{
+	return forward;
+}
+
+inline void Camera::SetForward(const glm::vec3& forward_) noexcept
+{
+	forward = forward_;
+}
+
+inline constexpr glm::vec3 Camera::GetUp() const noexcept
+{
+	return up;
+}
+
+inline void Camera::SetUp(const glm::vec3& up_) noexcept
+{
+	up = up_;
+}
+
+inline constexpr Camera::Viewport Camera::GetViewport() noexcept
+{
+	return viewport;
+}
+
+inline void Camera::SetViewport(const Viewport& viewport_) noexcept
+{
+	viewport = viewport_;
+}
+
+inline glm::mat4 Camera::GetViewMatrix() const noexcept
+{
+	return glm::lookAt(position, position + forward, up);
+}
+
+inline glm::mat4 Camera::GetProjectionMatrix() const noexcept
+{
+	const float height		= viewport.height;
+	const float width		= viewport.width;
+	const float aspectRatio = width / height;
+
+	switch (projection)
+	{
+		case Projection::Orthographic:
+		{
+			const float halfHeight = orthoSize * 0.5f;
+			const float halfWidth  = halfHeight * aspectRatio;
+
+			return glm::ortho(-halfWidth, halfWidth, -halfHeight, halfHeight, nearPlane, farPlane);
+		}
+		case Projection::Perspective:
+		{
+			return glm::perspective(glm::radians(fov), aspectRatio, nearPlane, farPlane);
+		}
+		default:
+		{
+			return { 1.0f };
+		}
+	}
+}

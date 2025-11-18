@@ -1,162 +1,227 @@
-#ifndef GUARD_INPUT_MANAGER_H
-#define GUARD_INPUT_MANAGER_H
+ï»¿#pragma once
 
-#include <array>
+#include "PCH.h"
 
-#include <GLFW/glfw3.h>
-
-#include <glm/vec2.hpp>
-
-// GLFW Çì´õ°¡ ÇÊ¿äÇÕ´Ï´Ù.
-struct GLFWwindow;
+class Application;
 
 /**
- * @brief GLFW ÀÔ·ÂÀ» °ü¸®ÇÏ´Â Á¤Àû Å¬·¡½º.
+ * @brief í‚¤/ë²„íŠ¼ ì…ë ¥ì„ ê°ì§€í•©ë‹ˆë‹¤.
  */
 class Input final
 {
+    friend class Application;
+
 public:
     /**
-     * @brief ÀÔ·Â ¸Å´ÏÀú¸¦ ÃÊ±âÈ­ÇÏ°í GLFW Äİ¹éÀ» ¼³Á¤ÇÕ´Ï´Ù.
-     * 
-     * @param window GLFW À©µµ¿ì Æ÷ÀÎÅÍ.
-     */
-    static void Init(GLFWwindow* window) noexcept;
-
-    /**
-     * @brief ¸Å ÇÁ·¹ÀÓ È£ÃâµÇ¾î¾ß ÇÏ´Â ¾÷µ¥ÀÌÆ® ÇÔ¼ö.
+     * @brief í‚¤/ë²„íŠ¼ ì…ë ¥ ìƒíƒœë¥¼ ê°±ì‹ í•©ë‹ˆë‹¤.
      */
     static void Update() noexcept;
 
     /**
-     * @brief Å°°¡ '´­¸° ¼ø°£'ÀÎÁö È®ÀÎÇÕ´Ï´Ù. (ÇØ´ç ÇÁ·¹ÀÓ¸¸ true)
+     * @brief í‚¤ê°€ 'ëˆŒë¦° ìˆœê°„'ì¸ì§€ í™•ì¸í•©ë‹ˆë‹¤. (í•´ë‹¹ í”„ë ˆì„ë§Œ true)
      */
     [[nodiscard]]
-    static bool IsKeyPressed(int key) noexcept;
+    static inline constexpr bool IsKeyPressed(int key) noexcept;
 
     /**
-     * @brief Å°°¡ '¶¼¾îÁø ¼ø°£'ÀÎÁö È®ÀÎÇÕ´Ï´Ù. (ÇØ´ç ÇÁ·¹ÀÓ¸¸ true)
+     * @brief í‚¤ê°€ 'ë–¼ì–´ì§„ ìˆœê°„'ì¸ì§€ í™•ì¸í•©ë‹ˆë‹¤. (í•´ë‹¹ í”„ë ˆì„ë§Œ true)
      */
     [[nodiscard]]
-    static bool IsKeyReleased(int key) noexcept;
+    static inline constexpr bool IsKeyReleased(int key) noexcept;
 
     /**
-     * @brief Å°¸¦ '´©¸£°í ÀÖ´Â Áß'ÀÎÁö È®ÀÎÇÕ´Ï´Ù. (´­¸° ¼ø°£ + ´©¸£°í ÀÖ´Â Áß)
+     * @brief í‚¤ë¥¼ 'ëˆ„ë¥´ê³  ìˆëŠ” ì¤‘'ì¸ì§€ í™•ì¸í•©ë‹ˆë‹¤. (ëˆŒë¦° ìˆœê°„ + ëˆ„ë¥´ê³  ìˆëŠ” ì¤‘)
      */
     [[nodiscard]]
-    static bool IsKeyHeld(int key) noexcept;
+    static inline constexpr bool IsKeyHeld(int key) noexcept;
 
     /**
-     * @brief ¸¶¿ì½º ¹öÆ°ÀÌ '´­¸° ¼ø°£'ÀÎÁö È®ÀÎÇÕ´Ï´Ù.
+     * @brief ë§ˆìš°ìŠ¤ ë²„íŠ¼ì´ 'ëˆŒë¦° ìˆœê°„'ì¸ì§€ í™•ì¸í•©ë‹ˆë‹¤.
      */
     [[nodiscard]]
-    static bool IsMouseButtonDown(int button) noexcept;
+    static inline constexpr bool IsMouseButtonPressed(int button) noexcept;
 
     /**
-     * @brief ¸¶¿ì½º ¹öÆ°ÀÌ '¶¼¾îÁø ¼ø°£'ÀÎÁö È®ÀÎÇÕ´Ï´Ù.
+     * @brief ë§ˆìš°ìŠ¤ ë²„íŠ¼ì´ 'ë–¼ì–´ì§„ ìˆœê°„'ì¸ì§€ í™•ì¸í•©ë‹ˆë‹¤.
      */
     [[nodiscard]]
-    static bool IsMouseButtonUp(int button) noexcept;
+    static inline constexpr bool IsMouseButtonReleased(int button) noexcept;
 
     /**
-     * @brief ¸¶¿ì½º ¹öÆ°À» '´©¸£°í ÀÖ´Â Áß'ÀÎÁö È®ÀÎÇÕ´Ï´Ù.
+     * @brief ë§ˆìš°ìŠ¤ ë²„íŠ¼ì„ 'ëˆ„ë¥´ê³  ìˆëŠ” ì¤‘'ì¸ì§€ í™•ì¸í•©ë‹ˆë‹¤.
      */
     [[nodiscard]]
-    static bool IsMouseButton(int button) noexcept;
-
-    [[nodiscard]]
-    static bool IsModPressed(int mod) noexcept
-    {
-        // ºñÆ® AND ¿¬»êÀ¸·Î ÇØ´ç ¸ğµå ÇÃ·¡±×°¡ ÄÑÁ® ÀÖ´ÂÁö È®ÀÎ
-        return (currentMods & mod) == mod;
-    }
+    static inline constexpr bool IsMouseButtonHeld(int button) noexcept;
 
     /**
-     * @brief ÇöÀç ¸¶¿ì½º Ä¿¼­ À§Ä¡¸¦ ¹İÈ¯ÇÕ´Ï´Ù.
-     */
+     * @brief ìˆ˜ì • í‚¤(Shift, Ctrl, Alt ë“±)ê°€ ëˆŒë ¤ìˆëŠ”ì§€ í™•ì¸í•©ë‹ˆë‹¤.
+	 */
     [[nodiscard]]
-    static glm::vec2 GetMousePosition() noexcept;
+    static inline constexpr bool IsModified(int mod) noexcept;
 
     /**
-     * @brief ´ëÃæ ¸¸µç ¸¶¿ì½º À§Ä¡ º¯È­·®.
-     * 
-	 * @return glm::vec2 ¸¶¿ì½º À§Ä¡ º¯È­·®
+     * @brief í˜„ì¬ ë§ˆìš°ìŠ¤ ì»¤ì„œ ìœ„ì¹˜ë¥¼ ë°˜í™˜í•©ë‹ˆë‹¤.
      */
     [[nodiscard]]
-    static glm::vec2 GetMouseDelta() noexcept
-    {
-        static glm::vec2 lastPosition = mousePosition;
-        glm::vec2 delta = mousePosition - lastPosition;
-        lastPosition = mousePosition;
-        return delta;
-	}
+    static inline constexpr glm::vec2 GetMousePosition() noexcept;
+
+    /**
+     * @brief ë§ˆìš°ìŠ¤ ì»¤ì„œì˜ ì´ë™ëŸ‰ì„ ë°˜í™˜í•©ë‹ˆë‹¤.
+	 */
+    [[nodiscard]]
+    static inline constexpr glm::vec2 GetMouseDelta() noexcept;
 
 private:
     /**
-	* @class KeyState
-    * 
-    * @brief ÀÔ·Â »óÅÂ¸¦ Á¤ÀÇÇÕ´Ï´Ù.
-    */
+     * @brief í‚¤/ë²„íŠ¼ì´ ì·¨í•  ìˆ˜ ìˆëŠ” ìƒíƒœì„ ì •ì˜í•©ë‹ˆë‹¤.
+     */
     enum class KeyState : unsigned char
     {
         /**
-         * @brief ¾Æ¹« »óÅÂµµ ¾Æ´Ô.
+         * @brief ì•„ë¬´ê²ƒë„ ì•ˆ í•¨
          */
         None,
 
         /**
-         * @brief ´­¸° »óÅÂ.
+         * @brief ëˆŒë¦° ìˆœê°„
          */
         Press,
 
         /**
-		 * @brief ´­·ÁÁ® ÀÖ´Â »óÅÂ.
+         * @brief ëˆŒë ¤ ìˆëŠ” ì¤‘
          */
         Hold,
 
         /**
-         * @brief ¶¾ »óÅÂ.
+         * @brief ë—€ ìˆœê°„
          */
         Release
     };
 
+#pragma region Deleted Functions
     Input() = delete;
     ~Input() = delete;
-    
+
     Input(const Input&) = delete;
     Input(Input&&) = delete;
-    
+
     Input& operator=(const Input&) = delete;
     Input& operator=(Input&&) = delete;
-    
+
     void* operator new(std::size_t) = delete;
     void* operator new[](std::size_t) = delete;
     void operator delete(void*) = delete;
     void operator delete[](void*) = delete;
-
-    static void OnKeyInteract(GLFWwindow* window, int key, int scancode, int action, int mods) noexcept;
-    static void OnMouseButtonInteract(GLFWwindow* window, int button, int action, int mods) noexcept;
-    static void OnMouseMove(GLFWwindow* window, double xpos, double ypos) noexcept;
+#pragma endregion
 
     /**
-     * @brief Å° »óÅÂ.
+     * @brief í‚¤ì™€ì˜ ìƒí˜¸ì‘ìš© ë°œìƒ ì‹œ í˜¸ì¶œë©ë‹ˆë‹¤.
+     * 
+     * @param key      ëˆŒë¦° í‚¤
+     * @param scancode ìŠ¤ìº”ì½”ë“œ
+     * @param action   í‚¤ ì•¡ì…˜
+     * @param mods     ìˆ˜ì •í‚¤
      */
-    static std::array<KeyState, GLFW_KEY_LAST> keyStates;
+    static void OnKeyInteract(int key, int scancode, int action, int mods) noexcept;
 
     /**
-     * @brief ¸¶¿ì½º ¹öÆ° »óÅÂ.
+	 * @brief ë§ˆìš°ìŠ¤ ë²„íŠ¼ê³¼ì˜ ìƒí˜¸ì‘ìš© ë°œìƒ ì‹œ í˜¸ì¶œë©ë‹ˆë‹¤.
+     * 
+     * @param button ëˆŒë¦° ë§ˆìš°ìŠ¤ ë²„íŠ¼
+     * @param action ë²„íŠ¼ ì•¡ì…˜
+     * @param mods   ìˆ˜ì •í‚¤
      */
-    static std::array<KeyState, GLFW_MOUSE_BUTTON_LAST> mouseButtonStates;
+    static void OnMouseButtonInteract(int button, int action, int mods) noexcept;
 
     /**
-     * @brief ¸¶¿ì½º Ä¿¼­ÀÇ À§Ä¡.
+	 * @brief ë§ˆìš°ìŠ¤ ì»¤ì„œê°€ ì´ë™í•  ë•Œ í˜¸ì¶œë©ë‹ˆë‹¤.
+     * 
+	 * @param xpos í˜„ì¬ ë§ˆìš°ìŠ¤ ì»¤ì„œì˜ X ì¢Œí‘œ
+	 * @param ypos í˜„ì¬ ë§ˆìš°ìŠ¤ ì»¤ì„œì˜ Y ì¢Œí‘œ
      */
-    static glm::vec2 mousePosition;
+    static void OnCursorMove(double xpos, double ypos) noexcept;
 
     /**
-     * @brief ÇöÀç È°¼ºÈ­µÈ ¼öÁ¤ÀÚ Å° ÇÃ·¡±×.
+     * @brief ê°ì§€í•  ìˆ˜ ìˆëŠ” í‚¤ì˜ ìµœëŒ€ ê°œìˆ˜.
+     */
+    static constexpr std::size_t MAX_KEYS = GLFW_KEY_LAST;
+
+	/**
+	 * @brief ê°ì§€í•  ìˆ˜ ìˆëŠ” ë§ˆìš°ìŠ¤ ë²„íŠ¼ì˜ ìµœëŒ€ ê°œìˆ˜.
 	 */
+	static constexpr std::size_t MAX_MOUSE_BUTTONS = GLFW_MOUSE_BUTTON_LAST;
+
+	/**
+	 * @brief 
+	 */
+	static std::array<KeyState, MAX_KEYS> keyStates;
+
+	/**
+	 * @brief 
+	 */
+	static std::array<KeyState, MAX_MOUSE_BUTTONS> mouseButtonStates;
+
+    /**
+     * @brief ì´ì „ í”„ë ˆì„ì˜ ë§ˆìš°ìŠ¤ ì»¤ì„œ ìœ„ì¹˜.
+	 */
+	static glm::vec2 lastMousePosition;
+
+    /**
+	 * @brief í˜„ì¬ í”„ë ˆì„ì˜ ë§ˆìš°ìŠ¤ ì»¤ì„œ ìœ„ì¹˜.
+     */
+    static glm::vec2 currentMousePosition;
+
+    /**
+     * @brief í˜„ì¬ ëˆŒë¦° 
+     */
     static int currentMods;
 };
 
-#endif // !GUARD_INPUT_MANAGER_H
+inline constexpr bool Input::IsKeyPressed(int key) noexcept
+{
+    return key >= 0 && key < static_cast<int>(MAX_KEYS) && keyStates[key] == KeyState::Press;
+}
+
+inline constexpr bool Input::IsKeyReleased(int key) noexcept
+{
+    return key >= 0 && key < static_cast<int>(MAX_KEYS) && keyStates[key] == KeyState::Release;
+}
+
+inline constexpr bool Input::IsKeyHeld(int key) noexcept
+{
+    return key >= 0 && key < static_cast<int>(MAX_KEYS) &&
+           (keyStates[key] == KeyState::Press || keyStates[key] == KeyState::Hold);
+}
+
+inline constexpr bool Input::IsMouseButtonPressed(int button) noexcept
+{
+    return button >= 0 && button < static_cast<int>(MAX_MOUSE_BUTTONS) &&
+           mouseButtonStates[button] == KeyState::Press;
+}
+
+inline constexpr bool Input::IsMouseButtonReleased(int button) noexcept
+{
+    return button >= 0 && button < static_cast<int>(MAX_MOUSE_BUTTONS) &&
+           mouseButtonStates[button] == KeyState::Release;
+}
+
+inline constexpr bool Input::IsMouseButtonHeld(int button) noexcept
+{
+    return button >= 0 && button < static_cast<int>(MAX_MOUSE_BUTTONS) &&
+           (mouseButtonStates[button] == KeyState::Press || mouseButtonStates[button] == KeyState::Hold);
+}
+
+inline constexpr bool Input::IsModified(int mod) noexcept
+{
+    return (currentMods & mod) == mod;
+}
+
+inline constexpr glm::vec2 Input::GetMousePosition() noexcept
+{
+    return currentMousePosition;
+}
+
+inline constexpr glm::vec2 Input::GetMouseDelta() noexcept
+{
+    return currentMousePosition - lastMousePosition;
+}

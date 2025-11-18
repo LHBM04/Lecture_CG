@@ -1,21 +1,18 @@
-#include "Camera.h"
+﻿#include "Camera.h"
 
-Camera::Camera(
-	const Camera::Projection projection_,
-    const glm::vec3&         position_,
-    const glm::vec3&         forward_,
-    const glm::vec3&         up_
-) noexcept
-    : projection(projection_)
-    , position(position_)
-    , forward(forward_)
-    , up(up_)
+Camera::Camera() noexcept
+    : projection(Projection::Perspective),
+      position(0.0f, 0.0f, 5.0f),
+      forward(0.0f, 0.0f, -1.0f),
+      up(0.0f, 1.0f, 0.0f) 
 {
 
 }
 
 void Camera::PreRender(const Shader& shader_) const noexcept
 {
+	glViewport(viewport.x, viewport.y, viewport.width, viewport.height);
+
     const glm::mat4 view = GetViewMatrix();
     shader_.SetUniformMatrix4x4("uView", view);
 

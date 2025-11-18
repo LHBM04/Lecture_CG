@@ -1,67 +1,79 @@
-#include "Shader.h"
+﻿#include "Shader.h"
 
-#include <spdlog/spdlog.h>
-
-#include "File.h"
-
-Shader::Shader(const char* const vertexSource_,
-    const char* const fragmentSource_) noexcept
+Shader::Shader() noexcept
 {
-    GLint success;
-    char infoLog[512];
-
-    const GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vertexShader, 1, &vertexSource_, nullptr);
-    glCompileShader(vertexShader);
-    glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
-    if (!success)
+    // 따로 유틸 함수 만들기 귀찮아서 람다로 대체
+    auto getFileContents = [] (const std::filesystem::path& path) -> std::string
     {
-        glGetShaderInfoLog(vertexShader, sizeof(infoLog), nullptr, infoLog);
+	    std::ifstream fileStream(path);
+        std::stringstream buffer;
+        buffer << fileStream.rdbuf();
+        return buffer.str();
+	};
 
-        spdlog::critical("Vertex shader compilation failed: {}", infoLog);
+	constexpr const char* shadersPath = "Resources/Shaders/";
 
-        glDeleteShader(vertexShader);
+	for (const auto& entry : std::filesystem::directory_iterator(shadersPath))
+    {
+        const std::filesystem::path filePath = entry.path();
+        const std::string extension          = filePath.extension().string();
 
-        return;
+        GLuint shaderID = 0;
+        if (extension == ".vert")
+        {
+            shaderID = glCreateShader(GL_VERTEX_SHADER);
+        }
+        else if (extension == ".frag")
+        {
+            shaderID = glCreateShader(GL_FRAGMENT_SHADER);
+        }
+        else
+        {
+            continue;
+        }
+        
+        const std::string sourceCode = getFileContents(filePath);
+        const char*       sourceCStr = sourceCode.c_str();
+        
+        glShaderSource(shaderID, 1, &sourceCStr, nullptr);
+        glCompileShader(shaderID);
+
+        GLint compileStatus;
+        glGetShaderiv(shaderID, GL_COMPILE_STATUS, &compileStatus);
+        if (compileStatus != GL_TRUE)
+        {
+            char infoLog[512];
+            glGetShaderInfoLog(shaderID, 512, nullptr, infoLog);
+            std::print("셰이더 컴파일 오류 ({}): {}\n", filePath.string(), infoLog);
+            glDeleteShader(shaderID);
+            continue;
+        }
+        
+        if (programID == 0)
+        {
+            programID = glCreateProgram();
+        }
+        
+        glAttachShader(programID, shaderID);
+        glDeleteShader(shaderID);
     }
 
-    const GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fragmentShader, 1, &fragmentSource_, nullptr);
-    glCompileShader(fragmentShader);
-    glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
-    if (!success)
+    if (programID != 0)
     {
-        glGetShaderInfoLog(fragmentShader, sizeof(infoLog), nullptr, infoLog);
+        glLinkProgram(programID);
 
-        spdlog::critical("Fragment shader compilation failed: {}", infoLog);
+        GLint linkStatus;
+        glGetProgramiv(programID, GL_LINK_STATUS, &linkStatus);
+        if (linkStatus != GL_TRUE)
+        {
+            char infoLog[512];
+            glGetProgramInfoLog(programID, 512, nullptr, infoLog);
+            std::print("셰이더 링크 오류: {}\n", infoLog);
 
-        glDeleteShader(vertexShader);
-        glDeleteShader(fragmentShader);
-
-        return;
+            glDeleteProgram(programID);
+            programID = 0;
+        }
     }
-
-    programID = glCreateProgram();
-    glAttachShader(programID, vertexShader);
-    glAttachShader(programID, fragmentShader);
-    glLinkProgram(programID);
-
-    glGetProgramiv(programID, GL_LINK_STATUS, &success);
-    if (!success)
-    {
-        glGetProgramInfoLog(programID, sizeof(infoLog), nullptr, infoLog);
-
-        spdlog::critical("Shader program linking failed: {}", infoLog);
-
-        glDeleteShader(vertexShader);
-        glDeleteShader(fragmentShader);
-        glDeleteProgram(programID);
-
-        return;
-    }
-
-    glDeleteShader(vertexShader);
-    glDeleteShader(fragmentShader);
 }
 
 Shader::~Shader() noexcept

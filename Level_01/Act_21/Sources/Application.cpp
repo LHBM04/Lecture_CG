@@ -1,111 +1,153 @@
-#include "Application.h"
-
-#include <GL/glew.h>
-
-#define GLFW_INCLUDE_NONE
-#define GLFW_EXPOSE_NATIVE_WIN32
-#include <GLFW/glfw3.h>
-
-#include <spdlog/spdlog.h>
+﻿#include "Application.h"
 
 #include "Input.h"
 
-int Application::Run(const Application::Specification& specification_) noexcept
+int Application::Run(const Application::Configuration& configuration_) noexcept
 {
-	specification = specification_;
-
-	if (!InitWindow())
+	configuration = configuration_;
+	
+	if (!Initialize())
 	{
-		spdlog::critical("Failed to initialize Window!");
-		return false;
+		return -1;
 	}
 
-	if (!InitGraphics())
-	{
-		spdlog::critical("Failed to initialize Graphics!");
-		return false;
-	}
+	Start();
 
-	Input::Init(window);
-
-	specification.onStart();
-
+	// 3. 메인 루프
 	while (!glfwWindowShouldClose(window))
 	{
-		glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-		static float lastTime = static_cast<float>(glfwGetTime());
-		
-		const float curTime   = static_cast<float>(glfwGetTime());
-		const float deltaTime = curTime - lastTime;
-		
-		lastTime = curTime;
-		
-		specification.onUpdate(deltaTime);
-		specification.onRender();
-		
 		glfwPollEvents();
-		glfwSwapBuffers(window);
+
+		static float previousTime = static_cast<float>(glfwGetTime());
+
+		const float currentTime = static_cast<float>(glfwGetTime());
+		const float deltaTime   = currentTime - previousTime;
+
+		Update(deltaTime);
+		Render();
+
+		Input::Update();
+
+		previousTime = currentTime;
 	}
 
-	specification.onClose();
+	Close();
+
+	return 0;
+}
+
+void Application::Quit(const int exitCode_) noexcept
+{
+	std::exit(exitCode_);
+}
+
+bool Application::Initialize() noexcept
+{
+	// 1. GLFW 초기화 및 윈도우 생성
+	{
+		if (!glfwInit())
+		{
+			std::println("GLFW 초기화에 실패했습니다.");
+			return false;
+		}
+
+		glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+		glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
+		glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+		glfwWindowHint(GLFW_RESIZABLE, configuration.shouldResizable ? GLFW_TRUE : GLFW_FALSE);
+		glfwWindowHint(GLFW_DECORATED, configuration.shouldDecorate ? GLFW_TRUE : GLFW_FALSE);
+
+		window = glfwCreateWindow(configuration.width, configuration.height, configuration.title, nullptr, nullptr);
+		if (!window)
+		{
+			std::println("GLFW 윈도우 생성에 실패했습니다.");
+			glfwTerminate();
+			return false;
+		}
+
+		glfwMakeContextCurrent(window);
+
+		glfwSetKeyCallback(window, [](GLFWwindow*, int key_, int scancode_, int action_, int mod_) {
+			Input::OnKeyInteract(key_, scancode_, action_, mod_);
+		});
+		glfwSetMouseButtonCallback(window, [](GLFWwindow*, int button_, int action_, int mod_) {
+			Input::OnMouseButtonInteract(button_, action_, mod_);
+		});
+		glfwSetCursorPosCallback(window, [](GLFWwindow*, double x_, double y_) {
+			Input::OnCursorMove(static_cast<int>(x_), static_cast<int>(y_));
+		});
+	}
+	// 2. GLAD 초기화
+	{
+		if (!gladLoadGLLoader(reinterpret_cast<GLADloadproc>(glfwGetProcAddress)))
+		{
+			std::println("GLAD 초기화에 실패했습니다.");
+			glfwDestroyWindow(window);
+			glfwTerminate();
+			return false;
+		}
+
+		glEnable(GL_DEPTH_TEST);
+
+		// glEnable(GL_CULL_FACE);
+		// glCullFace(GL_BACK);
+	}
+
+	// 3. VSync 설정
+	{
+		if (configuration.shouldVSync)
+		{
+			glfwSwapInterval(1);
+		}
+		else
+		{
+			glfwSwapInterval(0);
+		}
+	}
+
 	return true;
 }
 
-void Application::Quit() noexcept
+void Application::Start() noexcept
 {
-	glfwSetWindowShouldClose(window, GLFW_TRUE);
+	if (configuration.onStart)
+	{
+		configuration.onStart();
+	}
 }
 
-bool Application::InitWindow() noexcept
+void Application::Update(const float deltaTime_) noexcept
 {
-	if (glfwInit() != GLFW_TRUE)
+	if (configuration.onUpdate)
 	{
-		return false;
+		configuration.onUpdate(deltaTime_);
 	}
-
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, specification.majorVersion);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, specification.minorVersion);
-	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-	glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
-
-	window = glfwCreateWindow(
-		specification.width, 
-		specification.height,
-		specification.name.c_str(), 
-		nullptr, 
-		nullptr
-	);
-
-	if (window == nullptr)
-	{
-		glfwTerminate();
-		return false;
-	}
-
-	glfwMakeContextCurrent(window);
-	return true;
 }
 
-bool Application::InitGraphics() noexcept
+void Application::Render() noexcept
 {
-	if (glewInit() != GLEW_OK)
+	glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	if (configuration.onRender)
 	{
-		glfwDestroyWindow(window);
-		glfwTerminate();
-		return false;
+		configuration.onRender();
 	}
 
-	// glEnable(GL_CULL_FACE);
-	// glFrontFace(GL_CW);
-	// glCullFace(GL_BACK);
-
-	glEnable(GL_DEPTH_TEST);
-
-	return true;
+	glfwSwapBuffers(window);
 }
+
+void Application::Close() noexcept
+{
+	if (configuration.onClose)
+	{
+		configuration.onClose();
+	}
+
+	glfwDestroyWindow(window);
+	glfwTerminate();
+}
+
+Application::Configuration Application::configuration = { };
 
 GLFWwindow* Application::window = nullptr;
-
-Application::Specification Application::specification = {};

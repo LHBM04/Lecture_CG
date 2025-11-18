@@ -1,32 +1,23 @@
-#ifndef GUARD_MARBLE_H
+ï»¿#ifndef GUARD_MARBLE_H
 #define GUARD_MARBLE_H
 
 #include "Object.h"
 
-/**
- * @brief ±¸½½.
- */
+class Mesh;
+
 class Marble final
 	: public Object
 {
 public:
 	/**
-	 * @brief »ı¼ºÀÚ.
+	 * @brief 
 	 * 
-	 * @param boundary_ »ı¼ºÇÒ ±¸½½ÀÌ ¿òÁ÷ÀÏ ¼ö ÀÖ´Â °æ°è°ª
-	 * @param position_ »ı¼ºÇÒ ±¸½½ÀÇ À§Ä¡
-	 * @param rotation_ »ı¼ºÇÒ ±¸½½ÀÇ È¸Àü
-	 * @param scale_	»ı¼ºÇÒ ±¸½½ÀÇ Å©±â
+	 * @param mesh_ 
 	 */
-	explicit Marble(
-		const float      boundary_,
-		const glm::vec3& position_ = glm::vec3(0.0f),
-		const glm::vec3& rotation_ = glm::vec3(0.0f),
-		const glm::vec3& scale_    = glm::vec3(1.0f)
-	) noexcept;
+	explicit Marble(Mesh* const mesh_) noexcept;
 
 	/**
-	 * @brief ¼Ò¸êÀÚ.
+	 * @brief 
 	 */
 	virtual ~Marble() noexcept override;
 
@@ -37,21 +28,23 @@ public:
 	 */
 	virtual void Update(const float deltaTime_) noexcept override;
 
+	/**
+	 * @brief 
+	 * 
+	 * @param shader_ 
+	 */
+	virtual void Render(const Shader& shader_) const noexcept override;
+
 private:
 	/**
-	 * @brief ÇØ´ç ±¸½½ÀÇ ÀÌµ¿ ¼Óµµ.
+	 * @brief í•´ë‹¹ êµ¬ìŠ¬ì˜ ë§¤ì‰¬.
 	 */
-	static constexpr float MOVE_SPEED = 10;
+	Mesh* mesh;
 
-	/**
-	 * @brief °æ°è°ª
-	 */
-	float boundary;
-
-	/**
-	 * @brief ÇØ´ç ±¸½½ÀÇ ÀÌµ¿ ¹æÇâ.
-	 */
-	glm::vec3 direction;
+	glm::vec3  velocity = glm::vec3(3.0f, 2.0f, 0.0f); // ì´ˆê¸° ì†ë„
+	float      radius = 0.5f;       // ë©”ì‰¬ í¬ê¸°ì— ë§ê²Œ ì¡°ì •
+	float      restitution = 0.85f;      // ë°˜ë°œê³„ìˆ˜
+	float      damping = 0.995f;     // ë¯¸ì„¸ ê°ì‡ 
 };
 
 #endif // !GUARD_MARBLE_H

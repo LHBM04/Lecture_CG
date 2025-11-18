@@ -1,126 +1,197 @@
-#ifndef GUARD_APPLICATION_H
-#define GUARD_APPLICATION_H
+ï»¿#pragma once
 
-#include <functional>
-#include <string>
+#include "PCH.h"
 
 struct GLFWwindow;
 
 /**
- * @brief ¾ÖÇÃ¸®ÄÉÀÌ¼ÇÀ» Á¤ÀÇÇÕ´Ï´Ù.
+ * @brief ì• í”Œë¦¬ì¼€ì´ì…˜ì„ ì •ì˜í•©ë‹ˆë‹¤.
  */
 class Application final
 {
-	using StartCallback = std::function<void()>;
-	using UpdateCallback = std::function<void(float)>;
-	using RenderCallback = std::function<void()>;
-	using CloseCallback = std::function<void()>;
 public:
-    /**
-    * @brief ¾ÖÇÃ¸®ÄÉÀÌ¼Ç ¼³Á¤À» Á¤ÀÇÇÕ´Ï´Ù.
-    */
-    struct Specification final
-    {
-        /**
-         * @brief OpenGL ÄÁÅØ½ºÆ® »óÀ§ ¹öÀü.
-         */
-        int majorVersion;
+	/**
+	 * @brief ì• í”Œë¦¬ì¼€ì´ì…˜ ë‚´ ì‚¬ìš©ë  ë¦¬ì†ŒìŠ¤ë¥¼ ë¶ˆëŸ¬ì˜¤ëŠ” ì½œë°±ì„ ì •ì˜í•©ë‹ˆë‹¤.
+	 */
+	using StartCallback = std::function<void()>;
 
-        /**
-         * @brief OpenGL ÄÁÅØ½ºÆ® ÇÏÀ§ ¹öÀü.
-         */
-        int minorVersion;
+	/**
+	 * @brief ì• í”Œë¦¬ì¼€ì´ì…˜ì´ ë§¤ í”„ë ˆì„ë§ˆë‹¤ ì—…ë°ì´íŠ¸ë˜ëŠ” ì½œë°±ì„ ì •ì˜í•©ë‹ˆë‹¤.
+	 */
+	using UpdateCallback = std::function<void(const float)>;
 
-        /**
-         * @brief ¾ÖÇÃ¸®ÄÉÀÌ¼Ç Å¸ÀÌÆ².
-         */
-        std::string name;
+	/**
+	 * @brief ì• í”Œë¦¬ì¼€ì´ì…˜ì´ ë§¤ í”„ë ˆì„ë§ˆë‹¤ ê·¸ë ¤ì§€ëŠ” ì½œë°±ì„ ì •ì˜í•©ë‹ˆë‹¤.
+	 */
+	using RenderCallback = std::function<void()>;
 
-        /**
-         * @brief ¾ÖÇÃ¸®ÄÉÀÌ¼Ç ³Êºñ.
-         */
-        int width;
+	/**
+	 * @brief ì• í”Œë¦¬ì¼€ì´ì…˜ì´ ë‹«í ë•Œ í˜¸ì¶œë˜ëŠ” ì½œë°±ì„ ì •ì˜í•©ë‹ˆë‹¤.
+	 */
+	using CloseCallback = std::function<void()>;
 
-        /**
-         * @brief ¾ÖÇÃ¸®ÄÉÀÌ¼Ç ³ôÀÌ.
-         */
-        int height;
-
-        /**
-         * @brief ¾ÖÇÃ¸®ÄÉÀÌ¼ÇÀÇ ¾÷µ¥ÀÌÆ® ÁÖ±â.
-         */
-        int fps;
-
-        /**
-         * @brief ¾ÖÇÃ¸®ÄÉÀÌ¼ÇÀÌ ½ÇÇàµÉ ¶§ ½ÃÀÛÇÕ´Ï´Ù.
-         */
-        StartCallback onStart;
-
-        /**
-         * @brief ¸Å ÇÁ·¹ÀÓ¸¶´Ù È£ÃâµË´Ï´Ù.
-         */
-        UpdateCallback onUpdate;
-
-        /**
-         * @brief ·»´õ¸µµÉ ¶§ È£ÃâµË´Ï´Ù.
-         */
-        RenderCallback onRender;
+	/**
+	 * @brief ì• í”Œë¦¬ì¼€ì´ì…˜ ì„¤ì •ì„ ì •ì˜í•©ë‹ˆë‹¤.
+	 */
+	struct Configuration final
+	{
+		/**
+		 * @brief ì°½ì˜ ë„ˆë¹„.
+		 */
+		int width;
 
 		/**
-		 * @brief ¾ÖÇÃ¸®ÄÉÀÌ¼ÇÀÌ Á¾·áµÉ ¶§ È£ÃâµË´Ï´Ù.
+		 * @brief ì°½ì˜ ë†’ì´.
+		 */
+		int height;
+
+		/**
+		 * @brief ì°½ì˜ ì œëª©.
+		 */
+		const char* title;
+
+		/**
+		 * @brief ì „ì²´ í™”ë©´ ëª¨ë“œ ì—¬ë¶€.
+		 */
+		bool shouldFullscreen;
+
+		/**
+		 * @brief ì°½ í…Œë‘ë¦¬ í‘œì‹œ ì—¬ë¶€.
+		 */
+		bool shouldDecorate;
+
+		/**
+		 * @brief ì°½ í¬ê¸° ì¡°ì ˆ ê°€ëŠ¥ ì—¬ë¶€.
+		 */
+		bool shouldResizable;
+
+		/**
+		 * @brief ìˆ˜ì§ ë™ê¸°í™”(VSync) ì‚¬ìš© ì—¬ë¶€.
+		 */
+		bool shouldVSync;
+
+		/**
+		 * @brief ì°½ì´ ì¼œì§ˆ ë•Œ í˜¸ì¶œë˜ëŠ” ì½œë°± í•¨ìˆ˜.
+		 */
+		StartCallback onStart;
+
+		/**
+		 * @brief ë§¤ í”„ë ˆì„ë§ˆë‹¤ í˜¸ì¶œë˜ëŠ” ì½œë°± í•¨ìˆ˜.
+		 */
+		UpdateCallback onUpdate;
+
+		/**
+		 * @brief ì°½ì´ ê·¸ë ¤ì§ˆ ë•Œ í˜¸ì¶œë˜ëŠ” ì½œë°± í•¨ìˆ˜.
+		 */
+		RenderCallback onRender;
+
+		/**
+		 * @brief ì°½ì´ ë‹«í ë•Œ í˜¸ì¶œë˜ëŠ” ì½œë°± í•¨ìˆ˜.
 		 */
 		CloseCallback onClose;
-    };
-
-    /**
-     * @brief ¾ÖÇÃ¸®ÄÉÀÌ¼Ç ¼³Á¤À» ¹İÈ¯ÇÕ´Ï´Ù.
-     * 
-	 * @return const Application::Specification& ¾ÖÇÃ¸®ÄÉÀÌ¼Ç ¼³Á¤
-     */
-    [[nodiscard]]
-	static inline const Application::Specification& GetSpecification() noexcept;
+	};
 
 	/**
-	 * @brief ¾ÖÇÃ¸®ÄÉÀÌ¼ÇÀ» ½ÇÇàÇÕ´Ï´Ù.
-     * 
-	 * @param specification_ ¾ÖÇÃ¸®ÄÉÀÌ¼Ç ¼³Á¤
+	 * @brief ì• í”Œë¦¬ì¼€ì´ì…˜ ì„¤ì •ì„ ë°˜í™˜í•©ë‹ˆë‹¤.
+	 * 
+	 * @return Application::Configuration& ì• í”Œë¦¬ì¼€ì´ì…˜ ì„¤ì •
 	 */
-	static int Run(const Application::Specification& specification_) noexcept;
+	[[nodiscard]]
+	static inline constexpr Application::Configuration& GetSpecification() noexcept;
 
 	/**
-	 * @brief ¾ÖÇÃ¸®ÄÉÀÌ¼ÇÀ» Á¾·áÇÕ´Ï´Ù.
+	 * @brief ì• í”Œë¦¬ì¼€ì´ì…˜ ì„¤ì •ì„ ì§€ì •í•©ë‹ˆë‹¤.
+	 * 
+	 * @param config_ ì• í”Œë¦¬ì¼€ì´ì…˜ ì„¤ì •
 	 */
-	static void Quit() noexcept;
+	static inline void SetSpecification(const Application::Configuration& config_) noexcept;
+
+	/**
+	 * @brief GLFW ìœˆë„ìš° í•¸ë“¤ë¥¼ ë°˜í™˜í•©ë‹ˆë‹¤.
+	 * 
+	 * @return GLFWwindow* const GLFW ìœˆë„ìš° í•¸ë“¤
+	 */
+	[[nodiscard]]
+	static inline constexpr GLFWwindow* const GetNativeWindow() noexcept;
+
+	/**
+	 * @brief GLFW ìœˆë„ìš° í•¸ë“¤ë¥¼ ì§€ì •í•©ë‹ˆë‹¤.
+	 * 
+	 * @param window_ GLFW ìœˆë„ìš° í•¸ë“¤
+	 */
+	static void SetNativeWindow(GLFWwindow* const window_) noexcept;
+
+	/**
+	 * @brief ì• í”Œë¦¬ì¼€ì´ì…˜ì„ ì‹¤í–‰í•©ë‹ˆë‹¤.
+	 * 
+	 * @param configuration_ ì‹¤í–‰í•  ì• í”Œë¦¬ì¼€ì´ì…˜ì˜ ì„¤ì •
+	 * 
+	 * @return int ì¢…ë£Œ ì½”ë“œ
+	 */
+	static int Run(const Application::Configuration& configuration_) noexcept;
+
+	/**
+	 * @brief ì• í”Œë¦¬ì¼€ì´ì…˜ì„ ì¢…ë£Œí•©ë‹ˆë‹¤.
+	 * 
+	 * @param exitCode_ ì¢…ë£Œ ì½”ë“œ
+	 */
+	static void Quit(const int exitCode_) noexcept;
 
 private:
 	/**
-	 * @brief À©µµ¿ì¸¦ ÃÊ±âÈ­ÇÕ´Ï´Ù.
+	 * @brief ì• í”Œë¦¬ì¼€ì´ì…˜ì„ ì´ˆê¸°í™”í•©ë‹ˆë‹¤.
 	 * 
-	 * @return ¼º°ø ¿©ºÎ¸¦ ÃÊ±âÈ­ÇÕ´Ï´Ù.
+	 * @return bool ì´ˆê¸°í™” ì„±ê³µ ì—¬ë¶€
 	 */
-	static bool InitWindow() noexcept;
+	static bool Initialize() noexcept;
 
 	/**
-	 * @brief ±×·¡ÇÈ½º API¸¦ ÃÊ±âÈ­ÇÕ´Ï´Ù.
-	 * 
-	 * @return bool ¼º°ø ¿©ºÎ
+	 * @brief ì• í”Œë¦¬ì¼€ì´ì…˜ ë‚´ ë¦¬ì†ŒìŠ¤ë¥¼ ë¶ˆëŸ¬ì˜µë‹ˆë‹¤.
 	 */
-	static bool InitGraphics() noexcept;
+	static void Start() noexcept;
 
 	/**
-	 * @brief ¾ÖÇÃ¸®ÄÉÀÌ¼Ç ¼³Á¤.
+	 * @brief ì• í”Œë¦¬ì¼€ì´ì…˜ì„ ì—…ë°ì´íŠ¸í•©ë‹ˆë‹¤.
 	 */
-	static Application::Specification specification;
+	static void Update(const float deltaTime_) noexcept;
 
 	/**
-	 * @brief À©µµ¿ì ÇÚµé.
+	 * @brief ì• í”Œë¦¬ì¼€ì´ì…˜ì„ ê·¸ë¦½ë‹ˆë‹¤.
 	 */
+	static void Render() noexcept;
+
+	/**
+	 * @brief ì• í”Œë¦¬ì¼€ì´ì…˜ ë‚´ ë¦¬ì†ŒìŠ¤ë¥¼ ì •ë¦¬í•˜ê³ , ì• í”Œë¦¬ì¼€ì´ì…˜ì„ ë‹«ìŠµë‹ˆë‹¤.
+	 */
+	static void Close() noexcept;
+
+	/**
+	 * @brief ì• í”Œë¦¬ì¼€ì´ì…˜ ì„¤ì •.
+	 */
+	static Application::Configuration configuration;
+
+	/**
+	* @brief GLFW ìœˆë„ìš° í•¸ë“¤.
+	*/
 	static GLFWwindow* window;
 };
 
-inline const Application::Specification& Application::GetSpecification() noexcept
+inline constexpr Application::Configuration& Application::GetSpecification() noexcept
 {
-    return specification;
+	return configuration;
 }
 
-#endif // !GUARD_APPLICATION_H
+inline void Application::SetSpecification(const Application::Configuration& config_) noexcept
+{
+	configuration = config_;
+}
+
+inline constexpr GLFWwindow* const Application::GetNativeWindow() noexcept
+{
+	return window;
+}
+
+inline void Application::SetNativeWindow(GLFWwindow* const window_) noexcept
+{
+	window = window_;
+}

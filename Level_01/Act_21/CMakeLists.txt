@@ -1,17 +1,15 @@
 add_executable(Level_01_Act_21
-        "Sources/Application.cpp" 
-        "Sources/Camera.cpp" 
-        "Sources/Box.cpp"
+        "Sources/Application.cpp"
         "Sources/Camera.cpp"
-        "Sources/Cube.cpp"
-        "Sources/File.cpp"
         "Sources/Input.cpp"
         "Sources/Main.cpp"
-        "Sources/Marble.cpp"
         "Sources/Mesh.cpp"
         "Sources/Object.cpp"
-        "Sources/Shader.cpp"
- "Sources/CollisionBox.h")
+        "Sources/Shader.cpp" "Sources/Stage.cpp" "Sources/Marble.cpp" "Sources/Block.cpp")
+
+ target_precompile_headers(Level_01_Act_21 PRIVATE
+        "${CMAKE_CURRENT_SOURCE_DIR}/Sources/PCH.h"
+ )
 
 target_link_libraries(Level_01_Act_21 PRIVATE
         GLEW::GLEW

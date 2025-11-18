@@ -1,123 +1,95 @@
-#ifndef GUARD_SHADER_H
-#define GUARD_SHADER_H
+ï»¿#pragma once
 
-#include <filesystem>
-#include <memory>
-
-#include <gl/glew.h>
-
-#include <glm/vec2.hpp>
-#include <glm/vec3.hpp>
-#include <glm/vec4.hpp>
-#include <glm/mat4x4.hpp>
-#include <glm/gtc/type_ptr.hpp>
+#include "PCH.h"
 
 /**
  * @class Shader
  *
- * @brief ¼ÎÀÌ´õ¸¦ Á¤ÀÇÇÕ´Ï´Ù.
+ * @brief ì…°ì´ë”ë¥¼ ì •ì˜í•©ë‹ˆë‹¤.
  */
 class Shader final
 {
 public:
     /**
-     * @brief »ı¼ºÀÚ.
-     *
-     * @param vertexSource_   ¹öÅØ½º ¼ÎÀÌ´õ ¼Ò½º ÄÚµå.
-     * @param fragmentSource_ ÇÁ·¡±×¸ÕÆ® ¼ÎÀÌ´õ ¼Ò½º ÄÚµå
+     * @brief ìƒì„±ì.
      */
-    explicit Shader(
-        const char* vertexSource_,
-        const char* fragmentSource_
-    ) noexcept;
+    explicit Shader() noexcept;
 
     /**
-     * @brief ¼Ò¸êÀÚ.
+     * @brief ì†Œë©¸ì.
      */
     ~Shader() noexcept;
 
     /**
-     * @brief ¼ÎÀÌ´õ¸¦ »ç¿ëÇÕ´Ï´Ù.
+     * @brief ì…°ì´ë”ë¥¼ ì‚¬ìš©í•©ë‹ˆë‹¤.
      */
     inline void Use() const noexcept;
 
     /**
-     * @brief ¼ÎÀÌ´õ ÇÁ·Î±×·¥ ID¸¦ ¹İÈ¯ÇÕ´Ï´Ù.
+     * @brief ì…°ì´ë” í”„ë¡œê·¸ë¨ IDë¥¼ ë°˜í™˜í•©ë‹ˆë‹¤.
      *
-     * @return unsigned int ¼ÎÀÌ´õ ÇÁ·Î±×·¥ ID.
+     * @return unsigned int ì…°ì´ë” í”„ë¡œê·¸ë¨ ID.
      */
     [[nodiscard]]
     constexpr unsigned int GetProgramID() const noexcept;
 
     /**
-     * @brief Á¤¼öÇü À¯´ÏÆû º¯¼ö¸¦ ¼³Á¤ÇÕ´Ï´Ù.
+     * @brief ì •ìˆ˜í˜• ìœ ë‹ˆí¼ ë³€ìˆ˜ë¥¼ ì„¤ì •í•©ë‹ˆë‹¤.
      *
-     * @param name_  À¯´ÏÆû º¯¼ö ÀÌ¸§.
-     * @param value_ ¼³Á¤ÇÒ °ª.
+     * @param name_  ìœ ë‹ˆí¼ ë³€ìˆ˜ ì´ë¦„.
+     * @param value_ ì„¤ì •í•  ê°’.
      */
-    inline void SetUniformInt(
-        const char* const name_, 
-        const int         value_
-    ) const noexcept;
+    inline void SetUniformInt(const char* const name_,
+                              const int         value_) const noexcept;
 
     /**
-     * @brief ½Ç¼öÇü À¯´ÏÆû º¯¼ö¸¦ ¼³Á¤ÇÕ´Ï´Ù.
+     * @brief ì‹¤ìˆ˜í˜• ìœ ë‹ˆí¼ ë³€ìˆ˜ë¥¼ ì„¤ì •í•©ë‹ˆë‹¤.
      *
-     * @param name_  À¯´ÏÆû º¯¼ö ÀÌ¸§.
-     * @param value_ ¼³Á¤ÇÒ °ª.
+     * @param name_  ìœ ë‹ˆí¼ ë³€ìˆ˜ ì´ë¦„.
+     * @param value_ ì„¤ì •í•  ê°’.
      */
-    inline void SetUniformFloat(
-        const char* const name_, 
-        const float       value_
-    ) const noexcept;
+    inline void SetUniformFloat(const char* const name_,
+                                const float       value_) const noexcept;
 
     /**
-     * @brief 2Â÷¿ø º¤ÅÍ À¯´ÏÆû º¯¼ö¸¦ ¼³Á¤ÇÕ´Ï´Ù.
+     * @brief 2ì°¨ì› ë²¡í„° ìœ ë‹ˆí¼ ë³€ìˆ˜ë¥¼ ì„¤ì •í•©ë‹ˆë‹¤.
      *
-     * @param name_  À¯´ÏÆû º¯¼ö ÀÌ¸§.
-     * @param value_ ¼³Á¤ÇÒ °ª.
+     * @param name_  ìœ ë‹ˆí¼ ë³€ìˆ˜ ì´ë¦„.
+     * @param value_ ì„¤ì •í•  ê°’.
      */
-    inline void SetUniformVector2(
-        const char* const name_, 
-        const glm::vec2&  value_
-    ) const noexcept;
+    inline void SetUniformVector2(const char* const name_,
+                                  const glm::vec2& value_) const noexcept;
 
     /**
-     * @brief 3Â÷¿ø º¤ÅÍ À¯´ÏÆû º¯¼ö¸¦ ¼³Á¤ÇÕ´Ï´Ù.
+     * @brief 3ì°¨ì› ë²¡í„° ìœ ë‹ˆí¼ ë³€ìˆ˜ë¥¼ ì„¤ì •í•©ë‹ˆë‹¤.
      *
-     * @param name_  À¯´ÏÆû º¯¼ö ÀÌ¸§.
-     * @param value_ ¼³Á¤ÇÒ °ª.
+     * @param name_  ìœ ë‹ˆí¼ ë³€ìˆ˜ ì´ë¦„.
+     * @param value_ ì„¤ì •í•  ê°’.
      */
-    inline void SetUniformVector3(
-        const char* const name_, 
-        const glm::vec3&  value_
-    ) const noexcept;
+    inline void SetUniformVector3(const char* const name_,
+                                  const glm::vec3& value_) const noexcept;
 
     /**
-     * @brief 4Â÷¿ø º¤ÅÍ À¯´ÏÆû º¯¼ö¸¦ ¼³Á¤ÇÕ´Ï´Ù.
+     * @brief 4ì°¨ì› ë²¡í„° ìœ ë‹ˆí¼ ë³€ìˆ˜ë¥¼ ì„¤ì •í•©ë‹ˆë‹¤.
      *
-     * @param name_  À¯´ÏÆû º¯¼ö ÀÌ¸§.
-     * @param value_ ¼³Á¤ÇÒ °ª.
+     * @param name_  ìœ ë‹ˆí¼ ë³€ìˆ˜ ì´ë¦„.
+     * @param value_ ì„¤ì •í•  ê°’.
      */
-    inline void SetUniformVector4(
-        const char* const name_, 
-        const glm::vec4&  value_
-    ) const noexcept;
+    inline void SetUniformVector4(const char* const name_,
+                                  const glm::vec4& value_) const noexcept;
 
     /**
-     * @brief 4x4 Çà·Ä À¯´ÏÆû º¯¼ö¸¦ ¼³Á¤ÇÕ´Ï´Ù.
+     * @brief 4x4 í–‰ë ¬ ìœ ë‹ˆí¼ ë³€ìˆ˜ë¥¼ ì„¤ì •í•©ë‹ˆë‹¤.
      *
-     * @param name_  À¯´ÏÆû º¯¼ö ÀÌ¸§.
-     * @param value_ ¼³Á¤ÇÒ °ª.
+     * @param name_  ìœ ë‹ˆí¼ ë³€ìˆ˜ ì´ë¦„.
+     * @param value_ ì„¤ì •í•  ê°’.
      */
-    inline void SetUniformMatrix4x4(
-        const char* const name_, 
-        const glm::mat4&  value_
-    ) const noexcept;
+    inline void SetUniformMatrix4x4(const char* const name_,
+                                    const glm::mat4& value_) const noexcept;
 
 private:
     /**
-     * @brief ¼ÎÀÌ´õ ÇÁ·Î±×·¥ ID.
+     * @brief ì…°ì´ë” í”„ë¡œê·¸ë¨ ID.
      */
     GLuint programID = 0;
 };
@@ -167,5 +139,3 @@ inline void Shader::SetUniformMatrix4x4(const char* name_, const glm::mat4& valu
     const GLint location = glGetUniformLocation(programID, name_);
     glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(value_));
 }
-
-#endif // !GUARD_SHADER_H

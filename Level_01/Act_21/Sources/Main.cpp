@@ -1,163 +1,201 @@
-#include <array>
-#include <memory>
+ï»¿#include "PCH.h"
 
 #include "Application.h"
-#include "Camera.h"
-#include "File.h"
 #include "Input.h"
+
 #include "Shader.h"
-#include "Box.h"
-#include "Cube.h"
+#include "Camera.h"
+
+#include "Mesh.h"
+
+#include "Object.h"
+#include "Block.h"
 #include "Marble.h"
-
-#include <GLFW/glfw3.h>
-
-#include <spdlog/spdlog.h>
+#include "Stage.h"
 
 /**
- * @brief ¾ÖÇÃ¸®ÄÉÀÌ¼ÇÀÌ ½ÃÀÛµÉ ¶§ È£ÃâµË´Ï´Ù.
+ * @brief ì°½ì´ ì¼œì§ˆ ë•Œ í˜¸ì¶œë©ë‹ˆë‹¤.
  */
 static void OnStart() noexcept;
 
 /**
- * @brief ¸Å ÇÁ·¹ÀÓ¸¶´Ù È£ÃâµË´Ï´Ù.
+ * @brief ë§¤ í”„ë ˆì„ë§ˆë‹¤ í˜¸ì¶œë©ë‹ˆë‹¤.
  * 
- * @param deltaTime_ ÇöÀç ÇÁ·¹ÀÓ°ú ÀÌÀü ÇÁ·¹ÀÓ »çÀÌÀÇ °£°İ
+ * @param deltaTime_ ì´ì „ í”„ë ˆì„ê³¼ì˜ ì‹œê°„ ì°¨ì´(ì´ˆ)
  */
-static void OnUpdate(float deltaTime_) noexcept;
+static void OnUpdate(const float deltaTime_) noexcept;
 
 /**
- * @brief ·»´õ¸µÀÌ ½ÇÇàµÉ ¶§ È£ÃâµË´Ï´Ù.
+ * @brief ì°½ì´ ê·¸ë ¤ì§ˆ ë•Œ í˜¸ì¶œë©ë‹ˆë‹¤.
  */
 static void OnRender() noexcept;
 
 /**
- * @brief ¾ÖÇÃ¸®ÄÉÀÌ¼ÇÀÌ Á¾·áµÉ ¶§ È£ÃâµË´Ï´Ù.
+ * @brief ì°½ì´ ë‹«í ë•Œ í˜¸ì¶œë©ë‹ˆë‹¤.
  */
 static void OnClose() noexcept;
 
 /**
- * @brief ÄÁÅØ½ºÆ® ¸ŞÀÌÀú ¹öÀü.
- */
-static constexpr int CONTEXT_MAJOR_VERSION = 4;
-
-/**
- * @brief ÄÁÅØ½ºÆ® ¸¶ÀÌ³Ê ¹öÀü.
- */
-static constexpr int CONTEXT_MINOR_VERSION = 6;
-
-/**
- * @brief ¾ÖÇÃ¸®ÄÉÀÌ¼Ç ÀÌ¸§.
- */
-static constexpr const char* APPLICATION_NAME = "Level 1 - Act 20";
-
-/**
- * @brief ¾ÖÇÃ¸®ÄÉÀÌ¼Ç ³Êºñ.
- */
-static constexpr int APPLICATION_WIDTH = 1280;
-
-/**
- * @brief ¾ÖÇÃ¸®ÄÉÀÌ¼Ç ³ôÀÌ.
- */
-static constexpr int APPLICATION_HEIGHT = 720;
-
-/**
- * @brief ¾ÖÇÃ¸®ÄÉÀÌ¼Ç ³»¿¡¼­ »ç¿ëÇÒ Ä«¸Ş¶ó.
+ * @brief ë©”ì¸ ì¹´ë©”ë¼.
  */
 static std::unique_ptr<Camera> camera;
 
 /**
- * @brief ¾ÖÇÃ¸®ÄÉÀÌ¼Ç ³»¿¡¼­ »ç¿ëÇÒ ¼ÎÀÌ´õ.
+ * @brief ì…°ì´ë”.
  */
 static std::unique_ptr<Shader> shader;
 
 /**
- * @brief ¹Ú½º.
+ * @brief ë¬´ëŒ€ ì˜¤ë¸Œì íŠ¸ì˜ ë©”ì‰¬.
  */
-static std::unique_ptr<Box> box;
+static std::unique_ptr<Mesh> stageMesh;
 
 /**
- * @brief 
+ * @brief êµ¬ìŠ¬ ì˜¤ë¸Œì íŠ¸ì˜ ë©”ì‰¬.
  */
-static std::array<std::unique_ptr<Marble>, 6> marbles;
+static std::unique_ptr<Mesh> marbleMesh;
 
-int main(int, char**)
+/**
+ * @brief ë¸”ë¡ ì˜¤ë¸Œì íŠ¸ì˜ ë©”ì‰¬.
+ */
+static std::unique_ptr<Mesh> blockMesh;
+
+/**
+ * @brief ì¥ë©´ ë‚´ ì˜¤ë¸Œì íŠ¸ë“¤.
+ */
+static std::vector<std::unique_ptr<Object>> objects;
+
+int main()
 {
-	Application::Specification specification = {};
-	specification.majorVersion				 = CONTEXT_MAJOR_VERSION;
-	specification.minorVersion				 = CONTEXT_MINOR_VERSION;
-	specification.name						 = APPLICATION_NAME;
-	specification.width						 = APPLICATION_WIDTH;
-	specification.height					 = APPLICATION_HEIGHT;
-	specification.onStart					 = OnStart;
-	specification.onUpdate					 = OnUpdate;
-	specification.onRender					 = OnRender;
-	specification.onClose					 = OnClose;
+	std::print("â€» [z/Z]: Zì¶•ìœ¼ë¡œ ì–‘/ìŒì˜ ë°©í–¥ìœ¼ë¡œ ì´ë™\n");
+	std::print("â€» [y/Y]: í™”ë©´ì˜ Yì¶•ì— ëŒ€í•˜ì—¬ ì‹œê³„, ë°˜ì‹œê³„ ë°©í–¥ìœ¼ë¡œ íšŒì „\n");
+	std::print("â€» [B]:   ë°•ìŠ¤ ë‚´ ìƒˆë¡œìš´ ê³µì„ ì¶”ê°€\n");
+	std::print("â€» [Q]:   í”„ë¡œê·¸ë¨ ì¢…ë£Œ\n");
+	std::print("â€» ë§ˆìš°ìŠ¤ë¥¼ ì¢Œ/ìš°ë¡œ ì´ë™í•˜ë©´ ë°•ìŠ¤ê°€ Zì¶•ì— ëŒ€í•˜ì—¬ íšŒì „í•©ë‹ˆë‹¤\n");
 
-	return Application::Run(specification);
+	Application::Configuration configuration = { };
+	configuration.width				= 800;
+	configuration.height			= 600;
+	configuration.title				= "Level 01 - Act 21";
+	configuration.shouldFullscreen	= false;
+	configuration.shouldDecorate	= true;
+	configuration.shouldResizable	= false;
+	configuration.shouldVSync		= false;
+	configuration.onStart			= OnStart;
+	configuration.onUpdate			= OnUpdate;
+	configuration.onRender			= OnRender;
+	configuration.onClose			= OnClose;
+	
+	return Application::Run(configuration);
 }
 
 void OnStart() noexcept
 {
-	const std::string vertexShaderFile   = File::ReadFile("Resources/Shaders/Vertex.vert");
-	const char* const vertexShaderSource = vertexShaderFile.c_str();
+	camera = std::make_unique<Camera>();
+	camera->SetProjection(Camera::Projection::Perspective);
+	camera->SetPosition(glm::vec3(0.0f, 0.0f, 25.0f));
+	camera->SetForward(glm::vec3(0.0f) - camera->GetPosition());
+	camera->SetUp(glm::vec3(0.0f, 1.0f, 0.0f));
+	camera->SetViewport(Camera::Viewport{ 0, 0, 800, 600 });
 
-	const std::string fragmentShaderFile   = File::ReadFile("Resources/Shaders/Fragment.frag");
-	const char* const fragmentShaderSource = fragmentShaderFile.c_str();
-
-	shader = std::make_unique<Shader>(vertexShaderSource, fragmentShaderSource);
+	shader = std::make_unique<Shader>();
 	shader->Use();
-	
-	constexpr Camera::Projection projectionType = Camera::Projection::Perspective;
-	const glm::vec3 target   = glm::vec3(0.0f, 0.0f, 0.0f);
-	const glm::vec3 position = glm::vec3(0.0f, 0.0f, 50.0f);
-	const glm::vec3 front    = glm::normalize(target - position);
-	const glm::vec3 up       = glm::vec3(0.0f, 1.0f, 0.0f);
 
-	camera = std::make_unique<Camera>(projectionType, position, front, up);
-
-	box = std::make_unique<Box>();
-	box->SetScale(glm::vec3(20.0f));
-
-	for (int count = 0; count < marbles.size(); ++count)
+	stageMesh = Mesh::LoadFrom("Resources/Meshes/Stage.obj");
+	if (!stageMesh)
 	{
-		marbles[count] = std::make_unique<Marble>(10.0f);
-		marbles[count]->SetScale(glm::vec3(1.0f));
-		marbles[count]->SetPosition(glm::vec3(1.0f * count, 1.0f * count, 0.0f));
-		// marbles[count]->SetParent(box.get());
+		spdlog::critical("ë©”ì‰¬ ë¡œë“œì— ì‹¤íŒ¨í–ˆìŠµë‹ˆë‹¤: Resources/Meshes/Stage.obj");
+		return;
 	}
+
+	Object* stage = objects.emplace_back(std::make_unique<Stage>(stageMesh.get())).get();
+	stage->SetPosition(glm::vec3(0.0f, 0.0f, 0.0f));
+	stage->SetScale(glm::vec3(10.0f));
+
+	marbleMesh = Mesh::LoadFrom("Resources/Meshes/Marble.obj");
+	if (!marbleMesh)
+	{
+		spdlog::critical("ë©”ì‰¬ ë¡œë“œì— ì‹¤íŒ¨í–ˆìŠµë‹ˆë‹¤: Resources/Meshes/Marble.obj");
+		return;
+	}
+
+	blockMesh = Mesh::LoadFrom("Resources/Meshes/Block.obj");
+	if (!blockMesh)
+	{
+		spdlog::critical("ë©”ì‰¬ ë¡œë“œì— ì‹¤íŒ¨í–ˆìŠµë‹ˆë‹¤: Resources/Meshes/Block.obj");
+		return;
+	}
+
+	Object* block1 = objects.emplace_back(std::make_unique<Block>(blockMesh.get())).get();
+	block1->SetPosition(glm::vec3(-5.0f, 0.0f, 0.0f));
 }
 
-void OnUpdate(float deltaTime_) noexcept
+void OnUpdate(const float deltaTime_) noexcept
 {
-	if (Input::IsKeyPressed(GLFW_KEY_Q))
+	if (Input::IsKeyPressed(GLFW_KEY_Z))
 	{
-		Application::Quit();
+		if (Input::IsModified(GLFW_MOD_SHIFT))
+		{
+			const glm::vec3 position = camera->GetPosition();
+			const glm::vec3 forward  = glm::normalize(camera->GetForward());
+			camera->SetPosition(position + forward * 4.0f * deltaTime_);
+		}
+		else
+		{
+			const glm::vec3 position = camera->GetPosition();
+			const glm::vec3 forward = glm::normalize(camera->GetForward());
+			camera->SetPosition(position - forward * 4.0f * deltaTime_);
+		}
 	}
 
-	box->Update(deltaTime_); 
-
-	for (const auto& marble : marbles)
+	if (Input::IsKeyPressed(GLFW_KEY_B))
 	{
-		marble->Update(deltaTime_);
+		objects.emplace_back(std::make_unique<Marble>(marbleMesh.get())).get();
+	}
+
+	if (Input::IsKeyPressed(GLFW_KEY_Q))
+	{
+		Application::Quit(0);
+	}
+
+	for (const std::unique_ptr<Object>& object : objects)
+	{
+		if (object)
+		{
+			object->Update(deltaTime_);
+		}
 	}
 }
 
 void OnRender() noexcept
 {
-	shader->Use();
-	camera->PreRender(*(shader));
-
-	for (const auto& marble : marbles)
+	if (!shader)
 	{
-		marble->Render(*(shader));
+		return;
 	}
 
-	box->Render(*(shader));
+	if (camera)
+	{
+		camera->PreRender(*shader);
+
+		for (const std::unique_ptr<Object>& object : objects)
+		{
+			if (object)
+			{
+				object->Render(*shader);
+			}
+		}
+	}
 }
 
 void OnClose() noexcept
 {
 	camera.reset();
 	shader.reset();
+
+	stageMesh.reset();
+	marbleMesh.reset();
+	blockMesh.reset();
+
+	objects.clear();
 }

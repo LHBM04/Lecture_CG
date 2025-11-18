@@ -1,196 +1,177 @@
-#ifndef GUARD_OBJECTS_H
-#define GUARD_OBJECTS_H
+ï»¿#pragma once
 
-#include <memory>
+#include "PCH.h"
 
-#include <glm/vec3.hpp>
-
-#include "Mesh.h"
 #include "Shader.h"
 
-struct Transform final
-{
-    glm::vec3 position = glm::vec3(0 , 0, 0);
-    glm::vec3 rotation = glm::vec3(0, 0, 0);
-	glm::vec3 scale = glm::vec3(1, 1, 1);
-    Transform* parent = nullptr;
-
-    inline const glm::mat4 GetModelMatrix() const noexcept
-    {
-		glm::mat4 model = glm::mat4(1.0f);
-		model = glm::translate(model, position);
-		model = glm::rotate(model, glm::radians(rotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
-		model = glm::rotate(model, glm::radians(rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
-		model = glm::rotate(model, glm::radians(rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
-		model = glm::scale(model, scale);
-
-        if (parent)
-        {
-            model = parent->GetModelMatrix() * model;
-        }
-
-        return model;
-	}
-};
-
 /**
- * @class Object
- *
- * @brief ¿ÀºêÁ§Æ®¸¦ Á¤ÀÇÇÕ´Ï´Ù.
+ * @brief 
  */
 class Object
 {
 public:
-    /**
-     * @brief »ı¼ºÀÚ.
-     *
-     * @param position_ »ı¼ºÇÒ ¿ÀºêÁ§Æ®ÀÇ À§Ä¡
-     * @param rotation_ »ı¼ºÇÒ ¿ÀºêÁ§Æ®ÀÇ È¸Àü
-     * @param scale_    »ı¼ºÇÒ ¿ÀºêÁ§Æ®ÀÇ Å©±â
-     */
-    explicit Object(
-        const glm::vec3& position_ = glm::vec3{ 0.0f, 0.0f, 0.0f },
-        const glm::vec3& rotation_ = glm::vec3{ 0.0f, 0.0f, 0.0f },
-        const glm::vec3& scale_    = glm::vec3{ 1.0f, 1.0f, 1.0f }
-    ) noexcept;
+	/**
+	 * @brief ì†Œë©¸ì.
+	 */
+	virtual ~Object() noexcept = default;
+
+	/**
+	 * @brief í•´ë‹¹ ê°ì²´ë¥¼ ì—…ë°ì´íŠ¸í•©ë‹ˆë‹¤.
+     * 
+	 * @param deltaTime_ ì´ì „ í”„ë ˆì„ê³¼ í˜„ì¬ í”„ë ˆì„ ì‚¬ì´ì˜ ê°„ê²©
+	 */
+	virtual void Update(const float deltaTime_) noexcept;
 
     /**
-     * @brief ¼Ò¸êÀÚ.
-     */
-    virtual ~Object() noexcept;
-
-    /**
-     * @brief ÇØ´ç ¿ÀºêÁ§Æ®¸¦ ¾÷µ¥ÀÌÆ®ÇÕ´Ï´Ù.
-     */
-    virtual void Update(const float deltaTime_) noexcept;
-
-    /**
-     * @brief ÇØ´ç ¿ÀºêÁ§Æ®¸¦ ·»´õ¸µÇÕ´Ï´Ù.
-     *
-     * @param shader_ »ç¿ëÇÒ ¼ÎÀÌ´õ
+     * @brief í•´ë‹¹ ê°ì²´ë¥¼ ë Œë”ë§í•©ë‹ˆë‹¤.
+     * 
+     * @param shader_ ì‚¬ìš©í•  ì…°ì´ë”
      */
     virtual void Render(const Shader& shader_) const noexcept;
 
     /**
-     * @brief ÇØ´ç ¿ÀºêÁ§Æ®ÀÇ ¸Å½¬¸¦ ¹İÈ¯ÇÕ´Ï´Ù.
+     * @brief í•´ë‹¹ ì˜¤ë¸Œì íŠ¸ì˜ ìœ„ì¹˜ë¥¼ ë°˜í™˜í•©ë‹ˆë‹¤.
      *
-     * @return Mesh* ÇØ´ç ¿ÀºêÁ§Æ®ÀÇ ¸Å½¬
-     */
-    [[nodiscard]]
-    inline Mesh* GetMesh() const noexcept;
-
-    /**
-     * @brief ÇØ´ç ¿ÀºêÁ§Æ®ÀÇ ¸Å½¬¸¦ ¼³Á¤ÇÕ´Ï´Ù.
-     *
-     * @param mesh_ ¼³Á¤ÇÒ ¸Å½¬.
-     */
-    inline void SetMesh(Mesh* mesh_) noexcept;
-
-    /**
-     * @brief ÇØ´ç ¿ÀºêÁ§Æ®ÀÇ À§Ä¡¸¦ ¹İÈ¯ÇÕ´Ï´Ù.
-     *
-     * @return glm::vec3 ÇØ´ç ¿ÀºêÁ§Æ®ÀÇ À§Ä¡.
+     * @return glm::vec3 í•´ë‹¹ ì˜¤ë¸Œì íŠ¸ì˜ ìœ„ì¹˜
      */
     [[nodiscard]]
     inline constexpr glm::vec3 GetPosition() const noexcept;
 
     /**
-     * @brief ÇØ´ç ¿ÀºêÁ§Æ®ÀÇ À§Ä¡¸¦ ¼³Á¤ÇÕ´Ï´Ù.
+     * @brief í•´ë‹¹ ì˜¤ë¸Œì íŠ¸ì˜ ìœ„ì¹˜ë¥¼ ì„¤ì •í•©ë‹ˆë‹¤.
      *
-     * @param position_ ¼³Á¤ÇÒ À§Ä¡.
+     * @param position_ ì„¤ì •í•  ìœ„ì¹˜
      */
     inline void SetPosition(const glm::vec3& position_) noexcept;
 
     /**
-     * @brief ÇØ´ç ¿ÀºêÁ§Æ®ÀÇ È¸ÀüÀ» ¹İÈ¯ÇÕ´Ï´Ù.
+     * @brief í•´ë‹¹ ì˜¤ë¸Œì íŠ¸ì˜ íšŒì „ì„ ë°˜í™˜í•©ë‹ˆë‹¤.
      *
-     * @return glm::vec3 ÇØ´ç ¿ÀºêÁ§Æ®ÀÇ È¸Àü.
+     * @return glm::vec3 í•´ë‹¹ ì˜¤ë¸Œì íŠ¸ì˜ íšŒì „
      */
     [[nodiscard]]
     inline constexpr glm::vec3 GetRotation() const noexcept;
 
     /**
-     * @brief ÇØ´ç ¿ÀºêÁ§Æ®ÀÇ È¸ÀüÀ» ¼³Á¤ÇÕ´Ï´Ù.
+     * @brief í•´ë‹¹ ì˜¤ë¸Œì íŠ¸ì˜ íšŒì „ì„ ì„¤ì •í•©ë‹ˆë‹¤.
      *
-     * @param rotation_ ¼³Á¤ÇÒ È¸Àü.
+     * @param rotation_ ì„¤ì •í•  íšŒì „
      */
     inline void SetRotation(const glm::vec3& rotation_) noexcept;
 
     /**
-     * @brief ÇØ´ç ¿ÀºêÁ§Æ®ÀÇ Å©±â¸¦ ¹İÈ¯ÇÕ´Ï´Ù.
+     * @brief í•´ë‹¹ ì˜¤ë¸Œì íŠ¸ì˜ í¬ê¸°ë¥¼ ë°˜í™˜í•©ë‹ˆë‹¤.
      *
-     * @return glm::vec3 ÇØ´ç ¿ÀºêÁ§Æ®ÀÇ Å©±â.
+     * @return glm::vec3 í•´ë‹¹ ì˜¤ë¸Œì íŠ¸ì˜ í¬ê¸°
      */
     [[nodiscard]]
     inline constexpr glm::vec3 GetScale() const noexcept;
 
     /**
-     * @brief ÇØ´ç ¿ÀºêÁ§Æ®ÀÇ Å©±â¸¦ ¼³Á¤ÇÕ´Ï´Ù.
+     * @brief í•´ë‹¹ ì˜¤ë¸Œì íŠ¸ì˜ í¬ê¸°ë¥¼ ì„¤ì •í•©ë‹ˆë‹¤.
      *
-     * @param scale_ ¼³Á¤ÇÒ Å©±â.
+     * @param scale_ ì„¤ì •í•  í¬ê¸°
      */
     inline void SetScale(const glm::vec3& scale_) noexcept;
 
-    inline const Transform& GetTransform() const noexcept
-    {
-        return transform;
-	}
+    /**
+     * @brief í•´ë‹¹ ì˜¤ë¸Œì íŠ¸ì˜ í¬ê¸°ë¥¼ ë°˜í™˜í•©ë‹ˆë‹¤.
+     *
+     * @return glm::vec3 í•´ë‹¹ ì˜¤ë¸Œì íŠ¸ì˜ í¬ê¸°
+     */
+    [[nodiscard]]
+    inline constexpr Object* const GetParent() const noexcept;
 
-    void SetParent(Object* parent_) noexcept
-    {
-        transform.parent = parent_ ? &parent_->transform : nullptr;
-    }
+    /**
+     * @brief í•´ë‹¹ ì˜¤ë¸Œì íŠ¸ì˜ í¬ê¸°ë¥¼ ì„¤ì •í•©ë‹ˆë‹¤.
+     *
+     * @param scale_ ì„¤ì •í•  í¬ê¸°
+     */
+    inline void SetParent(Object* const parent_) noexcept;
+
+    /**
+     * @brief í•´ë‹¹ ì˜¤ë¸Œì íŠ¸ì˜ ëª¨ë¸ í–‰ë ¬ì„ ë°˜í™˜í•©ë‹ˆë‹¤.
+     * 
+	 * @return glm::mat4 í•´ë‹¹ ì˜¤ë¸Œì íŠ¸ì˜ ëª¨ë¸ í–‰ë ¬
+     */
+    [[nodiscard]]
+	inline glm::mat4 GetModelMatrix() const noexcept;
 
 private:
-    /**
-     * @brief ÇØ´ç ¿ÀºêÁ§Æ®ÀÇ ¸Å½¬.
-     */
-    std::unique_ptr<Mesh> mesh;
-
-    /**
-     * @brief ÇØ´ç ¿ÀºêÁ§Æ®ÀÇ À§Ä¡.
+	/**
+	 * @brief í•´ë‹¹ ê°ì²´ì˜ ìœ„ì¹˜.
 	 */
-    Transform transform;
+	glm::vec3 position = glm::vec3(0.0f);
+
+	/**
+	 * @brief í•´ë‹¹ ê°ì²´ì˜ íšŒì „.
+	 */
+    glm::vec3 rotation = glm::vec3(0.0f);
+
+	/**
+	 * @brief í•´ë‹¹ ê°ì²´ì˜ í¬ê¸°.
+	 */
+	glm::vec3 scale = glm::vec3(1.0f);
+
+	/**
+	 * @brief í•´ë‹¹ ê°ì²´ì˜ ìƒìœ„ ê°ì²´.
+	 */
+	Object* parent = nullptr;
 };
-
-inline Mesh* Object::GetMesh() const noexcept
-{
-    return mesh.get();
-}
-
-inline void Object::SetMesh(Mesh* const mesh_) noexcept
-{
-    mesh.reset(mesh_);
-}
 
 inline constexpr glm::vec3 Object::GetPosition() const noexcept
 {
-    return transform.position;
+    return position;
 }
 
 inline void Object::SetPosition(const glm::vec3& position_) noexcept
 {
-    transform.position = position_;
+    position = position_;
 }
 
 inline constexpr glm::vec3 Object::GetRotation() const noexcept
 {
-    return transform.rotation;
+    return rotation;
 }
 
 inline void Object::SetRotation(const glm::vec3& rotation_) noexcept
 {
-    transform.rotation = rotation_;
+    rotation = rotation_;
 }
 
 inline constexpr glm::vec3 Object::GetScale() const noexcept
 {
-    return transform.scale;
+    return scale;
 }
 
 inline void Object::SetScale(const glm::vec3& scale_) noexcept
 {
-    transform.scale = scale_;
+    scale = scale_;
 }
 
-#endif // !GUARD_OBJECTS_H
+inline constexpr Object* const Object::GetParent() const noexcept
+{
+    return parent;
+}
+
+inline void Object::SetParent(Object* const parent_) noexcept
+{
+    parent = parent_;
+}
+
+inline glm::mat4 Object::GetModelMatrix() const noexcept
+{
+    glm::mat4 model = glm::mat4(1.0f);
+    model = glm::translate(model, position);
+    model = glm::rotate(model, glm::radians(rotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
+    model = glm::rotate(model, glm::radians(rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
+    model = glm::rotate(model, glm::radians(rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
+    model = glm::scale(model, scale);
+
+    if (parent != nullptr)
+    {
+        model = parent->GetModelMatrix() * model;
+    }
+
+    return model;
+}

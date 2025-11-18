@@ -1,95 +1,144 @@
-#ifndef GUARD_MESH_H
-#define GUARD_MESH_H
+ï»¿#pragma once
 
-#include <string>
+#include "PCH.h"
 
-#include <GL/glew.h>
-
-#include <glm/vec3.hpp>
-
-/**
- * @brief ¸Ş½¬¸¦ Á¤ÀÇÇÕ´Ï´Ù.
- */
 class Mesh
 {
 public:
 	/**
-	 * @brief Á¤Á¡À» Á¤ÀÇÇÕ´Ï´Ù.
+	 * @brief ì •ì  ë°ì´í„°ë¥¼ ì •ì˜í•©ë‹ˆë‹¤.
 	 */
 	struct Vertex final
-	{ 
+	{
 		/**
-		 * @brief Á¤Á¡ À§Ä¡.
+		 * @brief ì •ì ì˜ ìœ„ì¹˜.
 		 */
 		glm::vec3 position;
 
 		/**
-		 * @brief Á¤Á¡ »ö.
+		 * @brief ì •ì ì˜ ìƒ‰ìƒ.
 		 */
 		glm::vec3 color;
-	};
-
+	};    
+    
     /**
-     * @brief »ı¼ºÀÚ.
+     * @brief ìƒì„±ì.
      *
-     * @param vertices_ »ı¼ºÇÒ Á¤Á¡µé.
-     * @param indices_  »ı¼ºÇÒ ÀÎµ¦½ºµé.
+     * @param vertices_ ìƒì„±í•  ì •ì ë“¤.
+     * @param indices_  ìƒì„±í•  ì¸ë±ìŠ¤ë“¤.
      */
-    explicit Mesh(
-        const std::vector<Vertex>& vertices_,
-        const std::vector<GLuint>& indices_
-    ) noexcept;
+    explicit Mesh(const std::vector<Vertex>& vertices_,
+                  const std::vector<GLuint>& indices_) noexcept;
 
     /**
-     * @brief ¼Ò¸êÀÚ.
+     * @brief ì†Œë©¸ì.
      */
     virtual ~Mesh();
 
     /**
-     * @brief ÇØ´ç ¸Ş½¬¸¦ ·»´õ¸µÇÕ´Ï´Ù.
-     */
-    void Render() const noexcept;
+     * @brief í•´ë‹¹ ë©”ì‰¬ì˜ ì •ì ë“¤ì„ ë°˜í™˜í•©ë‹ˆë‹¤.
+     *
+     * @return std::vector<Vertex>& í•´ë‹¹ ë©”ì‰¬ì˜ ì •ì ë“¤.
+	 */
+    [[nodiscard]]
+    inline constexpr const std::vector<Vertex>& GetVertices() const noexcept;
 
     /**
-     * @brief ÆÄÀÏ¿¡¼­ ¸Ş½¬¸¦ ·ÎµåÇÕ´Ï´Ù.
+     * @brief í•´ë‹¹ ë©”ì‰¬ì˜ ì •ì ë“¤ì„ ì„¤ì •í•©ë‹ˆë‹¤.
      *
-     * @param filePath_ ·ÎµåÇÒ ÆÄÀÏ °æ·Î.
+	 * @param vertices_ ì„¤ì •í•  ì •ì ë“¤.
+     */
+	inline void SetVertices(const std::vector<Vertex>& vertices_) noexcept;
+
+    /**
+     * @brief í•´ë‹¹ ë©”ì‰¬ì˜ ì¸ë±ìŠ¤ë“¤ì„ ë°˜í™˜í•©ë‹ˆë‹¤.
      *
-     * @return Mesh* ·ÎµåµÈ ¸Ş½¬ °´Ã¼.
+     * @return std::vector<GLuint>& í•´ë‹¹ ë©”ì‰¬ì˜ ì¸ë±ìŠ¤ë“¤.
+	 */
+    [[nodiscard]]
+	inline constexpr const std::vector<GLuint>& GetIndices() const noexcept;
+
+    /**
+     * @brief í•´ë‹¹ ë©”ì‰¬ì˜ ì¸ë±ìŠ¤ë“¤ì„ ì„¤ì •í•©ë‹ˆë‹¤.
+	 *
+     */
+	inline void SetIndices(const std::vector<GLuint>& indices_) noexcept;
+
+    /**
+     * @brief í•´ë‹¹ ë©”ì‰¬ì˜ ì •ì  ë°ì´í„°ë¥¼ ì—…ë°ì´íŠ¸í•©ë‹ˆë‹¤.
+	 */
+	void UpdateVertices() const noexcept;
+
+    /**
+     * @brief í•´ë‹¹ ë©”ì‰¬ì˜ ì¸ë±ìŠ¤ ë°ì´í„°ë¥¼ ì—…ë°ì´íŠ¸í•©ë‹ˆë‹¤.
+	 */
+	void UpdateIndices() const noexcept;
+
+    /**
+     * @brief í•´ë‹¹ ë©”ì‰¬ë¥¼ ë Œë”ë§í•©ë‹ˆë‹¤.
+     *
+     * @param renderMode_ ë Œë”ë§ ëª¨ë“œ. ê¸°ë³¸ê°’ì€ GL_TRIANGLESì…ë‹ˆë‹¤.
+     */
+    void Render(GLenum renderMode_ = GL_TRIANGLES) const noexcept;
+
+    /**
+     * @brief íŒŒì¼ì—ì„œ ë©”ì‰¬ë¥¼ ë¡œë“œí•©ë‹ˆë‹¤.
+     *
+     * @param filePath_ ë¡œë“œí•  íŒŒì¼ ê²½ë¡œ.
+     *
+     * @return Mesh* ë¡œë“œëœ ë©”ì‰¬ ê°ì²´.
      */
     [[nodiscard]]
-    static Mesh* LoadFrom(const std::string& filePath_) noexcept;
+    static std::unique_ptr<Mesh> LoadFrom(const std::string& filePath_) noexcept;
 
 private:
     /**
-     * @brief ÇØ´ç Á¤Á¡ ¹è¿­ °´Ã¼.
+     * @brief í•´ë‹¹ ì •ì  ë°°ì—´ ê°ì²´.
      */
     unsigned int vao;
 
     /**
-     * @brief ÇØ´ç ¸Å½¬ÀÇ Á¤Á¡ ¹öÆÛ °´Ã¼.
+     * @brief í•´ë‹¹ ë§¤ì‰¬ì˜ ì •ì  ë²„í¼ ê°ì²´.
      */
     unsigned int vbo;
 
     /**
-     * @brief ÇØ´ç ¸Å½¬ÀÇ ¿ä¼Ò ¹è¿­ °´Ã¼.
+     * @brief í•´ë‹¹ ë§¤ì‰¬ì˜ ìš”ì†Œ ë°°ì—´ ê°ì²´.
      */
     unsigned int ebo;
 
     /**
-     * @brief ÇØ´ç ¸Å½¬ÀÇ Á¤Á¡ µ¥ÀÌÅÍµé.
+     * @brief í•´ë‹¹ ë§¤ì‰¬ì˜ ì •ì  ë°ì´í„°ë“¤.
      */
     std::vector<Vertex> vertices;
 
     /**
-     * @brief ÇØ´ç ¸Å½¬ÀÇ ÀÎµ¦½ºµé.
+     * @brief í•´ë‹¹ ë§¤ì‰¬ì˜ ì¸ë±ìŠ¤ë“¤.
      */
     std::vector<GLuint> indices;
 
     /**
-     * @brief ÇØ´ç ¸Ş½¬ÀÇ ÃÊ±âÈ­ ¿©ºÎ.
+     * @brief í•´ë‹¹ ë©”ì‰¬ì˜ ì´ˆê¸°í™” ì—¬ë¶€.
      */
     bool isInitialized;
 };
 
-#endif // !GUARD_MESH_H
+inline constexpr const std::vector<Mesh::Vertex>& Mesh::GetVertices() const noexcept
+{
+    return vertices;
+}
+
+inline void Mesh::SetVertices(const std::vector<Vertex>& vertices_) noexcept
+{
+    vertices = vertices_;
+}
+
+inline constexpr const std::vector<GLuint>& Mesh::GetIndices() const noexcept
+{
+    return indices;
+}
+
+inline void Mesh::SetIndices(const std::vector<GLuint>& indices_) noexcept
+{
+    indices = indices_;
+}

@@ -1,18 +1,7 @@
-#include "Mesh.h"
+ï»¿#include "Mesh.h"
 
-#include <fstream>
-#include <sstream>
-#include <vector>
-
-#include <glm/geometric.hpp>
-#include <glm/gtc/type_ptr.hpp>
-
-#include <spdlog/spdlog.h>
-
-Mesh::Mesh(
-    const std::vector<Vertex>& vertices_,
-    const std::vector<GLuint>& indices_
-) noexcept
+Mesh::Mesh(const std::vector<Vertex>& vertices_,
+           const std::vector<GLuint>& indices_) noexcept
     : vao(0)
     , vbo(0)
     , ebo(0)
@@ -29,7 +18,7 @@ Mesh::Mesh(
         GL_ARRAY_BUFFER,
         sizeof(Vertex) * vertices.size(),
         vertices.data(),
-        GL_STATIC_DRAW
+        GL_DYNAMIC_DRAW
     );
 
     glGenBuffers(1, &ebo);
@@ -38,7 +27,7 @@ Mesh::Mesh(
         GL_ELEMENT_ARRAY_BUFFER,
         sizeof(GLuint) * indices.size(),
         indices.data(),
-        GL_STATIC_DRAW
+        GL_DYNAMIC_DRAW
     );
 
     glEnableVertexAttribArray(0);
@@ -62,7 +51,43 @@ Mesh::~Mesh()
     }
 }
 
-void Mesh::Render() const noexcept
+void Mesh::UpdateVertices() const noexcept
+{
+    if (!isInitialized)
+    {
+        return;
+    }
+
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    glBufferSubData(
+        GL_ARRAY_BUFFER,
+        0,
+        sizeof(Vertex) * vertices.size(),
+        vertices.data()
+    );
+
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+}
+
+void Mesh::UpdateIndices() const noexcept
+{
+    if (!isInitialized)
+    {
+        return;
+    }
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+    glBufferSubData(
+        GL_ELEMENT_ARRAY_BUFFER,
+        0,
+        sizeof(GLuint) * indices.size(),
+        indices.data()
+    );
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+}
+
+void Mesh::Render(const GLenum renderMode_) const noexcept
 {
     if (!isInitialized)
     {
@@ -70,17 +95,17 @@ void Mesh::Render() const noexcept
     }
 
     glBindVertexArray(vao);
-    glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(indices.size()), GL_UNSIGNED_INT, nullptr);
+    glDrawElements(renderMode_, static_cast<GLsizei>(indices.size()), GL_UNSIGNED_INT, nullptr);
 
     glBindVertexArray(0);
 }
 
-Mesh* Mesh::LoadFrom(const std::string& filePath_) noexcept
+std::unique_ptr<Mesh> Mesh::LoadFrom(const std::string& filePath_) noexcept
 {
     std::ifstream ifs(filePath_);
     if (!ifs.is_open())
     {
-        spdlog::error("OBJ open failed: {}", filePath_);
+        std::println("OBJ open failed: {}", filePath_);
         return nullptr;
     }
 
@@ -99,11 +124,11 @@ Mesh* Mesh::LoadFrom(const std::string& filePath_) noexcept
 
         if (tag == "v")
         {
-            glm::vec3 p; 
+            glm::vec3 p;
             iss >> p.x >> p.y >> p.z;
             positions.push_back(p);
 
-            glm::vec3 c; 
+            glm::vec3 c;
             iss >> c.r >> c.g >> c.b;
             colors.push_back(c);
         }
@@ -113,7 +138,7 @@ Mesh* Mesh::LoadFrom(const std::string& filePath_) noexcept
             std::string token;
             while (iss >> token)
             {
-                size_t slash = token.find('/');
+                std::size_t slash = token.find('/');
                 std::string vi = (slash == std::string::npos) ? token : token.substr(0, slash);
                 if (!vi.empty())
                 {
@@ -122,7 +147,9 @@ Mesh* Mesh::LoadFrom(const std::string& filePath_) noexcept
                 }
             }
             if (face_indices.size() >= 3)
+            {
                 faces.push_back(std::move(face_indices));
+            }
         }
         else if (tag == "l")
         {
@@ -145,14 +172,14 @@ Mesh* Mesh::LoadFrom(const std::string& filePath_) noexcept
 
     if (positions.empty())
     {
-        spdlog::error("OBJ has no positions: {}", filePath_);
+        std::println("OBJ has no positions: {}", filePath_);
         return nullptr;
     }
 
     std::vector<Vertex> outVertices(positions.size());
     std::vector<GLuint> outIndices;
 
-    for (size_t i = 0; i < positions.size(); ++i)
+    for (std::size_t i = 0; i < positions.size(); ++i)
     {
         outVertices[i].position = positions[i];
         outVertices[i].color    = colors[i];
@@ -160,8 +187,7 @@ Mesh* Mesh::LoadFrom(const std::string& filePath_) noexcept
 
     for (const auto& face : faces)
     {
-        // ... (faces ÀÎµ¦½Ì ·ÎÁ÷Àº µ¿ÀÏ)
-        for (size_t i = 1; i + 1 < face.size(); ++i)
+        for (std::size_t i = 1; i + 1 < face.size(); ++i)
         {
             int a_idx = face[0] - 1;
             int b_idx = face[i] - 1;
@@ -183,7 +209,7 @@ Mesh* Mesh::LoadFrom(const std::string& filePath_) noexcept
 
     for (const auto& line_segment : lines)
     {
-        for (size_t i = 0; i + 1 < line_segment.size(); ++i)
+        for (std::size_t i = 0; i + 1 < line_segment.size(); ++i)
         {
             int a_idx = line_segment[i] - 1;
             int b_idx = line_segment[i + 1] - 1;
@@ -200,5 +226,5 @@ Mesh* Mesh::LoadFrom(const std::string& filePath_) noexcept
         }
     }
 
-    return new Mesh(outVertices, outIndices);
+    return std::make_unique<Mesh>(outVertices, outIndices);
 }
