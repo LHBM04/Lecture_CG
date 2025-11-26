@@ -4,10 +4,16 @@
 
 #include "Mesh.h"
 
+#include "CollisionBox.h"
+
 Stage::Stage(Mesh* const mesh_) noexcept
 	: mesh(mesh_)
 	, isFloorOpen(false)
+	, left(std::make_unique<CollisionBox>())
+	, right(std::make_unique<CollisionBox>())
+	, floor(std::make_unique<CollisionBox>())
 {
+	
 }
 
 Stage::~Stage() noexcept

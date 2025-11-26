@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include "PCH.h"
 
@@ -74,7 +74,7 @@ private:
         /**
          * @brief 아무것도 안 함
          */
-        None,
+        Idle,
 
         /**
          * @brief 눌린 순간

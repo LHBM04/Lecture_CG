@@ -1,9 +1,6 @@
-﻿#pragma once
+#pragma once
 
 #include "PCH.h"
-
-#include "Application.h"
-#include "Shader.h"
 
 /**
  * @brief 
@@ -32,16 +29,60 @@ public:
 	 */
 	struct Viewport final
 	{
+		/**
+		 * @brief x 좌표.
+		 */
 		int x;
+
+		/**
+		 * @brief y 좌표.
+		 */
 		int y;
+
+		/**
+		 * @brief 너비.
+		 */
 		int width;
+
+		/**
+		 * @brief 높이.
+		 */
 		int height;
+
+		/**
+		 * @brief 생성자.
+		 * 
+		 * @param x_	  생성할 뷰포트의 x 좌표
+		 * @param y_	  생성할 뷰포트의 y 좌표
+		 * @param width_  생성할 뷰포트의 너비
+		 * @param height_ 생성할 뷰포트의 높이
+		 */
+		explicit Viewport(const int x_,
+						  const int y_,
+						  const int width_,  
+						  const int height_) noexcept
+			: x(x_)
+			, y(y_)
+			, width(width_)
+			, height(height_)
+		{
+		}
 	};
 
 	/**
 	 * @brief 생성자.
+	 * 
+	 * @param projection_ 생성할 카메라의 투영 방식
+	 * @param eye_		  생성할 카메라의 위치
+	 * @param at_		  생성할 카메라의 주시점
+	 * @param up_		  생성할 카메라의 윗방향 벡터
+	 * @param viewport_	  생성할 카메라의 뷰포트
 	 */
-	explicit Camera() noexcept;
+	explicit Camera(const Camera::Projection projection_, 
+					const glm::vec3&		 eye_,
+					const glm::vec3&		 at_,
+					const glm::vec3&		 up_,
+					const Camera::Viewport&  viewport_) noexcept;
 
 	/**
 	 * @brief 해당 카메라의 투영 방식을 반환합니다.
@@ -107,7 +148,7 @@ public:
 	 * @brief 뷰포트 반환
 	 */
 	[[nodiscard]]
-	inline constexpr Viewport GetViewport() noexcept;
+	inline const Camera::Viewport& GetViewport() noexcept;
 
 	/**
 	 * @brief 뷰포트 설정
@@ -128,10 +169,8 @@ public:
 
 	/**
 	 * @brief 렌더링 전에 호출되어 셰이더에 뷰 및 프로젝션 행렬을 설정합니다.
-	 * 
-	 * @param shader_ 셰이더 객체
 	 */
-	void PreRender(const Shader& shader_) const noexcept;
+	void PreRender() const noexcept;
 
 private:
 	/**
@@ -220,7 +259,7 @@ inline void Camera::SetUp(const glm::vec3& up_) noexcept
 	up = up_;
 }
 
-inline constexpr Camera::Viewport Camera::GetViewport() noexcept
+inline const Camera::Viewport& Camera::GetViewport() noexcept
 {
 	return viewport;
 }

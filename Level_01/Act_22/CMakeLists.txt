@@ -15,10 +15,3 @@ target_link_libraries(Level_01_Act_22 PRIVATE
 set_target_properties(Level_01_Act_22 PROPERTIES
         RUNTIME_OUTPUT_NAME "Level 01 - Act 22"
 )
-
-add_custom_command(TARGET Level_01_Act_22 PRE_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_directory
-        "${CMAKE_SOURCE_DIR}/Level_01/Act_22/Resources"
-        "$<TARGET_FILE_DIR:Level_01_Act_22>/Resources"
-        VERBATIM
-)

@@ -1,4 +1,4 @@
-﻿#include "Application.h"
+#include "Application.h"
 
 #include "Input.h"
 
@@ -47,7 +47,7 @@ bool Application::Initialize() noexcept
 	{
 		if (!glfwInit())
 		{
-			std::println("GLFW 초기화에 실패했습니다.");
+			spdlog::critical("GLFW initialize failed.");
 			return false;
 		}
 
@@ -60,7 +60,7 @@ bool Application::Initialize() noexcept
 		window = glfwCreateWindow(configuration.width, configuration.height, configuration.title, nullptr, nullptr);
 		if (!window)
 		{
-			std::println("GLFW 윈도우 생성에 실패했습니다.");
+			spdlog::critical("GLFWwindow create failed.");
 			glfwTerminate();
 			return false;
 		}
@@ -81,7 +81,7 @@ bool Application::Initialize() noexcept
 	{
 		if (!gladLoadGLLoader(reinterpret_cast<GLADloadproc>(glfwGetProcAddress)))
 		{
-			std::println("GLAD 초기화에 실패했습니다.");
+			spdlog::critical("GLAD initialize failed.");
 			glfwDestroyWindow(window);
 			glfwTerminate();
 			return false;

@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include <algorithm>
 #include <array>
@@ -11,7 +11,6 @@
 #include <functional>
 #include <iostream>
 #include <memory>
-#include <print>
 #include <random>
 #include <ranges>
 #include <sstream>
@@ -34,3 +33,5 @@
 #include <glm/ext.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+
+#include <spdlog/spdlog.h>

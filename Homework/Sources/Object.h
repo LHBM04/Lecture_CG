@@ -1,8 +1,12 @@
-﻿#pragma once
+#pragma once
 
 #include "PCH.h"
 
-#include "Shader.h"
+#include "Transform.h"
+
+#include "AABB.h"
+
+class Mesh;
 
 /**
  * @brief 
@@ -10,24 +14,31 @@
 class Object
 {
 public:
+    /**
+     * @brief 생성자.
+     * 
+	 * @param transform_ 생성할 오븝젝트의 트랜스폼
+	 * @param mesh_      생성할 오브젝트의 메쉬
+     */
+    explicit Object(const Transform& transform_, 
+                    Mesh* const      mesh_) noexcept;
+
 	/**
 	 * @brief 소멸자.
 	 */
 	virtual ~Object() noexcept = default;
 
-	/**
-	 * @brief 해당 객체를 업데이트합니다.
-     * 
-	 * @param deltaTime_ 이전 프레임과 현재 프레임 사이의 간격
-	 */
-	virtual void Update(const float deltaTime_) noexcept;
+    /**
+     * @brief 해당 객체를 업데이트합니다.
+     *
+     * @param deltaTime_ 이전 프레임과 현재 프레임 사이의 간격
+     */
+    void Update(const float deltaTime_) noexcept;
 
     /**
-     * @brief 해당 객체를 렌더링합니다.
-     * 
-     * @param shader_ 사용할 셰이더
+     * @brief 해당 객체를 그립니다.
      */
-    virtual void Render(const Shader& shader_) const noexcept;
+    void Render() const noexcept;
 
     /**
      * @brief 해당 오브젝트의 위치를 반환합니다.
@@ -75,103 +86,93 @@ public:
     inline void SetScale(const glm::vec3& scale_) noexcept;
 
     /**
-     * @brief 해당 오브젝트의 크기를 반환합니다.
+     * @brief 해당 오브젝트의 부모 트랜스폼을 반환합니다.
      *
-     * @return glm::vec3 해당 오브젝트의 크기
+     * @return glm::vec3 해당 오브젝트의 부모 트랜스폼
      */
     [[nodiscard]]
-    inline constexpr Object* const GetParent() const noexcept;
+    inline constexpr Transform* const GetParent() const noexcept;
 
     /**
-     * @brief 해당 오브젝트의 크기를 설정합니다.
+     * @brief 해당 오브젝트의 부모 트랜스폼을 설정합니다.
      *
-     * @param scale_ 설정할 크기
+     * @param scale_ 설정할 부모 트랜스폼
      */
-    inline void SetParent(Object* const parent_) noexcept;
+    inline void SetParent(Transform* const parent_) noexcept;
 
     /**
-     * @brief 해당 오브젝트의 모델 행렬을 반환합니다.
-     * 
-	 * @return glm::mat4 해당 오브젝트의 모델 행렬
+     * @brief 해당 오브젝트의 충돌 박스를 반환합니다.
+     *
+     * @return AABB 해당 오브젝트의 충돌 박스
+	 */
+	[[nodiscard]]
+    inline AABB GetAABB() const noexcept
+    {
+        glm::vec3 halfScale = GetScale() * 0.5f;
+        return AABB{ GetPosition() - halfScale, GetPosition() + halfScale };
+    }
+
+protected:
+    /**
+	 * @brief 해당 오브젝트가 업데이트될 때 호출됩니다.
+     *
+     * @param deltaTime_ 이전 프레임과 현재 프레임 사이의 간격
+	 */
+    virtual void OnUpdate(const float deltaTime_) noexcept;
+
+    /**
+     * @brief 해당 오브젝트가 그려질 때 호출됩니다.
      */
-    [[nodiscard]]
-	inline glm::mat4 GetModelMatrix() const noexcept;
+    virtual void OnRender() const noexcept;
 
 private:
-	/**
-	 * @brief 해당 객체의 위치.
+    /**
+     * @brief 해당 오브젝트의 트랜스폼.
 	 */
-	glm::vec3 position = glm::vec3(0.0f);
+    Transform transform;
 
-	/**
-	 * @brief 해당 객체의 회전.
-	 */
-    glm::vec3 rotation = glm::vec3(0.0f);
-
-	/**
-	 * @brief 해당 객체의 크기.
-	 */
-	glm::vec3 scale = glm::vec3(1.0f);
-
-	/**
-	 * @brief 해당 객체의 상위 객체.
-	 */
-	Object* parent = nullptr;
+    /**
+     * @brief 해당 오브젝트의 메쉬.
+     */
+    Mesh* mesh;
 };
 
 inline constexpr glm::vec3 Object::GetPosition() const noexcept
 {
-    return position;
+    return transform.position;
 }
 
 inline void Object::SetPosition(const glm::vec3& position_) noexcept
 {
-    position = position_;
+    transform.position = position_;
 }
 
 inline constexpr glm::vec3 Object::GetRotation() const noexcept
 {
-    return rotation;
+    return transform.rotation;
 }
 
 inline void Object::SetRotation(const glm::vec3& rotation_) noexcept
 {
-    rotation = rotation_;
+    transform.rotation = rotation_;
 }
 
 inline constexpr glm::vec3 Object::GetScale() const noexcept
 {
-    return scale;
+    return transform.scale;
 }
 
 inline void Object::SetScale(const glm::vec3& scale_) noexcept
 {
-    scale = scale_;
+    transform.scale = scale_;
 }
 
-inline constexpr Object* const Object::GetParent() const noexcept
+inline constexpr Transform* const Object::GetParent() const noexcept
 {
-    return parent;
+    return transform.parent;
 }
 
-inline void Object::SetParent(Object* const parent_) noexcept
+inline void Object::SetParent(Transform* const parent_) noexcept
 {
-    parent = parent_;
-}
-
-inline glm::mat4 Object::GetModelMatrix() const noexcept
-{
-    glm::mat4 model = glm::mat4(1.0f);
-    model = glm::translate(model, position);
-    model = glm::rotate(model, glm::radians(rotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
-    model = glm::rotate(model, glm::radians(rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
-    model = glm::rotate(model, glm::radians(rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
-    model = glm::scale(model, scale);
-
-    if (parent != nullptr)
-    {
-        model = parent->GetModelMatrix() * model;
-    }
-
-    return model;
+    transform.parent = parent_;
 }

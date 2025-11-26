@@ -163,13 +163,34 @@ void OnUpdate(float deltaTime_) noexcept
 	{
 		if (Input::IsModPressed(GLFW_MOD_SHIFT))
 		{
-			// const glm::vec3 forward = glm::normalize(camera->GetForward());
-			// camera->SetPosition(camera->GetPosition() + forward * 4.0f * deltaTime_);
+			{
+				const glm::vec3 forward = glm::normalize(mainCamera->GetForward());
+				mainCamera->SetPosition(mainCamera->GetPosition() + forward * 4.0f * deltaTime_);
+			}
+			{
+				const glm::vec3 forward = glm::normalize(sideViewCamera->GetForward());
+				sideViewCamera->SetPosition(sideViewCamera->GetPosition() + forward * 4.0f * deltaTime_);
+
+			}
+			{
+				const glm::vec3 forward = glm::normalize(topViewCamera->GetForward());
+				topViewCamera->SetPosition(topViewCamera->GetPosition() + forward * 4.0f * deltaTime_);
+			}
 		}
 		else
 		{
-			// const glm::vec3 forward = glm::normalize(camera->GetForward());
-			// camera->SetPosition(camera->GetPosition() - forward * 4.0f * deltaTime_);
+			{
+				const glm::vec3 forward = glm::normalize(mainCamera->GetForward());
+				mainCamera->SetPosition(mainCamera->GetPosition() - forward * 4.0f * deltaTime_);
+			}
+			{
+				const glm::vec3 forward = glm::normalize(sideViewCamera->GetForward());
+				sideViewCamera->SetPosition(sideViewCamera->GetPosition() - forward * 4.0f * deltaTime_);
+			}
+			{
+				const glm::vec3 forward = glm::normalize(topViewCamera->GetForward());
+				topViewCamera->SetPosition(topViewCamera->GetPosition() - forward * 4.0f * deltaTime_);
+			}
 		}
 	}
 
@@ -177,29 +198,65 @@ void OnUpdate(float deltaTime_) noexcept
 	{
 		if (Input::IsModPressed(GLFW_MOD_SHIFT))
 		{
-			// const glm::vec3 right = glm::normalize(glm::cross(camera->GetForward(), camera->GetUp()));
-			// camera->SetPosition(camera->GetPosition() + right * 4.0f * deltaTime_);
+			{
+				const glm::vec3 right = glm::normalize(glm::cross(mainCamera->GetForward(), mainCamera->GetUp()));
+				mainCamera->SetPosition(mainCamera->GetPosition() + right * 4.0f * deltaTime_);
+			}
+			{
+				const glm::vec3 right = glm::normalize(glm::cross(sideViewCamera->GetForward(), sideViewCamera->GetUp()));
+				sideViewCamera->SetPosition(sideViewCamera->GetPosition() + right * 4.0f * deltaTime_);
+			}
+			{
+				const glm::vec3 right = glm::normalize(glm::cross(topViewCamera->GetForward(), topViewCamera->GetUp()));
+				topViewCamera->SetPosition(topViewCamera->GetPosition() + right * 4.0f * deltaTime_);
+			}
 		}
 		else
 		{
-			// const glm::vec3 right = glm::normalize(glm::cross(camera->GetForward(), camera->GetUp()));
-			// camera->SetPosition(camera->GetPosition() - right * 4.0f * deltaTime_);
+			{
+				const glm::vec3 right = glm::normalize(glm::cross(mainCamera->GetForward(), mainCamera->GetUp()));
+				mainCamera->SetPosition(mainCamera->GetPosition() - right * 4.0f * deltaTime_);
+			}
+			{
+				const glm::vec3 right = glm::normalize(glm::cross(sideViewCamera->GetForward(), sideViewCamera->GetUp()));
+				sideViewCamera->SetPosition(sideViewCamera->GetPosition() - right * 4.0f * deltaTime_);
+			}
+			{
+				const glm::vec3 right = glm::normalize(glm::cross(topViewCamera->GetForward(), topViewCamera->GetUp()));
+				topViewCamera->SetPosition(topViewCamera->GetPosition() - right * 4.0f * deltaTime_);
+			}
 		}
 	}
 
 	if (Input::IsKeyPressed(GLFW_KEY_Y))
 	{
-		// auto rotationInput = Input::IsModPressed(GLFW_MOD_SHIFT) ? -1 : 1;
-		// 
-		// const float rotationAngle = rotationInput * 10.0f * deltaTime_;
-		// 
-		// const glm::vec3 currentForward = camera->GetForward();
-		// const glm::vec3 upVector	   = camera->GetUp();
-		// 
-		// glm::mat4 rotMatrix  = glm::rotate(glm::mat4(1.0f), glm::radians(rotationAngle), upVector);
-		// glm::vec3 newForward = glm::vec3(rotMatrix * glm::vec4(currentForward, 0.0f));
-		// 
-		// camera->SetForward(glm::normalize(newForward));
+		auto rotationInput = Input::IsModPressed(GLFW_MOD_SHIFT) ? -1 : 1;
+		
+		const float rotationAngle = rotationInput * 10.0f * deltaTime_;
+		
+		{
+			const glm::vec3 currentForward = mainCamera->GetForward();
+			const glm::vec3 upVector = mainCamera->GetUp();
+
+			glm::mat4 rotMatrix = glm::rotate(glm::mat4(1.0f), glm::radians(rotationAngle), upVector);
+			glm::vec3 newForward = glm::vec3(rotMatrix * glm::vec4(currentForward, 0.0f));
+
+			mainCamera->SetForward(glm::normalize(newForward));
+		}
+		{
+			const glm::vec3 currentForward = sideViewCamera->GetForward();
+			const glm::vec3 upVector = sideViewCamera->GetUp();
+			glm::mat4 rotMatrix = glm::rotate(glm::mat4(1.0f), glm::radians(rotationAngle), upVector);
+			glm::vec3 newForward = glm::vec3(rotMatrix * glm::vec4(currentForward, 0.0f));
+			sideViewCamera->SetForward(glm::normalize(newForward));
+		}
+		{
+			const glm::vec3 currentForward = topViewCamera->GetForward();
+			const glm::vec3 upVector = topViewCamera->GetUp();
+			glm::mat4 rotMatrix = glm::rotate(glm::mat4(1.0f), glm::radians(rotationAngle), upVector);
+			glm::vec3 newForward = glm::vec3(rotMatrix * glm::vec4(currentForward, 0.0f));
+			topViewCamera->SetForward(glm::normalize(newForward));
+		}
 	}
 
 	if (Input::IsKeyPressed(GLFW_KEY_A))
@@ -239,14 +296,10 @@ void OnUpdate(float deltaTime_) noexcept
 
 void OnRender() noexcept
 {
-	// Application::Run에서 이미 glClear를 호출하므로
-	// OnRender에서는 뷰포트 설정과 렌더링만 수행합니다.
-
 	const auto& spec = Application::GetSpecification();
 	const int totalWidth = spec.width;
 	const int totalHeight = spec.height;
 
-	// --- 1. 메인 뷰포트 (좌측 1/2) ---
 	{
 		const int v_x = 0;
 		const int v_y = 0;
@@ -254,14 +307,13 @@ void OnRender() noexcept
 		const int v_h = totalHeight;
 		const float aspect = static_cast<float>(v_w) / static_cast<float>(v_h);
 
-		glViewport(v_x, v_y, v_w, v_h); // 뷰포트 설정
-		mainCamera->PreRender(*(shader), aspect); // 수정된 PreRender 호출
+		glViewport(v_x, v_y, v_w, v_h);
+		mainCamera->PreRender(*(shader), aspect);
 
 		tank->Render(*(shader));
 		plane->Render(*(shader));
 	}
 
-	// --- 2. Top 뷰포트 (우측 상단 1/4) ---
 	{
 		const int v_x = totalWidth / 2;
 		const int v_y = totalHeight / 2;
@@ -276,7 +328,6 @@ void OnRender() noexcept
 		plane->Render(*(shader));
 	}
 
-	// --- 3. Side 뷰포트 (우측 하단 1/4) ---
 	{
 		const int v_x = totalWidth / 2;
 		const int v_y = 0;

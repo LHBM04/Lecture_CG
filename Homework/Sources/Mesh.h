@@ -6,80 +6,75 @@ class Mesh
 {
 public:
 	/**
-	 * @brief Á¤Á¡ µ¥ÀÌÅÍ¸¦ Á¤ÀÇÇÕ´Ï´Ù.
+	 * @brief ì •ì  ë°ì´í„°ë¥¼ ì •ì˜í•©ë‹ˆë‹¤.
 	 */
 	struct Vertex final
 	{
 		/**
-		 * @brief Á¤Á¡ÀÇ À§Ä¡.
+		 * @brief ì •ì ì˜ ìœ„ì¹˜.
 		 */
 		glm::vec3 position;
 
 		/**
-		 * @brief Á¤Á¡ÀÇ »ö»ó.
+		 * @brief ì •ì ì˜ ìƒ‰ìƒ.
 		 */
 		glm::vec3 color;
+
+		/**
+		 * @brief ì •ì ì˜ ë²•ì„  ë²¡í„°.
+         */
+        glm::vec3 normal;
 	};    
     
     /**
-     * @brief »ı¼ºÀÚ.
+     * @brief ìƒì„±ì.
      *
-     * @param vertices_ »ı¼ºÇÒ Á¤Á¡µé.
-     * @param indices_  »ı¼ºÇÒ ÀÎµ¦½ºµé.
+     * @param vertices_ ìƒì„±í•  ì •ì ë“¤.
+     * @param indices_  ìƒì„±í•  ì¸ë±ìŠ¤ë“¤.
      */
-    explicit Mesh(const std::vector<Vertex>& vertices_,
-                  const std::vector<GLuint>& indices_) noexcept;
+    explicit Mesh(const std::vector<Mesh::Vertex>& vertices_,
+                  const std::vector<GLuint>&       indices_) noexcept;
 
     /**
-     * @brief ¼Ò¸êÀÚ.
+     * @brief ì†Œë©¸ì.
      */
     virtual ~Mesh();
 
     /**
-     * @brief ÇØ´ç ¸Ş½¬¸¦ ·»´õ¸µÇÕ´Ï´Ù.
+     * @brief í•´ë‹¹ ë©”ì‰¬ë¥¼ ë Œë”ë§í•©ë‹ˆë‹¤.
      *
-     * @param renderMode_ ·»´õ¸µ ¸ğµå. ±âº»°ªÀº GL_TRIANGLESÀÔ´Ï´Ù.
+     * @param renderMode_ ë Œë”ë§ ëª¨ë“œ. ê¸°ë³¸ê°’ì€ GL_TRIANGLESì…ë‹ˆë‹¤.
      */
     void Render(GLenum renderMode_ = GL_TRIANGLES) const noexcept;
 
-    /**
-     * @brief ÆÄÀÏ¿¡¼­ ¸Ş½¬¸¦ ·ÎµåÇÕ´Ï´Ù.
-     *
-     * @param filePath_ ·ÎµåÇÒ ÆÄÀÏ °æ·Î.
-     *
-     * @return Mesh* ·ÎµåµÈ ¸Ş½¬ °´Ã¼.
-     */
-    [[nodiscard]]
-    static std::unique_ptr<Mesh> LoadFrom(const std::string& filePath_) noexcept;
-
 private:
     /**
-     * @brief ÇØ´ç Á¤Á¡ ¹è¿­ °´Ã¼.
+     * @brief í•´ë‹¹ ì •ì  ë°°ì—´ ê°ì²´.
      */
     unsigned int vao;
 
     /**
-     * @brief ÇØ´ç ¸Å½¬ÀÇ Á¤Á¡ ¹öÆÛ °´Ã¼.
+     * @brief í•´ë‹¹ ë§¤ì‰¬ì˜ ì •ì  ë²„í¼ ê°ì²´.
      */
     unsigned int vbo;
 
     /**
-     * @brief ÇØ´ç ¸Å½¬ÀÇ ¿ä¼Ò ¹è¿­ °´Ã¼.
+     * @brief í•´ë‹¹ ë§¤ì‰¬ì˜ ìš”ì†Œ ë°°ì—´ ê°ì²´.
      */
     unsigned int ebo;
 
     /**
-     * @brief ÇØ´ç ¸Å½¬ÀÇ Á¤Á¡ µ¥ÀÌÅÍµé.
+     * @brief í•´ë‹¹ ë§¤ì‰¬ì˜ ì •ì  ë°ì´í„°ë“¤.
      */
-    std::vector<Vertex> vertices;
+    std::vector<Mesh::Vertex> vertices;
 
     /**
-     * @brief ÇØ´ç ¸Å½¬ÀÇ ÀÎµ¦½ºµé.
+     * @brief í•´ë‹¹ ë§¤ì‰¬ì˜ ì¸ë±ìŠ¤ë“¤.
      */
     std::vector<GLuint> indices;
 
     /**
-     * @brief ÇØ´ç ¸Ş½¬ÀÇ ÃÊ±âÈ­ ¿©ºÎ.
+     * @brief í•´ë‹¹ ë©”ì‰¬ì˜ ì´ˆê¸°í™” ì—¬ë¶€.
      */
     bool isInitialized;
 };

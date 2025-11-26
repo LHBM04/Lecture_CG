@@ -1,4 +1,4 @@
-﻿#include "Input.h"
+#include "Input.h"
 
 void Input::Update() noexcept
 {
@@ -13,7 +13,7 @@ void Input::Update() noexcept
 			}
 			case KeyState::Release:
 			{
-				keyState = KeyState::None;
+				keyState = KeyState::Idle;
 				break;
 			}
 			default:
@@ -34,7 +34,7 @@ void Input::Update() noexcept
 			}
 			case KeyState::Release:
 			{
-				mouseButtonState = KeyState::None;
+				mouseButtonState = KeyState::Idle;
 				break;
 			}
 			default:
@@ -104,9 +104,9 @@ void Input::OnCursorMove(double xpos, double ypos) noexcept
 	currentMousePosition = glm::vec2(static_cast<float>(xpos), static_cast<float>(ypos));
 }
 
-std::array<Input::KeyState, Input::MAX_KEYS> Input::keyStates = { Input::KeyState::None };
+std::array<Input::KeyState, Input::MAX_KEYS> Input::keyStates = { Input::KeyState::Idle };
 
-std::array<Input::KeyState, Input::MAX_MOUSE_BUTTONS> Input::mouseButtonStates = { Input::KeyState::None };
+std::array<Input::KeyState, Input::MAX_MOUSE_BUTTONS> Input::mouseButtonStates = { Input::KeyState::Idle };
 
 glm::vec2 Input::lastMousePosition = glm::vec2(0.0f, 0.0f);
 

@@ -39,10 +39,19 @@
     <ClCompile Include="Sources\Mesh.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
-    <ClCompile Include="Sources\Wall.cpp">
+    <ClCompile Include="Sources\Mountain.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
-    <ClCompile Include="Sources\Stage.cpp">
+    <ClCompile Include="Sources\Player.cpp">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="Sources\Resources.cpp">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="Sources\Light.cpp">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="Sources\Random.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
   </ItemGroup>
@@ -65,21 +74,36 @@
     <ClInclude Include="Sources\Object.h">
       <Filter>Sources</Filter>
     </ClInclude>
-    <ClInclude Include="Sources\Wall.h">
+    <ClInclude Include="Sources\Mountain.h">
       <Filter>Sources</Filter>
     </ClInclude>
     <ClInclude Include="Sources\Mesh.h">
       <Filter>Sources</Filter>
     </ClInclude>
-    <ClInclude Include="Sources\Stage.h">
+    <ClInclude Include="Sources\Player.h">
+      <Filter>Sources</Filter>
+    </ClInclude>
+    <ClInclude Include="Sources\Transform.h">
+      <Filter>Sources</Filter>
+    </ClInclude>
+    <ClInclude Include="Sources\Resources.h">
+      <Filter>Sources</Filter>
+    </ClInclude>
+    <ClInclude Include="Sources\Light.h">
+      <Filter>Sources</Filter>
+    </ClInclude>
+    <ClInclude Include="Sources\Random.h">
+      <Filter>Sources</Filter>
+    </ClInclude>
+    <ClInclude Include="Sources\AABB.h">
       <Filter>Sources</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <Text Include="Resources\Meshes\Wall.obj">
+    <Text Include="Resources\Meshes\Mountain.obj">
       <Filter>Resources\Meshes</Filter>
     </Text>
-    <Text Include="Resources\Meshes\Stage.obj">
+    <Text Include="Resources\Meshes\Player.obj">
       <Filter>Resources\Meshes</Filter>
     </Text>
   </ItemGroup>

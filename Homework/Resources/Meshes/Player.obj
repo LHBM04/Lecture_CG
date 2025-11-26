@@ -1,0 +1,77 @@
+g obj_stage
+# clean_among_bump.obj
+# vertices: v x y z  (no colors)
+# center at (0,0,0). body height from y=-1.0 to y=+1.0.
+# bump: small box at front top, protrudes in +Z
+
+# ===== Body (1..8)
+v -0.5 -1.0 -0.5 1.0 1.0 1.0
+v  0.5 -1.0 -0.5 1.0 1.0 1.0
+v  0.5 -1.0  0.5 1.0 1.0 1.0
+v -0.5 -1.0  0.5 1.0 1.0 1.0
+
+v -0.5  1.0 -0.5 1.0 1.0 1.0
+v  0.5  1.0 -0.5 1.0 1.0 1.0
+v  0.5  1.0  0.5 1.0 1.0 1.0
+v -0.5  1.0  0.5 1.0 1.0 1.0
+
+# ===== Bump (9..16)  (front-top small box, z from 0.5 to 0.85)
+v -0.45  0.40  0.50
+v  0.45  0.40  0.50
+v  0.45  0.40  0.85
+v -0.45  0.40  0.85
+
+v -0.45  0.90  0.50
+v  0.45  0.90  0.50
+v  0.45  0.90  0.85
+v -0.45  0.90  0.85
+
+# ===== Faces: body (triangulated)
+# bottom
+f 1 2 3
+f 1 3 4
+
+# back
+f 1 2 6
+f 1 6 5
+
+# right
+f 2 6 7
+f 2 7 3
+
+# front
+f 4 3 7
+f 4 7 8
+
+# left
+f 1 4 8
+f 1 8 5
+
+# top
+f 5 6 7
+f 5 7 8
+
+# ===== Faces: bump (triangulated)
+# bump bottom (y=0.40)
+f 9 10 11
+f 9 11 12
+
+# bump front (protruding face z=0.85)
+f 12 11 15
+f 12 15 16
+
+# bump top (y=0.90)
+f 13 14 15
+f 13 15 16
+
+# bump back (attached to body's front plane z~0.5)
+f 9 13 14
+f 9 14 10
+
+# bump left side
+f 9 12 16
+f 9 16 13
+
+# bump right side
+f 10 14 15
+f 10 15 11

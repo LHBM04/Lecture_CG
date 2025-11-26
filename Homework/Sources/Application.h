@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include "PCH.h"
 
@@ -116,6 +116,22 @@ public:
 	static void Quit(const int exitCode_) noexcept;
 
 private:
+#pragma region Deleted Functions
+	Application() = delete;
+	~Application() = delete;
+
+	Application(const Application&) = delete;
+	Application(Application&&) = delete;
+
+	Application& operator=(const Application&) = delete;
+	Application& operator=(Application&&) = delete;
+
+	void* operator new(std::size_t) = delete;
+	void* operator new[](std::size_t) = delete;
+	void operator delete(void*) = delete;
+	void operator delete[](void*) = delete;
+#pragma endregion
+
 	/**
 	 * @brief 애플리케이션을 초기화합니다.
 	 * 
