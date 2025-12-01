@@ -8,18 +8,18 @@
 #include "Object.h"
 
 /**
- * @brief ÅÊÅ©¸¦ Á¤ÀÇÇÕ´Ï´Ù.
+ * @brief ï¿½ï¿½Å©ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Õ´Ï´ï¿½.
  */
 class Tank final
 	: public Object
 {
 public:
 	/**
-	 * @brief »ý¼ºÀÚ.
+	 * @brief ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½.
 	 *
-	 * @param position_ »ý¼ºÇÒ ÅÊÅ©ÀÇ À§Ä¡
-	 * @param rotation_ »ý¼ºÇÒ ÅÊÅ©ÀÇ È¸Àü
-	 * @param scale_    »ý¼ºÇÒ ÅÊÅ©ÀÇ Å©±â
+	 * @param position_ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Å©ï¿½ï¿½ ï¿½ï¿½Ä¡
+	 * @param rotation_ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Å©ï¿½ï¿½ È¸ï¿½ï¿½
+	 * @param scale_    ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Å©ï¿½ï¿½ Å©ï¿½ï¿½
 	 */
 	explicit Tank(
 		const glm::vec3& position_ = glm::vec3{ 0.0f, 0.0f, 0.0f },
@@ -28,22 +28,22 @@ public:
 	) noexcept;
 
 	/**
-	 * @brief ¼Ò¸êÀÚ.
+	 * @brief ï¿½Ò¸ï¿½ï¿½ï¿½.
 	 */
 	virtual ~Tank() noexcept override;
 
 	/**
-	 * @brief ÇØ´ç ´ëÆ÷¸¦ ¾÷µ¥ÀÌÆ®ÇÕ´Ï´Ù.
+	 * @brief ï¿½Ø´ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ®ï¿½Õ´Ï´ï¿½.
 	 * 
-	 * @param deltaTime_ ÀÌÀü ÇÁ·¹ÀÓ°ú ÇöÀç ÇÁ·¹ÀÓ »çÀÌÀÇ ½Ã°£ °£°Ý
+	 * @param deltaTime_ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ó°ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ã°ï¿½ ï¿½ï¿½ï¿½ï¿½
 	 */
 	virtual void Update(const float deltaTime_) noexcept override;
 
 	/**
-	 * @brief ÇØ´ç ´ëÆ÷¸¦ ·»´õ¸µÇÕ´Ï´Ù.
+	 * @brief ï¿½Ø´ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Õ´Ï´ï¿½.
 	 * 
-	 * @param shader_     »ç¿ëÇÒ ¼ÎÀÌ´õ
-	 * @param renderMode_ ·»´õ¸µ ¸ðµå
+	 * @param shader_     ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Ì´ï¿½
+	 * @param renderMode_ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½
 	 */
 	virtual void Render(
 		const Shader& shader_, 
@@ -68,54 +68,54 @@ private:
 	std::unique_ptr<Object> rightPolePivot;
 
 	/**
-	 * @brief ÅÊÅ© ÀÌµ¿ ¼Óµµ.
+	 * @brief ï¿½ï¿½Å© ï¿½Ìµï¿½ ï¿½Óµï¿½.
 	 */
 	static constexpr float MOVE_SPEED = 5.0f;
 
 	/**
-	 * @brief ÅÊÅ© È¸Àü ¼Óµµ.
+	 * @brief ï¿½ï¿½Å© È¸ï¿½ï¿½ ï¿½Óµï¿½.
 	 */
 	static constexpr float ROTATE_SPEED = 45.0f;
 
 	/**
-	 * @brief Áß¾Ó ¸öÃ¼ ¾Ö´Ï¸ÞÀÌ¼Ç Æ®¸®°Å.
+	 * @brief ï¿½ß¾ï¿½ ï¿½ï¿½Ã¼ ï¿½Ö´Ï¸ï¿½ï¿½Ì¼ï¿½ Æ®ï¿½ï¿½ï¿½ï¿½.
 	 */
 	bool isAnimT = false;
 
 	/**
-	 * @brief »óºÎ ¸öÃ¼ ¾Ö´Ï¸ÞÀÌ¼Ç Æ®¸®°Å.
+	 * @brief ï¿½ï¿½ï¿½ ï¿½ï¿½Ã¼ ï¿½Ö´Ï¸ï¿½ï¿½Ì¼ï¿½ Æ®ï¿½ï¿½ï¿½ï¿½.
 	 */
 	bool isAnimL = false;
 
 	/**
-	 * @brief µÎ Æ÷½Å yÃà È¸Àü ¾Ö´Ï¸ÞÀÌ¼Ç Æ®¸®°Å.
+	 * @brief ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ yï¿½ï¿½ È¸ï¿½ï¿½ ï¿½Ö´Ï¸ï¿½ï¿½Ì¼ï¿½ Æ®ï¿½ï¿½ï¿½ï¿½.
 	 */
 	bool isAnimG = false;
 	
 	/**
-	 * @brief G ¾Ö´Ï¸ÞÀÌ¼Ç °æ°ú ½Ã°£.
+	 * @brief G ï¿½Ö´Ï¸ï¿½ï¿½Ì¼ï¿½ ï¿½ï¿½ï¿½ ï¿½Ã°ï¿½.
 	 */
 	float animGTime = 0.0f;
 
 	/**
-	 * @brief µÎ Æ÷½Å xÃà È¸Àü ¾Ö´Ï¸ÞÀÌ¼Ç Æ®¸®°Å.
+	 * @brief ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ xï¿½ï¿½ È¸ï¿½ï¿½ ï¿½Ö´Ï¸ï¿½ï¿½Ì¼ï¿½ Æ®ï¿½ï¿½ï¿½ï¿½.
 	 */
 	bool isAnimP = false;
 
 	float animPTime = 0.0f;
 	
 	/**
-	 * @brief »óºÎ ¸öÃ¼ÀÇ ÀÌµ¿ Å¸°Ù.
+	 * @brief ï¿½ï¿½ï¿½ ï¿½ï¿½Ã¼ï¿½ï¿½ ï¿½Ìµï¿½ Å¸ï¿½ï¿½.
 	 */
 	glm::vec3 leftTargetPos;
 
 	/**
-	 * @brief ¶Ç ´Ù¸¥ »óºÎ ¸öÃ¼ÀÇ ÀÌµ¿ Å¸ÄÏ
+	 * @brief ï¿½ï¿½ ï¿½Ù¸ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½Ã¼ï¿½ï¿½ ï¿½Ìµï¿½ Å¸ï¿½ï¿½
 	 */
 	glm::vec3 rightTargetPos;
 
 	/**
-	 * @brief È¸ÀüÀ» À§ÇÑ °¡»ó °´Ã¼.
+	 * @brief È¸ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ã¼.
 	 */
 	std::unique_ptr<Object> temp;
 

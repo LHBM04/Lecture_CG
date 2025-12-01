@@ -136,6 +136,10 @@ std::unique_ptr<Mesh> Mesh::LoadFrom(const std::string& filePath_) noexcept
                         int normIdx = std::stoi(indices[2]) - 1;
                         vertex.normal = tempNormals[normIdx];
                     }
+                    else
+                    {
+                        vertex.normal = glm::normalize(vertex.position);
+                    }
 
                     outVertices.push_back(vertex);
                     outIndices.push_back(static_cast<GLuint>(outVertices.size() - 1));

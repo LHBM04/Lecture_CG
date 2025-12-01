@@ -23,7 +23,7 @@ target_precompile_headers(Level_01_Act_26 PRIVATE
         "Sources/PCH.h"
 )
 
-set_target_properties(Level_01_Act_25 PROPERTIES
+set_target_properties(Level_01_Act_26 PROPERTIES
         RUNTIME_OUTPUT_NAME "Level 01 - Act 26"
 )
 

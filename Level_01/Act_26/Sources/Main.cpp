@@ -76,31 +76,21 @@ static std::unique_ptr<Light> light;
 static std::unique_ptr<Shader> shader;
 
 /**
- * @brief 큐브 메쉬.
+ * @brief 구 메쉬.
  */
-static std::unique_ptr<Mesh> cubeMesh;
+static std::unique_ptr<Mesh> sphereMesh;
 
 /**
- * @brief 피라미드 메쉬.
+ * @brief 구 오브젝트들.
  */
-static std::unique_ptr<Mesh> pyramidMesh;
-
-/**
- * @brief 큐브 오브젝트.
- */
-static std::array<std::unique_ptr<Object>, 2> objects;
-
-/**
- * @brief 큐브 오브젝트.
- */
-static std::size_t currentObjectIndex = 0;
+static std::array<std::unique_ptr<Object>, 3> objects;
 
 int main()
 {
 	Application::Configuration configuration = { };
 	configuration.width				= 800;
 	configuration.height			= 600;
-	configuration.title				= "Level 01 - Act 25";
+	configuration.title				= "Level 01 - Act 26";
 	configuration.shouldFullscreen	= false;
 	configuration.shouldDecorate	= true;
 	configuration.shouldResizable	= false;
@@ -122,30 +112,25 @@ void OnLoad() noexcept
 	camera->SetUp(glm::vec3(0.0f, 1.0f, 0.0f));
 	camera->SetViewport(Camera::Viewport{ 0, 0, 800, 600 });
 	 
-	const glm::vec3 lightPosition = glm::vec3(0.0f, 0.0f, 6.0f);
-	const glm::vec3 lightColor	  = glm::vec3(1.0f, 1.0f, 1.0f);
+	constexpr glm::vec3 lightPosition = glm::vec3(0.0f, 0.0f, 6.0f);
+	constexpr glm::vec3 lightColor	  = glm::vec3(1.0f, 1.0f, 1.0f);
 	light = std::make_unique<Light>(lightPosition, lightColor);
 
 	shader = std::make_unique<Shader>();
 	shader->Use();
 
-	cubeMesh = std::unique_ptr<Mesh>(Mesh::LoadFrom("Resources/Meshes/Cube.obj"));
-	if (!cubeMesh)
+	sphereMesh = std::unique_ptr<Mesh>(Mesh::LoadFrom("Resources/Meshes/Sphere.obj"));
+	if (!sphereMesh)
 	{
 		spdlog::critical("Cube mesh load failed.");
 		Application::Quit(-1);
 	}
-	objects.at(0) = std::make_unique<Object>(cubeMesh.get());
-	
-	pyramidMesh = std::unique_ptr<Mesh>(Mesh::LoadFrom("Resources/Meshes/Pyramid.obj"));
-	if (!pyramidMesh)
-	{
-		spdlog::critical("Pyramid mesh load failed.");
-		Application::Quit(-1);
-	}
-	objects.at(1) = std::make_unique<Object>(pyramidMesh.get());
 
-	currentObjectIndex = 0;
+	for (int count = 0; count < 3; ++count)
+	{
+		objects.at(count) = std::make_unique<Object>(sphereMesh.get());
+		objects.at(count)->SetPosition(glm::vec3(static_cast<float>(count * 2 - 2), 0.0f, 0.0f));
+	}
 }
 
 static bool turnOff = false;
@@ -157,47 +142,23 @@ void OnTick(const float deltaTime_) noexcept
 		Application::Quit(0);
 	}
 
+	if (Input::IsKeyReleased(GLFW_KEY_C))
+	{
+		const float r = static_cast<float>(std::rand()) / static_cast<float>(RAND_MAX);
+		const float g = static_cast<float>(std::rand()) / static_cast<float>(RAND_MAX);
+		const float b = static_cast<float>(std::rand()) / static_cast<float>(RAND_MAX);
+
+		light->SetColor(glm::vec3(r, g, b));
+	}
+
 	if (Input::IsKeyPressed(GLFW_KEY_M))
 	{
 		turnOff = !turnOff;
 	}
 
-	if (Input::IsKeyPressed(GLFW_KEY_N))
-	{
-		currentObjectIndex = (currentObjectIndex + 1) % objects.size();
-	}
-
-	if (Input::IsKeyHeld(GLFW_KEY_Z))
-	{
-		if (Input::IsModified(GLFW_MOD_SHIFT))
-		{
-			const glm::vec3 position = light->GetPosition();
-			light->SetPosition(position - (glm::vec3(0.0f, 0.0f, 1.0f) * (10.0f * deltaTime_)));
-		}
-		else
-		{
-			const glm::vec3 position = light->GetPosition();
-			light->SetPosition(position + (glm::vec3(0.0f, 0.0f, 1.0f) * (10.0f * deltaTime_)));
-		}
-	}
-
-	if (Input::IsKeyHeld(GLFW_KEY_Y))
-	{
-		const glm::vec3 rotation = objects.at(currentObjectIndex)->GetRotation();
-
-		if (Input::IsModified(GLFW_MOD_SHIFT))
-		{
-			objects.at(currentObjectIndex)->SetRotation(rotation + (glm::vec3(0.0f, 1.0f, 0.0f) * (30.0f * deltaTime_)));
-		}
-		else
-		{
-			objects.at(currentObjectIndex)->SetRotation(rotation - (glm::vec3(0.0f, 1.0f, 0.0f) * (30.0f * deltaTime_)));
-		}
-	}
-
 	if (Input::IsKeyHeld(GLFW_KEY_R))
 	{
-		const glm::vec3 center  = objects.at(currentObjectIndex)->GetPosition();
+		const glm::vec3 center  = glm::vec3(0.0f);
 		const glm::vec3 current = light->GetPosition();
 
 		glm::vec3 offset = current - center;
@@ -239,11 +200,17 @@ void OnDisplay() noexcept
 
 	if (camera)
 	{
-		// [수정] Specular 계산을 위해 현재 카메라의 위치(viewPos)를 반드시 전송해야 함
-		shader->SetUniformVector3("viewPos", camera->GetPosition()); // 이 줄 추가
+		shader->SetUniformVector3("viewPos", camera->GetPosition());
 
 		camera->PreRender(*(shader));
-		objects.at(currentObjectIndex)->Render(*(shader));
+
+		for (const auto& object : objects)
+		{
+			if (object)
+			{
+				object->Render(*(shader));
+			}
+		}
 	}
 }
 
